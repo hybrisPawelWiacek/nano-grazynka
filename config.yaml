@@ -1,0 +1,41 @@
+server:
+  port: 3101
+  host: 0.0.0.0
+
+database:
+  url: file:/data/nano-grazynka.db
+
+transcription:
+  provider: openai
+  model: whisper-1
+  maxFileSizeMB: 25
+  supportedFormats:
+    - mp3
+    - mp4
+    - mpeg
+    - mpga
+    - m4a
+    - wav
+    - webm
+
+summarization:
+  provider: openai
+  model: gpt-4-turbo-preview
+  maxTokens: 2000
+  temperature: 0.7
+  prompts:
+    summary: |
+      Summarize the following transcript concisely, capturing key points and main ideas.
+      Maintain the original language of the transcript.
+    actionPoints: |
+      Extract actionable items from the following transcript as a bullet list.
+      Present them in the same language as the transcript.
+
+storage:
+  uploadDir: /data/uploads
+  maxFileAgeDays: 30
+
+processing:
+  maxConcurrentJobs: 3
+  jobTimeoutMinutes: 30
+  retryAttempts: 3

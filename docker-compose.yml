@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3100:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3101
+      - API_URL_INTERNAL=http://backend:3101
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - nano-grazynka-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3101:3101"
+    environment:
+      - DATABASE_URL=file:/data/nano-grazynka.db
+      - PORT=3101
+      - NODE_ENV=development
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./data:/data
+      - ./config.yaml:/app/config.yaml:ro
+    env_file:
+      - .env
+    networks:
+      - nano-grazynka-network
+
+networks:
+  nano-grazynka-network:
+    driver: bridge
+
+volumes:
+  data:

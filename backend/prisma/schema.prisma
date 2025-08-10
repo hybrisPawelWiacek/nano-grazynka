@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model VoiceNote {
+  id               String   @id @default(cuid())
+  userId           String
+  title            String
+  originalFilePath String
+  fileSize         Int
+  mimeType         String
+  language         String
+  status           String
+  tags             String   @default("[]") // JSON array
+  errorMessage     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  version          Int      @default(1)
+
+  transcriptions   Transcription[]
+  summaries        Summary[]
+  events           Event[]
+
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@index([userId, updatedAt])
+}
+
+model Transcription {
+  id              String   @id @default(cuid())
+  voiceNoteId     String   @unique
+  text            String
+  language        String
+  duration        Float
+  confidence      Float    @default(0.0)
+  timestamp       DateTime @default(now())
+
+  voiceNote       VoiceNote @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)
+  summaries       Summary[]
+
+  @@index([voiceNoteId])
+}
+
+model Summary {
+  id              String   @id @default(cuid())
+  voiceNoteId     String   @unique
+  transcriptionId String
+  summary         String
+  keyPoints       String   // JSON array
+  actionItems     String   // JSON array
+  language        String
+  timestamp       DateTime @default(now())
+
+  voiceNote       VoiceNote @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)
+  transcription   Transcription @relation(fields: [transcriptionId], references: [id], onDelete: Cascade)
+
+  @@index([voiceNoteId])
+  @@index([transcriptionId])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  eventId     String   @unique
+  aggregateId String
+  eventType   String
+  payload     String   // JSON
+  occurredAt  DateTime @default(now())
+
+  voiceNote   VoiceNote? @relation(fields: [aggregateId], references: [id], onDelete: Cascade)
+
+  @@index([aggregateId])
+  @@index([occurredAt])
+}

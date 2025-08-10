@@ -1,0 +1,555 @@
+openapi: 3.0.3
+info:
+  title: nano-Grazynka API
+  description: Voice note transcription and summarization utility API
+  version: 1.0.0
+  contact:
+    name: nano-Grazynka Team
+
+servers:
+  - url: http://localhost:3101
+    description: Development server
+  - url: http://backend:3101
+    description: Docker internal server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  database:
+                    type: string
+                    example: connected
+                  observability:
+                    type: object
+                    properties:
+                      enabled:
+                        type: boolean
+                      providers:
+                        type: array
+                        items:
+                          type: string
+
+  /ready:
+    get:
+      summary: Readiness check endpoint
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                  services:
+                    type: object
+                    properties:
+                      database:
+                        type: boolean
+                      storage:
+                        type: boolean
+
+  /api/voice-notes:
+    get:
+      summary: List voice notes with filtering and pagination
+      tags:
+        - Voice Notes
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search in title and transcription
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, completed, failed]
+        - name: language
+          in: query
+          schema:
+            type: string
+            enum: [EN, PL]
+        - name: tags
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+      responses:
+        '200':
+          description: List of voice notes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  voiceNotes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VoiceNote'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+    post:
+      summary: Upload a new voice note
+      tags:
+        - Voice Notes
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Audio file (mp3, wav, m4a, webm, mp4, mpga, mpeg, ogg, oga, opus, flac)
+                title:
+                  type: string
+                  description: Optional title (extracted from filename if not provided)
+                language:
+                  type: string
+                  enum: [EN, PL]
+                  description: Language of the audio (default EN)
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional tags
+      responses:
+        '201':
+          description: Voice note created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  voiceNote:
+                    $ref: '#/components/schemas/VoiceNote'
+                  message:
+                    type: string
+                    example: Voice note uploaded successfully
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/voice-notes/{id}:
+    get:
+      summary: Get a specific voice note with details
+      tags:
+        - Voice Notes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: includeTranscription
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - name: includeSummary
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Voice note details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  voiceNote:
+                    $ref: '#/components/schemas/VoiceNoteDetailed'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete a voice note
+      tags:
+        - Voice Notes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Voice note deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Voice note deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/voice-notes/{id}/process:
+    post:
+      summary: Trigger processing of a voice note
+      tags:
+        - Processing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Processing started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  voiceNote:
+                    $ref: '#/components/schemas/VoiceNote'
+                  message:
+                    type: string
+                    example: Processing started successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Already processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/voice-notes/{id}/reprocess:
+    post:
+      summary: Reprocess a voice note with new prompts
+      tags:
+        - Processing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                systemPrompt:
+                  type: string
+                  description: Custom system prompt for reprocessing
+                userPrompt:
+                  type: string
+                  description: Custom user prompt for reprocessing
+      responses:
+        '200':
+          description: Reprocessing started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  voiceNote:
+                    $ref: '#/components/schemas/VoiceNote'
+                  message:
+                    type: string
+                    example: Reprocessing started successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/voice-notes/{id}/export:
+    get:
+      summary: Export a voice note
+      tags:
+        - Export
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [markdown, json]
+            default: markdown
+      responses:
+        '200':
+          description: Exported content
+          content:
+            text/markdown:
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceNoteExport'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    VoiceNote:
+      type: object
+      required:
+        - id
+        - title
+        - status
+        - language
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, completed, failed]
+        language:
+          type: string
+          enum: [EN, PL]
+        duration:
+          type: integer
+          description: Duration in seconds
+        fileSize:
+          type: integer
+          description: File size in bytes
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
+
+    VoiceNoteDetailed:
+      allOf:
+        - $ref: '#/components/schemas/VoiceNote'
+        - type: object
+          properties:
+            transcription:
+              $ref: '#/components/schemas/Transcription'
+            summary:
+              $ref: '#/components/schemas/Summary'
+
+    Transcription:
+      type: object
+      required:
+        - id
+        - text
+        - language
+        - createdAt
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        language:
+          type: string
+          enum: [EN, PL]
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        createdAt:
+          type: string
+          format: date-time
+
+    Summary:
+      type: object
+      required:
+        - id
+        - summary
+        - keyPoints
+        - actionItems
+        - project
+        - createdAt
+      properties:
+        id:
+          type: string
+        summary:
+          type: string
+        keyPoints:
+          type: array
+          items:
+            type: string
+        actionItems:
+          type: array
+          items:
+            type: string
+        project:
+          type: string
+          nullable: true
+        systemPrompt:
+          type: string
+        userPrompt:
+          type: string
+        modelUsed:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    VoiceNoteExport:
+      type: object
+      properties:
+        metadata:
+          type: object
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+            processedAt:
+              type: string
+              format: date-time
+            language:
+              type: string
+            duration:
+              type: integer
+        transcription:
+          type: string
+        summary:
+          type: string
+        keyPoints:
+          type: array
+          items:
+            type: string
+        actionItems:
+          type: array
+          items:
+            type: string
+        project:
+          type: string
+
+    Pagination:
+      type: object
+      required:
+        - currentPage
+        - totalPages
+        - totalItems
+        - itemsPerPage
+      properties:
+        currentPage:
+          type: integer
+        totalPages:
+          type: integer
+        totalItems:
+          type: integer
+        itemsPerPage:
+          type: integer
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        traceId:
+          type: string
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+tags:
+  - name: System
+    description: System health and readiness endpoints
+  - name: Voice Notes
+    description: Voice note CRUD operations
+  - name: Processing
+    description: Transcription and summarization operations
+  - name: Export
+    description: Export voice notes in various formats

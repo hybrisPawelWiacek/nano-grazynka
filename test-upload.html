@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Upload</title>
+</head>
+<body>
+    <h1>Test Voice Note Upload</h1>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" accept="audio/*" required>
+        <button type="submit">Upload</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('userId', 'test-user');
+            
+            try {
+                const response = await fetch('http://localhost:3101/api/voice-notes', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = 
+                    `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+                
+                if (response.ok) {
+                    alert('Upload successful! ID: ' + result.id);
+                } else {
+                    alert('Upload failed: ' + result.message);
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<pre>Error: ${error.message}</pre>`;
+                alert('Upload failed: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
