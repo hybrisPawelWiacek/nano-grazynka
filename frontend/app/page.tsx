@@ -12,7 +12,7 @@ export default function Home() {
 
   const handleUploadComplete = (id: string) => {
     // Navigate to the voice note detail page after successful upload
-    router.push(`/notes/${id}`);
+    router.push(`/note/${id}`);
   };
 
   const handleError = (errorMessage: string) => {

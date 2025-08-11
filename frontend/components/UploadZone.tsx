@@ -2,6 +2,7 @@
 
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { voiceNotesApi } from '@/lib/api/voiceNotes';
+import PreviewDialog from './PreviewDialog';
 import styles from './UploadZone.module.css';
 
 interface UploadZoneProps {
@@ -13,6 +14,8 @@ export default function UploadZone({ onUploadComplete, onError }: UploadZoneProp
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
@@ -50,7 +53,7 @@ export default function UploadZone({ onUploadComplete, onError }: UploadZoneProp
     }
   };
 
-  const handleFile = async (file: File) => {
+  const handleFile = (file: File) => {
     // Validate file
     const validation = voiceNotesApi.validateFile(file);
     if (!validation.valid) {
@@ -58,12 +61,21 @@ export default function UploadZone({ onUploadComplete, onError }: UploadZoneProp
       return;
     }
 
+    // Show preview dialog
+    setSelectedFile(file);
+    setShowPreview(true);
+  };
+
+  const handleUploadConfirm = async (customPrompt?: string) => {
+    if (!selectedFile) return;
+
     setIsUploading(true);
     setUploadProgress(0);
+    setShowPreview(false);
 
     try {
-      // Upload file
-      const uploadResponse = await voiceNotesApi.upload(file);
+      // Upload file with optional custom prompt
+      const uploadResponse = await voiceNotesApi.upload(selectedFile, customPrompt);
       setUploadProgress(50);
 
       // Start processing
@@ -78,10 +90,20 @@ export default function UploadZone({ onUploadComplete, onError }: UploadZoneProp
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
+      setSelectedFile(null);
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const handleUploadCancel = () => {
+    setShowPreview(false);
+    setSelectedFile(null);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -90,25 +112,26 @@ export default function UploadZone({ onUploadComplete, onError }: UploadZoneProp
   };
 
   return (
-    <div
-      className={`${styles.uploadZone} ${isDragging ? styles.dragging : ''} ${
-        isUploading ? styles.uploading : ''
-      }`}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      onClick={!isUploading ? triggerFileSelect : undefined}
-    >
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="audio/*,video/mp4,video/webm"
-        onChange={handleFileSelect}
-        disabled={isUploading}
-        className={styles.fileInput}
-        aria-label="Choose audio file"
-      />
+    <>
+      <div
+        className={`${styles.uploadZone} ${isDragging ? styles.dragging : ''} ${
+          isUploading ? styles.uploading : ''
+        }`}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={!isUploading ? triggerFileSelect : undefined}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/*,video/mp4,video/webm"
+          onChange={handleFileSelect}
+          disabled={isUploading}
+          className={styles.fileInput}
+          aria-label="Choose audio file"
+        />
 
       {isUploading ? (
         <div className={styles.uploadingContent}>
@@ -145,6 +168,17 @@ export default function UploadZone({ onUploadComplete, onError }: UploadZoneProp
           </p>
         </div>
       )}
-    </div>
+      </div>
+
+      {/* Preview Dialog */}
+      {showPreview && selectedFile && (
+        <PreviewDialog
+          file={selectedFile}
+          onConfirm={handleUploadConfirm}
+          onCancel={handleUploadCancel}
+          isUploading={isUploading}
+        />
+      )}
+    </>
   );
 }

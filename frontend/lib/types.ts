@@ -20,6 +20,8 @@ export interface VoiceNote {
   tags: string[];
   transcriptions?: Transcription[];
   summaries?: Summary[];
+  transcription?: Transcription;  // Singular for getById response
+  summary?: Summary;              // Singular for getById response
 }
 
 export interface Transcription {

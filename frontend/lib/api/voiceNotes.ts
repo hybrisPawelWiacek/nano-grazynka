@@ -20,13 +20,24 @@ export const voiceNotesApi = {
 
   // Get single voice note by ID
   async getById(id: string): Promise<VoiceNote> {
-    return apiClient.get<VoiceNote>(`/api/voice-notes/${id}`);
+    return apiClient.get<VoiceNote>(`/api/voice-notes/${id}?includeTranscription=true&includeSummary=true`);
   },
 
-  // Upload new voice note
-  async upload(file: File, metadata?: { title?: string; description?: string; tags?: string[] }): Promise<UploadResponse> {
+  // Upload new voice note with optional custom prompt
+  async upload(file: File, customPrompt?: string, metadata?: { title?: string; description?: string; tags?: string[] }): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append('file', file);
+    
+    // TODO: MVP Simplification - hardcoded userId
+    // When user authentication is implemented, replace with actual user ID from auth context
+    // This is a temporary solution for the MVP phase where we don't have user management
+    formData.append('userId', 'default-user');
+    
+    // Add custom prompt if provided
+    if (customPrompt) {
+      formData.append('customPrompt', customPrompt);
+    }
+    
     if (metadata?.title) formData.append('title', metadata.title);
     if (metadata?.description) formData.append('description', metadata.description);
     if (metadata?.tags) formData.append('tags', metadata.tags.join(','));

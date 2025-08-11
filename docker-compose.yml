@@ -29,6 +29,8 @@ services:
       - DATABASE_URL=file:/data/nano-grazynka.db
       - PORT=3101
       - NODE_ENV=development
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - ./backend:/app
       - /app/node_modules

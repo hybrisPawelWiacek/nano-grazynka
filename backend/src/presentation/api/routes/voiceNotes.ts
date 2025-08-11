@@ -51,9 +51,11 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
       const allowedMimeTypes = [
         'audio/mp4',
         'audio/m4a',
+        'audio/x-m4a',  // Some systems report m4a files with this MIME type
         'audio/mpeg',
         'audio/mp3',
         'audio/wav',
+        'audio/x-wav',
         'audio/webm',
         'audio/ogg'
       ];
@@ -73,7 +75,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
           originalName: fileData.filename,
           size: fileData.buffer.length
         },
-        userPrompt: fields.userPrompt,
+        userPrompt: fields.customPrompt || fields.userPrompt,  // Support both field names for compatibility
         tags: fields.tags ? fields.tags.split(',') : undefined,
         userId: fields.userId,
         language: fields.language as 'EN' | 'PL' | undefined

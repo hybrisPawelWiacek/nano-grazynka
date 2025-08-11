@@ -1,289 +1,163 @@
-# nano-Grazynka
+# nano-Grazynka 🎙️
 
-Voice note transcription and summarization utility with English/Polish support.
+A voice note transcription and summarization utility that processes audio files in English and Polish, generating intelligent summaries with key points and action items.
 
-## Features
+## ✨ Features
 
-- 🎙️ Audio file upload (MP3, WAV, M4A, OGG, WebM, MP4)
-- 🔤 Automatic transcription using Whisper AI
-- 📝 Smart summarization with key points and action items
-- 🌍 English and Polish language support
-- 🔄 Reprocessing with custom prompts
-- 📂 Export to Markdown or JSON
-- 🔍 Search and filter capabilities
+- **Voice Note Upload** - Drag-and-drop or click to upload audio files
+- **Multi-language Support** - English and Polish transcription
+- **AI Summarization** - Automatic summary generation with:
+  - Brief overview (2-3 sentences)
+  - Key points extraction
+  - Action items identification
+- **Multiple AI Models** - Supports Gemini (via OpenRouter) and GPT-4o-mini (via OpenAI)
+- **Export Options** - Download as Markdown or JSON
+- **Clean Architecture** - Domain-Driven Design with clear boundaries
+- **Docker Ready** - Single command deployment
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
-
 - Docker and Docker Compose
-- OpenAI API key or OpenRouter API key
+- OpenRouter API key (for Gemini) OR OpenAI API key
 
 ### Setup
 
 1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd nano-grazynka_CC
-   ```
+```bash
+git clone <repo-url>
+cd nano-grazynka
+```
 
 2. **Configure API keys**
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your API key:
-   # OPENAI_API_KEY=sk-your-key-here
-   # or
-   # OPENROUTER_API_KEY=sk-your-key-here
-   ```
+```bash
+# Create .env file in project root
+echo "OPENROUTER_API_KEY=sk-or-v1-your-key-here" > .env
+# OR use OpenAI
+echo "OPENAI_API_KEY=sk-your-openai-key-here" > .env
+```
 
 3. **Start the application**
-   
-   **Development:**
-   ```bash
-   docker compose up -d
-   ```
-   
-   **Production (recommended):**
-   ```bash
-   docker compose -f docker-compose.prod.yml up -d
-   
-   # With monitoring stack (Prometheus + Grafana)
-   docker compose -f docker-compose.prod.yml --profile monitoring up -d
-   ```
-
-4. **Access the application**
-   - Frontend: http://localhost:3100
-   - Backend API: http://localhost:3101
-   - Health Check: http://localhost:3101/health
-   - Metrics: http://localhost:3101/metrics
-   - Prometheus (if enabled): http://localhost:9090
-   - Grafana (if enabled): http://localhost:3000 (admin/admin)
-
-## Usage
-
-1. **Upload a voice note**
-   - Navigate to http://localhost:3100
-   - Drag and drop or click to upload an audio file
-   - The file will be automatically processed
-
-2. **View your library**
-   - Click "Library" to see all voice notes
-   - Use search and filters to find specific notes
-   - Click on a note to view details
-
-3. **Export notes**
-   - From the detail page, export to Markdown or JSON
-   - Use exported files for documentation or further processing
-
-4. **Reprocess with custom prompts**
-   - Click "Reprocess" on the detail page
-   - Enter a custom prompt for different summarization
-   - View version history of summaries
-
-## Production Deployment
-
-### Environment Variables
-
-Create a `.env` file with your API keys:
-
-```env
-# Required for transcription/summarization
-OPENAI_API_KEY=sk-...
-
-# Optional - Alternative LLM provider
-OPENROUTER_API_KEY=sk-or-...
-
-# Optional - LLM Observability
-LANGSMITH_API_KEY=ls-...
-OPENLLMETRY_API_KEY=otel-...
-```
-
-### Production Features
-
-#### Health Monitoring
-- **Health Check**: `http://localhost:3101/health` - Basic health status
-- **Readiness Check**: `http://localhost:3101/ready` - Database connectivity check
-- **Metrics**: `http://localhost:3101/metrics` - Prometheus-compatible metrics
-
-#### LLM Observability
-
-**LangSmith Integration** (when `LANGSMITH_API_KEY` is set):
-- All LLM calls are traced automatically
-- View traces at https://smith.langchain.com
-- Project name: `nano-grazynka-prod`
-
-**OpenLLMetry Integration** (when `OPENLLMETRY_API_KEY` is set):
-- OpenTelemetry traces for all LLM operations
-- Automatic latency and token usage tracking
-- View at https://app.traceloop.com
-
-#### Metrics Collection
-
-The `/metrics` endpoint exposes:
-```
-nano_grazynka_up 1
-nano_grazynka_uptime_seconds 3600
-nano_grazynka_voice_notes_total 42
-nano_grazynka_voice_notes_processing 2
-nano_grazynka_voice_notes_completed 38
-nano_grazynka_voice_notes_failed 2
-```
-
-### Production Commands
-
 ```bash
-# Start production
-docker compose -f docker-compose.prod.yml up -d
-
-# With monitoring (Prometheus + Grafana)
-docker compose -f docker-compose.prod.yml --profile monitoring up -d
-
-# View logs
-docker compose -f docker-compose.prod.yml logs -f backend
-
-# Restart services
-docker compose -f docker-compose.prod.yml restart
-
-# Stop all services
-docker compose -f docker-compose.prod.yml down
+docker compose up --build
 ```
 
-### Production Checklist
+4. **Access the app**
+- Frontend: http://localhost:3100
+- Backend API: http://localhost:3101
 
-- [ ] Set `NODE_ENV=production` in docker-compose.prod.yml
-- [ ] Configure API keys in `.env`
-- [ ] Enable LangSmith for LLM tracing (optional)
-- [ ] Enable OpenLLMetry for observability (optional)
-- [ ] Test health endpoints are responding
-- [ ] Verify metrics endpoint is working
-- [ ] Set up monitoring alerts (optional)
-- [ ] Configure log rotation
+## 🏗️ Architecture
 
-## Configuration
-
-Edit `config.yaml` for application settings:
-
-```yaml
-transcription:
-  provider: openai
-  model: whisper-1
-  
-summarization:
-  provider: openai
-  model: gpt-4-turbo-preview
-  
-storage:
-  uploadDir: /data/uploads
-  maxFileAgeDays: 30
 ```
-
-## Documentation
-
-### 📚 Complete Documentation
-
-| Document | Description |
-|----------|-------------|
-| [CLAUDE.md](./CLAUDE.md) | AI collaboration guide & documentation map |
-| [PROJECT_STATUS.md](./PROJECT_STATUS.md) | Implementation progress tracker |
-| **Architecture** | |
-| [System Design](./docs/architecture/ARCHITECTURE.md) | System design, DDD implementation, patterns |
-| [Database Schema](./docs/architecture/DATABASE.md) | Database schema, relationships, queries |
-| [Product Requirements](./docs/architecture/PRD.md) | Product requirements document |
-| **Development** | |
-| [Development Guide](./docs/development/DEVELOPMENT.md) | Development setup, debugging, testing |
-| [MCP Best Practices](./docs/development/MCP_BEST_PRACTICES.md) | MCP server integration guide |
-| **API & Testing** | |
-| [API Contract](./docs/api/api-contract.md) | API specifications and endpoints |
-| [Integration Testing](./docs/testing/integration-testing.md) | Docker testing and E2E guide |
-
-## Development
-
-### Project Structure
-```
-├── frontend/          # Next.js frontend
-│   ├── app/          # App router pages
+nano-grazynka/
+├── frontend/          # Next.js 15 + TypeScript
+│   ├── app/          # App Router pages
 │   ├── components/   # React components
-│   └── lib/          # API client and utilities
-├── backend/          # Node.js/Fastify backend
-│   ├── domain/       # Business logic (DDD)
+│   └── lib/          # Utilities & types
+├── backend/          # Node.js + Fastify
+│   ├── domain/       # Business logic
 │   ├── application/  # Use cases
 │   ├── infrastructure/ # External services
 │   └── presentation/ # API layer
-├── docs/            # Technical documentation
-├── data/            # SQLite database and uploads
-└── config.yaml      # Application configuration
+└── docs/            # Documentation
 ```
 
-### Quick Commands
+## 🤖 AI Models
 
+### Primary: Gemini 2.0 Flash (via OpenRouter)
+- Cost-effective: ~$0.0002/1K tokens
+- Fast response times
+- Get API key: https://openrouter.ai/keys
+
+### Fallback: GPT-4o-mini (via OpenAI)
+- Alternative when OpenRouter unavailable
+- Get API key: https://platform.openai.com/api-keys
+
+## 📖 Documentation
+
+- [Project Status](./PROJECT_STATUS.md) - Current state and roadmap
+- [Architecture](./docs/architecture/ARCHITECTURE.md) - System design
+- [API Contract](./docs/api/api-contract.md) - API endpoints
+- [Development Guide](./docs/development/DEVELOPMENT.md) - Local setup
+- [Gemini Setup](./docs/development/GEMINI_SETUP.md) - AI configuration
+- [Changelog](./CHANGELOG.md) - Version history
+
+## 🐛 Recent Fixes (August 11, 2025)
+
+- ✅ Fixed userId requirement error
+- ✅ Fixed route navigation after upload
+- ✅ Fixed transcription/summary display
+- ✅ Added Gemini model support
+- ✅ Improved error handling
+
+## 🏷️ MVP Limitations
+
+This is an MVP with intentional simplifications:
+- Single-user design (hardcoded userId)
+- SQLite database (not production-ready)
+- No authentication system
+- Basic error handling
+- No rate limiting
+
+## 🛠️ Development
+
+### Local Development (without Docker)
+
+**Backend:**
 ```bash
-# Start development
-docker compose up
-
-# View logs
-docker compose logs -f
-
-# Run tests
-docker compose exec backend npm test
-
-# Database GUI
-docker compose exec backend npx prisma studio
-
-# Rebuild after changes
-docker compose down
-docker compose build --no-cache
-docker compose up
+cd backend
+npm install
+npx prisma migrate dev
+npm run dev
 ```
 
-For detailed development instructions, see [docs/development/DEVELOPMENT.md](./docs/development/DEVELOPMENT.md).
-
-## Troubleshooting
-
-### API Key Issues
-- Ensure your API key is valid and has sufficient credits
-- Check `.env` file has the correct format
-- Restart services after changing environment variables
-
-### Upload Failures
-- Check file size (max 500MB)
-- Verify file format is supported
-- Check `data/uploads` directory permissions
-
-### Processing Errors
-- View backend logs: `docker compose logs backend`
-- Check API rate limits
-- Verify network connectivity
-
-### Production Issues
-
-#### Check Service Health
+**Frontend:**
 ```bash
-curl http://localhost:3101/health
-curl http://localhost:3101/ready
-curl http://localhost:3101/metrics
+cd frontend
+npm install
+npm run dev
 ```
 
-#### View LangSmith Traces
-1. Go to https://smith.langchain.com
-2. Select project: `nano-grazynka-prod`
-3. View traces for debugging
-
-#### Database Access
+### Running Tests
 ```bash
-# Access database GUI
-docker exec -it nano-grazynka_cc-backend-1 npx prisma studio
-
-# Run migrations
-docker exec -it nano-grazynka_cc-backend-1 npm run prisma:migrate
+cd backend
+npm test
 ```
 
-### Security Notes
-- **Never commit** `.env` file to version control
-- **Rotate API keys** regularly
-- **Backup database** from `./data/` directory regularly
-- Consider using **reverse proxy** (nginx/traefik) for production
-- Enable **log rotation** to prevent disk fill
+### Database Management
+```bash
+cd backend
+npx prisma studio  # GUI for database
+```
 
-## License
+## 📝 Usage
 
-MIT
+1. **Upload** - Drag and drop audio file or click to browse
+2. **Process** - Automatic transcription and summarization
+3. **View** - See transcription, summary, key points, and action items
+4. **Export** - Download as Markdown or JSON
+
+## 🤝 Contributing
+
+This is an MVP project. For production use, consider:
+- Adding user authentication
+- Switching to PostgreSQL
+- Implementing rate limiting
+- Adding monitoring and logging
+- Setting up CI/CD pipeline
+
+## 📄 License
+
+Private project - not for public distribution
+
+## 🙏 Acknowledgments
+
+- Built with Domain-Driven Design principles
+- Powered by OpenAI Whisper and Google Gemini
+- Deployed with Docker Compose
+
+---
+
+**Status**: ✅ MVP Complete and Functional  
+**Version**: 1.0.0  
+**Last Updated**: August 11, 2025

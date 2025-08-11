@@ -139,8 +139,8 @@ export default function VoiceNoteDetailPage() {
     );
   }
 
-  const latestTranscription = voiceNote.transcriptions?.[0];
-  const latestSummary = voiceNote.summaries?.[0];
+  const latestTranscription = voiceNote.transcription;
+  const latestSummary = voiceNote.summary;
 
   return (
     <div className={styles.container}>

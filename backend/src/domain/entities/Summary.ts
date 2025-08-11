@@ -19,10 +19,12 @@ export class Summary {
     if (!summary || summary.trim().length === 0) {
       throw new Error('Summary text cannot be empty');
     }
-    if (!keyPoints || keyPoints.length === 0) {
-      throw new Error('Key points cannot be empty');
-    }
-    return new Summary(summary, keyPoints, actionItems, language, timestamp || new Date());
+    // MVP: Allow empty keyPoints and actionItems
+    // In production, we might want to enforce at least some key points
+    const validKeyPoints = keyPoints || [];
+    const validActionItems = actionItems || [];
+    
+    return new Summary(summary, validKeyPoints, validActionItems, language, timestamp || new Date());
   }
 
   getSummary(): string {

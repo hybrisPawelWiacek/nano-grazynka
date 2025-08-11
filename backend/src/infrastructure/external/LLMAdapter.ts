@@ -14,25 +14,22 @@ export class LLMAdapter {
 
   async summarize(
     text: string,
+    language: Language,
     systemPrompt?: string,
     userPrompt?: string
   ): Promise<SummarizationResult> {
-    const traceId = await this.observability.startTrace('llm.summarize', {
-      textLength: text.length,
-      hasSystemPrompt: !!systemPrompt,
-      hasUserPrompt: !!userPrompt
-    });
-
     try {
-      // Check if OpenAI is configured
-      const apiKey = process.env.OPENAI_API_KEY;
+      // Check for OpenRouter API key (replaces OpenAI)
+      const apiKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+      
       if (!apiKey) {
-        console.warn('OpenAI API key not configured, using mock summary');
+        console.warn('OpenRouter/OpenAI API key not configured, using mock summary');
         return this.getMockSummary();
       }
 
-      // Use GPT-5-mini for cost-effective summarization with structured outputs
-      const model = 'gpt-5-mini';
+      // Use Gemini Flash via OpenRouter for cost-effective summarization
+      const model = 'google/gemini-2.0-flash-001'; // Fast and cost-effective
+      // Alternative: 'google/gemini-2.5-pro-exp-03-25' for higher reasoning
       
       // Prepare the prompt
       const defaultSystemPrompt = `You are an AI assistant that creates concise summaries of voice transcriptions.
@@ -41,7 +38,7 @@ Your task is to:
 2. Extract 3-5 key points from the transcription
 3. Identify any action items or tasks mentioned
 
-Respond in JSON format with the following structure:
+Respond ONLY with valid JSON format with the following structure:
 {
   "summary": "brief summary text",
   "keyPoints": ["key point 1", "key point 2", ...],
@@ -51,63 +48,74 @@ Respond in JSON format with the following structure:
       const finalSystemPrompt = systemPrompt || defaultSystemPrompt;
       const finalUserPrompt = userPrompt || `Please summarize the following transcription:\n\n${text}`;
 
-      // Call OpenAI API with structured output
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Determine which API endpoint to use
+      const isOpenRouter = process.env.OPENROUTER_API_KEY && model.startsWith('google/');
+      const apiUrl = isOpenRouter 
+        ? 'https://openrouter.ai/api/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+
+      // Call API with structured output
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      };
+
+      // Add OpenRouter specific headers if using OpenRouter
+      if (isOpenRouter) {
+        headers['HTTP-Referer'] = 'https://nano-grazynka.app'; // Optional: your app URL
+        headers['X-Title'] = 'nano-Grazynka'; // Optional: your app name
+      }
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
+        headers,
         body: JSON.stringify({
-          model,
+          model: isOpenRouter ? model : 'gpt-4o-mini', // Use Gemini for OpenRouter, GPT for OpenAI
           messages: [
             { role: 'system', content: finalSystemPrompt },
             { role: 'user', content: finalUserPrompt }
           ],
           response_format: { type: 'json_object' },
           temperature: 0.3,
-          max_tokens: 1000
+          ...(isOpenRouter ? {} : { max_completion_tokens: 1000 }) // OpenRouter doesn't use max_completion_tokens
         })
       });
 
       if (!response.ok) {
         const error = await response.text();
-        console.error('OpenAI API error:', error);
+        console.error(`${isOpenRouter ? 'OpenRouter' : 'OpenAI'} API error:`, error);
         
         // Fallback to mock if API fails
         console.warn('Falling back to mock summary due to API error');
         return this.getMockSummary();
       }
 
-      const data = await response.json() as any;
-      const content = data.choices[0].message.content;
-      
-      try {
-        const result = JSON.parse(content) as SummarizationResult;
-        
-        // Validate the response structure
-        if (!result.summary || !Array.isArray(result.keyPoints) || !Array.isArray(result.actionItems)) {
-          console.warn('Invalid response structure from OpenAI, using mock');
-          return this.getMockSummary();
-        }
-        
-        await this.observability.endTrace(traceId, { 
-          success: true,
-          model,
-          responseLength: content.length
-        });
-        
-        return result;
-      } catch (parseError) {
-        console.error('Failed to parse OpenAI response:', parseError);
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+
+      if (!content) {
+        console.warn('No content in API response, using mock summary');
         return this.getMockSummary();
       }
-      
+
+      // Parse JSON response
+      try {
+        const result = JSON.parse(content);
+        
+        // Validate and normalize the response
+        return {
+          summary: result.summary || 'Summary not available',
+          keyPoints: Array.isArray(result.keyPoints) ? result.keyPoints : [],
+          actionItems: Array.isArray(result.actionItems) ? result.actionItems : []
+        };
+      } catch (parseError) {
+        console.error('Failed to parse API response as JSON:', parseError);
+        console.error('Response content:', content);
+        return this.getMockSummary();
+      }
+
     } catch (error) {
-      await this.observability.endTrace(traceId, null, error as Error);
-      console.error('LLM summarization error:', error);
-      
-      // Return mock summary as fallback
+      console.error('Error generating summary:', error);
       return this.getMockSummary();
     }
   }
