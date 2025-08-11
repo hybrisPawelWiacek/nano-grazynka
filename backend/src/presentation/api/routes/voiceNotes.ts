@@ -3,67 +3,120 @@ import { MultipartFile } from '@fastify/multipart';
 import { Container } from '../container';
 import { Language } from '../../../domain/value-objects/Language';
 
-export async function voiceNoteRoutes(fastify: FastifyInstance): Promise<void> {
+export async function voiceNoteRoutes(fastify: FastifyInstance) {
   const container = Container.getInstance();
 
   // Upload voice note
   fastify.post('/api/voice-notes', async (request: FastifyRequest, reply: FastifyReply) => {
-    const parts = request.parts();
-    let file: MultipartFile | null = null;
-    const fields: any = {};
-    
-    for await (const part of parts) {
-      if (part.type === 'file') {
-        file = part as MultipartFile;
-      } else if (part.type === 'field') {
-        const fieldPart = part as any;
-        fields[fieldPart.fieldname] = fieldPart.value;
+    try {
+      const parts = request.parts();
+      let fileData: { buffer: Buffer; filename: string; mimetype: string } | null = null;
+      const fields: any = {};
+      
+      for await (const part of parts) {
+        if (part.file) {
+          // MUST consume the file stream for the iterator to proceed
+          const chunks = [];
+          for await (const chunk of part.file) {
+            chunks.push(chunk);
+          }
+          const buffer = Buffer.concat(chunks);
+          fileData = {
+            buffer,
+            filename: part.filename,
+            mimetype: part.mimetype
+          };
+        } else {
+          // Regular field
+          fields[part.fieldname] = part.value;
+        }
       }
-    }
-    
-    if (!file) {
-      return reply.status(400).send({
-        error: 'Bad Request',
-        message: 'No file uploaded'
+      
+      if (!fileData) {
+        return reply.status(400).send({
+          error: 'Bad Request',
+          message: 'No file uploaded'
+        });
+      }
+
+      // Validate userId is provided
+      if (!fields.userId) {
+        return reply.status(400).send({
+          error: 'Bad Request',
+          message: 'userId is required'
+        });
+      }
+
+      // Validate file type
+      const allowedMimeTypes = [
+        'audio/mp4',
+        'audio/m4a',
+        'audio/mpeg',
+        'audio/mp3',
+        'audio/wav',
+        'audio/webm',
+        'audio/ogg'
+      ];
+      
+      if (!allowedMimeTypes.includes(fileData.mimetype)) {
+        return reply.status(400).send({
+          error: 'Bad Request',
+          message: `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`
+        });
+      }
+
+      const useCase = container.getUploadVoiceNoteUseCase();
+      const result = await useCase.execute({
+        file: {
+          buffer: fileData.buffer,
+          mimeType: fileData.mimetype,
+          originalName: fileData.filename,
+          size: fileData.buffer.length
+        },
+        userPrompt: fields.userPrompt,
+        tags: fields.tags ? fields.tags.split(',') : undefined,
+        userId: fields.userId,
+        language: fields.language as 'EN' | 'PL' | undefined
+      });
+
+      if (!result.success) {
+        throw result.error;
+      }
+
+      // Fetch the created voice note to return full object
+      const getUseCase = container.getGetVoiceNoteUseCase();
+      const voiceNoteResult = await getUseCase.execute({
+        voiceNoteId: result.data!.voiceNoteId,
+        includeTranscription: false,
+        includeSummary: false
+      });
+
+      if (!voiceNoteResult.success) {
+        throw voiceNoteResult.error;
+      }
+
+      return reply.status(201).send({
+        voiceNote: voiceNoteResult.data,
+        message: 'Voice note uploaded successfully'
+      });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      
+      // Return 400 for validation errors
+      if (error.message?.includes('validation') || 
+          error.message?.includes('invalid') || 
+          error.message?.includes('required')) {
+        return reply.status(400).send({
+          error: 'Bad Request',
+          message: error.message || 'Validation failed'
+        });
+      }
+      
+      return reply.status(500).send({
+        error: 'Internal Server Error',
+        message: error.message || 'Upload failed'
       });
     }
-    
-    const buffer = await file.toBuffer();
-
-    const useCase = container.getUploadVoiceNoteUseCase();
-    const result = await useCase.execute({
-      file: {
-        buffer,
-        mimeType: file.mimetype,
-        originalName: file.filename,
-        size: buffer.length
-      },
-      userPrompt: fields.userPrompt,
-      tags: fields.tags ? fields.tags.split(',') : undefined,
-      userId: fields.userId || 'default-user',
-      language: fields.language as 'EN' | 'PL' | undefined
-    });
-
-    if (!result.success) {
-      throw result.error;
-    }
-
-    // Fetch the created voice note to return full object
-    const getUseCase = container.getGetVoiceNoteUseCase();
-    const voiceNoteResult = await getUseCase.execute({
-      voiceNoteId: result.data!.voiceNoteId,
-      includeTranscription: false,
-      includeSummary: false
-    });
-
-    if (!voiceNoteResult.success) {
-      throw voiceNoteResult.error;
-    }
-
-    return reply.status(201).send({
-      voiceNote: voiceNoteResult.data,
-      message: 'Voice note uploaded successfully'
-    });
   });
 
   // Process voice note
@@ -71,7 +124,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance): Promise<void> {
     const useCase = container.getProcessVoiceNoteUseCase();
     const result = await useCase.execute({
       voiceNoteId: request.params.id,
-      language: request.body?.language ? Language[request.body.language] : undefined
+      language: request.body?.language
     });
 
     if (!result.success) {
@@ -92,8 +145,8 @@ export async function voiceNoteRoutes(fastify: FastifyInstance): Promise<void> {
 
     return reply.send({
       voiceNote: voiceNoteResult.data,
-      transcription: voiceNoteResult.data?.transcriptions?.[0],
-      summary: voiceNoteResult.data?.summaries?.[0],
+      transcription: voiceNoteResult.data?.transcription,
+      summary: voiceNoteResult.data?.summary,
       message: 'Voice note processing started'
     });
   });
@@ -183,29 +236,49 @@ export async function voiceNoteRoutes(fastify: FastifyInstance): Promise<void> {
   // Export voice note
   fastify.get('/api/voice-notes/:id/export', async (request: any, reply: any) => {
     const useCase = container.getExportVoiceNoteUseCase();
-    const query = request.query || {};
-    
     const result = await useCase.execute({
       voiceNoteId: request.params.id,
-      format: query.format || 'markdown',
-      includeTranscription: query.includeTranscription !== 'false',
-      includeSummary: query.includeSummary !== 'false',
-      includeMetadata: query.includeMetadata !== 'false'
+      format: request.query?.format || 'markdown'
     });
 
     if (!result.success) {
       throw result.error;
     }
 
-    const contentType = query.format === 'json' 
-      ? 'application/json' 
-      : 'text/markdown; charset=utf-8';
-    
-    const filename = `voice-note-${request.params.id}.${query.format === 'json' ? 'json' : 'md'}`;
+    const format = request.query?.format || 'markdown';
+    const contentType = format === 'json' ? 'application/json' : 'text/markdown';
+    const extension = format === 'json' ? 'json' : 'md';
     
     return reply
       .header('Content-Type', contentType)
-      .header('Content-Disposition', `attachment; filename="${filename}"`)
+      .header('Content-Disposition', `attachment; filename="voice-note-${request.params.id}.${extension}"`)
       .send(result.data?.content);
+  });
+
+  // Search voice notes
+  fastify.get('/api/voice-notes/search', async (request: any, reply: any) => {
+    const useCase = container.getListVoiceNotesUseCase();
+    const query = request.query || {};
+    
+    const result = await useCase.execute({
+      page: parseInt(query.page) || 1,
+      limit: parseInt(query.limit) || 20,
+      filter: {
+        search: query.q || query.query,
+        status: query.status,
+        language: query.language,
+        tags: query.tags ? query.tags.split(',') : undefined,
+        projects: query.projects ? query.projects.split(',') : undefined
+      },
+      userId: query.userId || 'default-user',
+      sortBy: query.sortBy || 'relevance',
+      sortOrder: query.sortOrder || 'desc'
+    });
+
+    if (!result.success) {
+      throw result.error;
+    }
+
+    return reply.send(result.data);
   });
 }

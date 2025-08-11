@@ -86,7 +86,7 @@ export class ProcessingOrchestrator {
         {
           summaryId: voiceNote.getId().toString(), // Use voice note ID as summary reference
           transcriptionId: voiceNote.getId().toString(), // Use voice note ID as transcription reference
-          model: this.config.get('summarization.defaultModel'),
+          model: this.config.get('summarization.model'),
           provider: this.config.get('summarization.provider')
         }
       );
@@ -163,18 +163,21 @@ export class ProcessingOrchestrator {
     language?: Language
   ): Promise<{ success: boolean; transcription?: Transcription; error?: Error }> {
     try {
-      // Mock transcription for now - in production would read audio file
-      const result = await this.transcriptionService.transcribe(
-        voiceNote.getOriginalFilePath(),
-        language || Language.EN,
-        {}
+      // Read the audio file
+      const fs = require('fs').promises;
+      const audioBuffer = await fs.readFile(voiceNote.getOriginalFilePath());
+      
+      // Pass the buffer and language string to the transcription service
+      const transcriptionText = await this.transcriptionService.transcribe(
+        audioBuffer,
+        language ? language.getValue() : undefined
       );
 
       const transcription = Transcription.create(
-        result.text,
-        result.language,
-        result.duration,
-        result.confidence
+        transcriptionText,
+        language || Language.EN,
+        1, // Duration not available from Whisper API, using 1 as default
+        1.0 // Confidence not available from Whisper API
       );
 
       return { success: true, transcription };
@@ -191,8 +194,9 @@ export class ProcessingOrchestrator {
   ): Promise<{ success: boolean; summary?: Summary; error?: Error }> {
     try {
       const language = transcription.getLanguage();
-      const prompts = this.config.get(`summarization.systemPrompts.${language.toString()}`);
-      const finalSystemPrompt = systemPrompt || prompts.summary;
+      // Get the summary prompt directly, not language-specific
+      const summaryPrompt = this.config.get('summarization.prompts.summary');
+      const finalSystemPrompt = systemPrompt || summaryPrompt;
       const finalUserPrompt = userPrompt || transcription.getText();
 
       // This is a simplified version - the actual LLMAdapter returns SummarizationResult

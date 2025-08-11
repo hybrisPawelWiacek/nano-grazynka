@@ -1,0 +1,82 @@
+{
+  "id": "brave-search",
+  "name": "Brave Search MCP Server",
+  "status": "active",
+  "transports": ["stdio"],
+  "runtime": "node",
+  "deploy": {
+    "kind": "npx",
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-brave-search"]
+  },
+  "envSchema": [
+    {
+      "name": "BRAVE_API_KEY",
+      "description": "Brave Search API key for web and local search",
+      "required": true,
+      "example": "BSA..."
+    }
+  ],
+  "ports": [],
+  "healthCheck": {
+    "command": "echo 'Brave Search MCP server configured'"
+  },
+  "docs": [
+    {
+      "title": "Brave Search MCP Server",
+      "url": "https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search"
+    },
+    {
+      "title": "Brave Search API Documentation",
+      "url": "https://brave.com/search/api/"
+    }
+  ],
+  "useCases": {
+    "generic": [
+      "Privacy-focused web search",
+      "Local business and place searches",
+      "News and current events retrieval",
+      "General information discovery"
+    ],
+    "project": [
+      "Find MCP server documentation and GitHub repos",
+      "Search for implementation examples",
+      "Discover user guides and tutorials",
+      "Research configuration best practices"
+    ]
+  },
+  "prosCons": {
+    "pros": [
+      "Privacy-focused search without tracking",
+      "Supports both web and local search",
+      "Fast response times",
+      "No ads in API responses"
+    ],
+    "cons": [
+      "Requires API key with usage limits",
+      "Less comprehensive than some competitors",
+      "Limited advanced search operators"
+    ]
+  },
+  "agenticUsefulness": {
+    "humanVerificationRating": 2,
+    "aiAgentRating": 3,
+    "ratingRationale": {
+      "human": "Low - Search is primarily an AI task. Humans mainly verify search relevance and results quality.",
+      "agent": "Moderate - Useful alternative to native web search. Good for privacy-conscious searches and when native search is rate-limited."
+    },
+    "bestPractices": [
+      "Use for general web search when privacy matters",
+      "Prefer for local business searches",
+      "Cache search results to avoid repeated API calls",
+      "Combine with Perplexity for comprehensive research"
+    ],
+    "humanRole": "Verify search results relevance, manage API usage and costs",
+    "aiRole": "Execute searches, analyze results, extract relevant information",
+    "integrationSynergies": [
+      "Brave for initial search → Firecrawl for detailed extraction",
+      "Brave for privacy-sensitive searches → Perplexity for deep research",
+      "Brave as fallback when WebSearch is unavailable"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 import { VoiceNoteId } from '../value-objects/VoiceNoteId';
 import { Language } from '../value-objects/Language';
-import { ProcessingStatus } from '../value-objects/ProcessingStatus';
+import { ProcessingStatus, ProcessingStatusValue } from '../value-objects/ProcessingStatus';
 import { Transcription } from './Transcription';
 import { Summary } from './Summary';
 import { 
@@ -79,7 +79,7 @@ export class VoiceNote {
       params.fileSize,
       params.mimeType,
       params.language,
-      ProcessingStatus.PENDING,
+      new ProcessingStatus(ProcessingStatusValue.PENDING),
       params.tags || []
     );
 
@@ -197,10 +197,11 @@ export class VoiceNote {
 
   // Business methods
   startProcessing(): void {
-    if (this.status !== ProcessingStatus.PENDING) {
-      throw new Error('Can only start processing for pending voice notes');
+    const currentStatus = this.status.getValue();
+    if (currentStatus !== ProcessingStatusValue.PENDING && currentStatus !== ProcessingStatusValue.FAILED) {
+      throw new Error('Can only start processing for pending or failed voice notes');
     }
-    this.status = ProcessingStatus.PROCESSING;
+    this.status = new ProcessingStatus(ProcessingStatusValue.PROCESSING);
     this.updatedAt = new Date();
     this.addDomainEvent(new VoiceNoteProcessingStartedEvent(this.id.getValue()));
   }
@@ -234,10 +235,10 @@ export class VoiceNote {
   }
 
   markAsCompleted(): void {
-    if (this.status !== ProcessingStatus.PROCESSING) {
+    if (this.status.getValue() !== ProcessingStatusValue.PROCESSING) {
       throw new Error('Can only mark as completed from processing status');
     }
-    this.status = ProcessingStatus.COMPLETED;
+    this.status = new ProcessingStatus(ProcessingStatusValue.COMPLETED);
     this.errorMessage = undefined;
     this.updatedAt = new Date();
     this.addDomainEvent(new VoiceNoteProcessingCompletedEvent(this.id.getValue(), {
@@ -246,7 +247,7 @@ export class VoiceNote {
   }
 
   markAsFailed(error: string): void {
-    this.status = ProcessingStatus.FAILED;
+    this.status = new ProcessingStatus(ProcessingStatusValue.FAILED);
     this.errorMessage = error;
     this.updatedAt = new Date();
     this.addDomainEvent(new VoiceNoteProcessingFailedEvent(this.id.getValue(), {
@@ -261,10 +262,10 @@ export class VoiceNote {
   }
 
   reprocess(): void {
-    if (this.status === ProcessingStatus.PROCESSING) {
+    if (this.status.getValue() === ProcessingStatusValue.PROCESSING) {
       throw new Error('Cannot reprocess while already processing');
     }
-    this.status = ProcessingStatus.PENDING;
+    this.status = new ProcessingStatus(ProcessingStatusValue.PENDING);
     this.errorMessage = undefined;
     this.updatedAt = new Date();
     this.version += 1;

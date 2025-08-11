@@ -63,7 +63,11 @@ export class GetVoiceNoteUseCase extends UseCase<
     try {
       // Find voice note
       const voiceNoteId = VoiceNoteId.fromString(input.voiceNoteId);
-      const voiceNote = await this.voiceNoteRepository.findById(voiceNoteId);
+      const voiceNote = await this.voiceNoteRepository.findById(
+        voiceNoteId,
+        input.includeTranscription,
+        input.includeSummary
+      );
 
       if (!voiceNote) {
         return {
@@ -97,8 +101,9 @@ export class GetVoiceNoteUseCase extends UseCase<
             id: voiceNote.getId().toString(), // Use voice note ID as reference
             text: transcription.getText(),
             language: transcription.getLanguage().getValue(),
-            timestamps: transcription.getTimestamps(),
-            createdAt: transcription.getCreatedAt()
+            wordCount: transcription.getWordCount(),
+            confidence: transcription.getConfidence(),
+            duration: transcription.getDuration()
           };
         }
       }
@@ -113,7 +118,7 @@ export class GetVoiceNoteUseCase extends UseCase<
             keyPoints: summary.getKeyPoints(),
             actionItems: summary.getActionItems(),
             language: summary.getLanguage().getValue(),
-            createdAt: summary.getCreatedAt()
+            timestamp: summary.getTimestamp()
           };
         }
       }

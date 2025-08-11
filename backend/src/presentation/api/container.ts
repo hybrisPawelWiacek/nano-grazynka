@@ -56,7 +56,7 @@ export class Container {
       this.summarizationService,
       this.voiceNoteRepository,
       this.eventStore,
-      this.config.config!  // Pass the actual config object
+      this.config  // Pass the ConfigLoader instance
     );
   }
   
@@ -84,7 +84,7 @@ export class Container {
       this.voiceNoteRepository,
       this.storageService,
       this.eventStore,
-      this.config.config!  // Pass the actual config object, not the ConfigLoader
+      this.config  // Pass the ConfigLoader instance
     );
   }
   

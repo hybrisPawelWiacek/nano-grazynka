@@ -1,663 +1,328 @@
-# Claude AI Assistant Guidelines for nano-Grazynka Project
+## Date - We are in mid August 2025; 
+
+# AI Collaboration Guide - nano-Grazynka Project
+
+## Agent Personality Configuration
+
+### Main Agent Settings
+**MCP_HELPER_PERSONALITY**: verbosity=3, tone=casual, depth=standard
+**Last Updated**: 2025-08-11
+
+### Personality Dimensions
+- **Verbosity**: 3 (Balanced) - I'll provide moderate detail, not too brief but not overwhelming
+- **Tone**: Casual - Relaxed and informal communication, using contractions and conversational language
+- **Depth**: Standard - Normal conversation flow with appropriate confirmations
+
+### Behavioral Guidelines
+- **Always ask before making significant changes** - I'll check with you before any major modifications
+- **Role**: Main orchestrator for tools and eventually subagents
+- **Communication style**: 
+  - "Let's check out what's in this file..."
+  - "I'll need to update a few things here..."
+  - "Looks like we've got an issue with..."
+  - "Want me to fix that for you?"
+
+### Orchestration Principles
+As the main agent, I will:
+1. **Coordinate tools efficiently** - Use the right tool for each task
+2. **Manage complexity** - Break down complex tasks using TodoWrite
+3. **Maintain context** - Keep track of what we're working on
+4. **Prepare for subagents** - Structure work to eventually delegate to specialized agents
+5. **Stay focused** - Work on what you ask, nothing more
+
+### Decision Rules
+- **Minor changes** (formatting, imports, small fixes): I'll just do them
+- **Significant changes** (new features, refactoring, deletions): I'll ask first
+- **Ambiguous situations**: I'll clarify with you
+- **Error fixes**: I'll explain the issue and proposed solution before fixing
+
+## Quick Navigation
+
+### 📚 Documentation Map
+
+#### Architecture & Design
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [System Architecture](./docs/architecture/ARCHITECTURE.md) | System design & patterns | Understanding system structure |
+| [Database Schema](./docs/architecture/DATABASE.md) | Schema & data models | Database work, queries |
+| [Product Requirements](./docs/architecture/PRD.md) | Product requirements document | Feature planning, scope |
+
+#### Development & Operations
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [Development Guide](./docs/development/DEVELOPMENT.md) | Dev guide & debugging | Setup, testing, troubleshooting |
+| [MCP Playbook](./docs/playbook/MCP_PLAYBOOK.md) | MCP server playbook | Detailed MCP usage examples |
+
+#### API & Testing
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [API Contract](./docs/api/api-contract.md) | API specifications | Frontend-backend integration |
+| [Integration Testing](./docs/testing/integration-testing.md) | Testing guide | E2E testing, Docker testing |
+| [Test Plan](./docs/testing/TEST_PLAN.md) | Test planning & strategy | Test execution planning |
+| [Test Results](./docs/testing/TEST_RESULTS.md) | Latest test results | Review test outcomes |
+
+#### Project Management
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [README.md](./README.md) | Quick start & overview | First time setup, basic usage |
+| [PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) | Progress tracker | Current status, next steps |
 
 ## Project Overview
-nano-Grazynka is a voice note transcription and summarization utility that processes audio files (EN/PL), generates summaries, and extracts action points following strict rules where transcription is the sole source of truth.
 
-## Working with Paweł (Product Manager)
-- I have strong technical understanding but delegate implementation details
-- I value simplicity and MVP-focused development
-- I expect you to make technology/architecture decisions within my requirements
-- I appreciate when you follow best practices (DDD, separation of concerns)
-- I don't want over-engineering or premature optimization
+**nano-Grazynka** is a voice note transcription and summarization utility that:
+- Processes audio files (English/Polish)
+- Generates intelligent summaries with key points and action items  
+- Follows strict rule: transcription is the sole source of truth
+- Built with Domain-Driven Design principles
+- MVP-focused with no unnecessary features
 
-## Key Development Rules
+**Current Status**: Backend complete (Steps 1-6), ready for frontend implementation (Step 7)
 
-### 1. MVP Mindset is Critical
-- Build only what's specified in the PRD
-- No features for hypothetical future needs  
-- Choose boring, proven technology
-- Simplicity > Cleverness
-- If it's not in the PRD, don't build it
+## Working with This Codebase
 
-### 2. Architecture Principles
-- Follow Domain-Driven Design
-- Maintain clear separation of concerns
-- Keep business logic framework-agnostic
-- Use dependency injection appropriately
-- Prefer composition over inheritance
+### Core Philosophy
+- **MVP First**: Build only what's in the PRD, nothing more
+- **Simplicity**: Choose boring technology that works
+- **DDD**: Maintain clean architecture boundaries
+- **No Premature Optimization**: Solve today's problems, not tomorrow's
 
-### 3. Technology Stack (Fixed per PRD)
-```
-Frontend: Next.js (App Router) + TypeScript
-Backend: Node.js with Fastify  
-Database: SQLite via Prisma
-Deployment: Docker Compose
-Testing: Unit + Integration + E2E (Playwright/Puppeteer)
-```
+### Collaboration with Paweł (Product Manager)
+- Strong technical understanding but delegates implementation
+- Values simplicity and pragmatic solutions
+- Expects autonomous technology decisions within requirements
+- Appreciates best practices without over-engineering
 
-### 4. Core Features (MVP Phase)
-- Local file upload only (no cloud storage)
-- Whisper transcription via OpenRouter/OpenAI
-- LLM summarization with configurable prompts
-- Version history for reprocessing
-- Library view with search/filter
-- Export to Markdown
-- EN/PL language support
-
-### 5. What NOT to Build
-- Multi-user authentication
-- Cloud integrations (Google Drive, etc.)
-- Real-time recording
-- Team features
-- Local Whisper runtime
-- Vector search
-- Complex caching layers
-
-### 6. Code Style Guidelines
-- Write clear, readable TypeScript
-- Small, focused functions
-- Descriptive variable names
-- Document complex business logic only
-- Consistent formatting
-- No unnecessary abstractions
-
-### 7. UI/UX Requirements
-- Light theme, minimal colors (no blue/purple)
-- Apple-inspired design
-- To-doist as secondary reference  
-- Keyboard navigation support
-- Basic ARIA accessibility
-
-### 8. Error Handling
-- Use canonical failure message for processing errors
-- Structured logging with trace IDs
-- User-friendly error messages
-- Graceful degradation
-
-### 9. Configuration
-- YAML for user settings
-- .env for secrets
-- All limits/timeouts configurable
-- Clear documentation
-
-### 10. Testing Approach
-- Test critical business logic
-- Integration tests for workflows
-- Stub external services
-- E2E for key user journeys
-
-## Decision Making Framework
-
+### Decision Making Framework
 When making choices, ask:
 1. Is it required by the PRD?
 2. Is it the simplest solution that works?
 3. Does it follow established patterns?
-4. Will it scale to our MVP needs (not beyond)?
+4. Will it scale to MVP needs (not beyond)?
 5. Is it maintainable and clear?
 
-## Communication Style
-- Be concise and direct
-- Explain "why" for non-obvious decisions
-- Suggest simpler alternatives when I over-specify
-- Ask for clarification on ambiguous requirements
-- Focus on implementation, not theory
+## MCP Server Configuration
 
-## File Organization
-```
-/src
-  /domain        # Business logic
-  /infrastructure # External integrations
-  /application   # Use cases
-  /presentation  # UI components
-  /shared        # Common utilities
-```
+### Project-Specific Setup
+**Launch with**: `./claude-mcp-env.sh` (loads project overrides from `.env.mcp`)
 
-## MCP Server Usage Guidelines
-
-### Primary Tool Selection Hierarchy
-When working on this project, follow this tool selection order:
+### Enabled MCP Servers (8 total)
 
 #### 1. Code Navigation & Analysis (PRIMARY: Serena)
 **ALWAYS use Serena MCP first for code exploration:**
 - `get_symbols_overview` - Start here to understand file structure
-- `find_symbol` - Navigate to specific classes/functions/methods
+- `find_symbol` - Navigate to specific classes/functions
 - `find_referencing_symbols` - Analyze impact before changes
 - `search_for_pattern` - Find code patterns across codebase
-- **Fallback**: Use native Read/Grep only for non-code files or quick checks
-
-**Example Workflow:**
-```
-1. serena.get_symbols_overview(file) → Understand structure
-2. serena.find_symbol("ProcessingOrchestrator") → Navigate to class
-3. serena.find_referencing_symbols("ProcessingOrchestrator") → Check usage
-4. Make changes with confidence
-```
 
 #### 2. Persistent Memory (PRIMARY: Memory MCP)
-**Use Memory MCP for all architectural decisions:**
+**Use Memory MCP for all architectural decisions + auto-save:**
 - Store API contract changes
 - Document interface mappings
-- Track breaking changes
-- Persist design decisions
-- Save integration patterns
+- **AUTO-SAVE at 94% context** - Creates CONTEXT_CHECKPOINT
+- Recovery protocol: Search checkpoint → Restore state → Continue
 
-**What to persist:**
-- API endpoint changes
-- Type/interface modifications  
-- Configuration updates
-- Architecture decisions
-- Integration fixes
+#### 3. Complex Planning (MUST USE: Sequential Thinking)
+**Sequential Thinking for deep reasoning:**
+- **MANDATORY for**: Bug root-cause analysis
+- **MANDATORY for**: Feature planning and verification
+- Always use within TodoWrite tasks
+- Document insights in Memory
 
-#### 3. Complex Planning (SYNERGY: TodoWrite + Sequential Thinking)
-**TodoWrite owns task management, Sequential Thinking owns deep reasoning:**
-
-**Regular Mode Pattern:**
-```
-1. TodoWrite → Create task list
-2. Mark task as in_progress
-3. Sequential Thinking → Deep dive into HOW to implement
-4. Execute implementation
-5. Mark task as completed
-```
-
-**Plan Mode Pattern (when user asks for planning):**
-```
-1. Sequential Thinking → Break down complex problem
-2. ExitPlanMode → Transition to execution
-3. TodoWrite → Track execution tasks
-```
-
-**Key Principle:** Sequential Thinking works WITHIN TodoWrite tasks, never replaces them
-
-#### 4. Documentation Research (PRIMARY: Context7 + Perplexity)
+#### 4. Documentation Research (PRIMARY: Context7)
 **Context7 for framework docs:**
-- Next.js 15 documentation
-- Fastify API references
-- Prisma schema guides
-- TypeScript patterns
+- Next.js 15, Fastify, Prisma, TypeScript documentation
+- **Fallback**: Firecrawl when you know the URL but Context7 doesn't have it
 
-**Perplexity for best practices:**
-- Architecture patterns research
-- Security best practices
-- Performance optimization strategies
-- Industry standards
+#### 5. Web Research (PRIMARY: Perplexity)
+**Perplexity for general research:**
+- Best practices and patterns
+- Audio processing techniques
+- Whisper optimization strategies
+- Project context: "nano-grazynka voice transcription MVP"
 
-**Workflow:**
-```
-1. Context7 → Get latest framework docs
-2. Perplexity → Research best practices
-3. Implement with confidence
-```
+#### 6. URL Scraping (FALLBACK: Firecrawl)
+**Firecrawl for specific documentation:**
+- Use ONLY when you know the URL
+- Fallback for Context7
+- NOT for general search (use Perplexity)
 
-#### 5. Web Scraping (PRIMARY: Firecrawl)
-**Use for external documentation:**
-- API documentation not in Context7
-- Blog posts with solutions
-- GitHub issues and discussions
-- Stack Overflow answers
+#### 7. Version Control & Research (GitHub)
+**GitHub MCP for collaboration and research:**
+- **Research**: Analyze public repos (whisper, whisper.cpp)
+- **PRs/Issues**: Use MCP for GitHub-specific features
+- **Local commits**: Use Git CLI via Bash
+- **Rule**: Local ops → Git CLI, Remote ops → GitHub MCP
 
-### Integration Workflows
+#### 8. E2E Testing (Playwright)
+**Playwright for frontend testing:**
+- Test at http://localhost:3100
+- Voice note upload flows
+- Cross-browser testing
 
-#### Feature Implementation Flow
-```
-1. Sequential Thinking → Plan approach (within TodoWrite task)
-2. Context7/Perplexity → Research requirements
-3. Serena → Navigate and understand existing code
-4. Implementation → Make changes
-5. Serena → Verify impact with find_referencing_symbols
-6. Memory → Persist decisions and changes
-```
-
-#### Bug Fix Flow
-```
-1. Serena.search_for_pattern → Locate issue
-2. Serena.find_referencing_symbols → Understand dependencies
-3. Fix implementation
-4. Memory → Document fix and reasoning
-```
-
-#### API Contract Update Flow
-```
-1. Memory → Check existing contracts
-2. Update implementation
-3. Serena → Find all references to update
-4. Memory → Persist new contract
-```
+### BLOCKED Servers
+- **claude-code MCP**: Use native tools (Bash, Read, Write, Edit) instead
+- Not needed: PostgreSQL, Atlassian, LinkedIn, Slack, Notion, Brave Search
 
 ### Tool Selection Rules
+1. **Native Tools First**: Use native Bash/Read/Write, not mcp__claude-code__*
+2. **Serena First**: Always try Serena for code navigation before Read/Grep
+3. **Memory Auto-Save**: Checkpoint at 94% context automatically
+4. **Sequential Thinking Required**: MUST use for bugs and planning
+5. **Research Hierarchy**: Context7 → Firecrawl (with URL) → Perplexity (general)
 
-1. **Serena First Rule**: Always try Serena for code navigation before Read/Grep
-2. **Memory Always Rule**: Always persist architectural changes to Memory
-3. **Research Before Implementation**: Use Context7/Perplexity before implementing new patterns
-4. **TodoWrite for Tracking**: All multi-step tasks go through TodoWrite
-5. **Sequential Thinking for Complexity**: Use within tasks for deep reasoning, not for general planning
+## Critical Cross-MCP Workflows
 
-### Anti-Patterns to Avoid
+### 🔍 Feature Implementation Pattern
+**Servers**: Sequential → Context7 → Serena → Memory → GitHub
+```
+1. Sequential Thinking: Plan implementation approach
+2. Context7: Get framework documentation
+3. Serena: Navigate existing code patterns
+4. Memory: Store architectural decisions
+5. Implement using native tools
+6. GitHub (CLI): Commit with comprehensive message
+```
 
-❌ **DON'T:**
-- Use Read for entire source files (use Serena's symbolic tools)
-- Use Grep for code search (use Serena's search_for_pattern)
-- Use Sequential Thinking for simple task planning (use TodoWrite)
-- Skip Memory when making architectural changes
-- Navigate code without understanding structure first
+### 🐛 Bug Investigation Pattern  
+**Servers**: Serena → Memory → Perplexity → Sequential → GitHub
+```
+1. Serena: Analyze error location semantically
+2. Memory: Check for similar past issues
+3. Perplexity: Research error patterns
+4. Sequential: Synthesize root cause
+5. Fix using native tools
+6. Memory: Document solution for future
+```
 
-✅ **DO:**
-- Start with Serena.get_symbols_overview for new files
-- Use Memory to persist all API/interface changes
-- Use TodoWrite for task management
-- Use Sequential Thinking within complex TodoWrite tasks
-- Research with Context7/Perplexity before implementing patterns
+### 📚 Documentation + Code Pattern
+**Servers**: Context7/Perplexity → GitHub → Serena
+```
+1. Context7: Official docs (or Perplexity for research)
+2. GitHub MCP: Find implementation examples in public repos
+3. Serena: Apply patterns to local codebase
+```
 
-### MCP Server Fallback Strategy
+### 🧪 Testing Verification Pattern
+**Servers**: Docker → Playwright → Memory
+```
+1. Docker: Spin up test environment
+2. Playwright: Run E2E tests
+3. Memory: Store test scenarios that failed/passed
+```
 
-If primary tool fails, follow this fallback order:
-1. **Code Navigation**: Serena → Grep → Read
-2. **Documentation**: Context7 → Perplexity → WebSearch → Firecrawl
-3. **Planning**: TodoWrite + Sequential Thinking → TodoWrite alone
-4. **Memory**: Memory MCP → Create local documentation file
+**For detailed patterns and examples → See [MCP Playbook](./docs/playbook/MCP_PLAYBOOK.md)**
 
-### Integration Points for nano-Grazynka
+## Context Management & Auto-Save
 
-**Critical MCP Usage for This Project:**
-1. **Serena**: Navigate DDD architecture (domain/application/infrastructure)
-2. **Memory**: Track API contracts between frontend/backend
-3. **Context7**: Next.js 15 App Router and Fastify documentation
-4. **Sequential Thinking**: Within tasks for processing pipeline design
-5. **Perplexity**: Research Whisper API and LLM best practices
-
-**Project-Specific Patterns:**
-- Use Serena to navigate between use cases and domain entities
-- Memory stores all interface mappings (frontend ↔ backend)
-- Context7 for Prisma schema and Next.js patterns
-- Sequential Thinking for complex processing orchestration logic
-
-## Context Management & Auto-Save System
-
-### When to Save Context (Triggers)
+### When to Save Context
 Save project state to Memory MCP when:
-1. **Context Warning**: "/compact" message appears or context feels heavy
-2. **Before Major Changes**: Starting new feature or significant refactoring
-3. **Session End**: Before closing or switching projects
-4. **Milestone Completion**: After completing major todos or features
-5. **Context at ~94%**: When approaching auto-compact threshold
+1. Context warning appears
+2. Before major changes
+3. Session end
+4. Milestone completion
+5. Context at ~94%
 
-### Context Save Pattern
-When triggered, automatically save these entities to Memory:
-
-#### 1. PROJECT_STATUS Entity
-```javascript
-{
-  name: "nano-grazynka-status-[timestamp]",
-  entityType: "project-status",
-  observations: [
-    "Current date: [date]",
-    "Active branch: [branch]",
-    "Last completed task: [task]",
-    "Current work focus: [description]",
-    "Pending issues: [list]",
-    "Next planned action: [action]"
-  ]
-}
-```
-
-#### 2. ACTIVE_TODOS Entity
-```javascript
-{
-  name: "nano-grazynka-todos-[timestamp]",
-  entityType: "todo-state",
-  observations: [
-    "Todo #1: [content] - Status: [status]",
-    "Todo #2: [content] - Status: [status]",
-    // ... all active todos from TodoWrite
-  ]
-}
-```
-
-#### 3. TECHNICAL_CONTEXT Entity
-```javascript
-{
-  name: "nano-grazynka-technical-[timestamp]",
-  entityType: "technical-state",
-  observations: [
-    "Files modified: [list]",
-    "API endpoints touched: [list]",
-    "Current errors/issues: [list]",
-    "Dependencies added: [list]",
-    "Configuration changes: [list]"
-  ]
-}
-```
-
-### Auto-Save Command Sequence
-When context is low, execute this sequence:
-```bash
-# 1. Save current TodoWrite state to Memory
-memory.create_entities([project_status, active_todos, technical_context])
-
-# 2. Create relations between entities
-memory.create_relations([
-  {from: "project_status", to: "active_todos", relationType: "has-todos"},
-  {from: "project_status", to: "technical_context", relationType: "uses-tech"}
-])
-
-# 3. Add checkpoint observation to main project entity
-memory.add_observations({
-  entityName: "nano-grazynka-continuation-plan",
-  contents: ["Checkpoint created at [timestamp] due to low context"]
-})
-```
+### Auto-Save Pattern
+Automatically save these entities:
+- PROJECT_STATUS: Current work state
+- ACTIVE_TODOS: TodoWrite state
+- TECHNICAL_CONTEXT: Files modified, errors
 
 ### Recovery After Compaction
-After context compaction, restore by:
-1. `memory.search_nodes("nano-grazynka status todos technical")`
-2. Load most recent checkpoint entities
-3. Restore TodoWrite state from saved todos
+1. Search Memory for recent checkpoint
+2. Load saved entities
+3. Restore TodoWrite state
 4. Continue from last active task
 
-### Manual Trigger Command
-If you notice context getting full, say:
-> "Save context checkpoint to memory"
+## Bug Fixing Protocol
 
-This will trigger the full save sequence above.
+When encountering issues:
+1. **Use Sequential Thinking** - Systematic root cause analysis
+2. **Research Solutions** - Context7 for framework issues, Perplexity for general solutions
+3. **Document the Fix** - Save pattern to Memory for future reference
+4. **Test Thoroughly** - Verify fix doesn't break other functionality
+
+## API Contract-First Development
+
+### Key Rules
+1. **OpenAPI Specification** (`/api-spec.yaml`) is source of truth
+2. All interfaces MUST match specification exactly
+3. No ad-hoc field renaming or format changes
+4. Always test in Docker environment
+
+### Common Patterns
+```typescript
+// ✅ CORRECT: Nested response
+{ voiceNote: { id, title, ... }, message: "Success" }
+
+// ❌ WRONG: Flat response  
+{ id, title, ..., message: "Success" }
+```
+
+### Pre-commit Checklist
+- [ ] API matches `/api-spec.yaml`?
+- [ ] Field names consistent?
+- [ ] Response format nested?
+- [ ] Tested in Docker?
+
+## Quick Reference
+
+### Technology Stack
+- **Backend**: Node.js + Fastify + TypeScript
+- **Frontend**: Next.js 15 + TypeScript  
+- **Database**: SQLite via Prisma
+- **Container**: Docker Compose
+- **AI Services**: OpenAI/OpenRouter
+
+### Ports
+- Frontend: `http://localhost:3100`
+- Backend: `http://localhost:3101`
+
+### Key Commands
+```bash
+# Start application
+docker compose up
+
+# Run tests
+npm test
+
+# Database GUI
+npx prisma studio
+
+# View logs
+docker compose logs -f
+```
+
+### File Structure
+```
+/backend/src
+├── domain/        # Business logic
+├── application/   # Use cases
+├── infrastructure/# External integrations
+└── presentation/  # API layer
+
+/frontend/src
+├── app/          # Next.js App Router
+├── components/   # React components
+├── lib/          # Utilities
+└── types/        # TypeScript definitions
+```
+
+## Where to Find What
+
+| Looking for... | Check... |
+|----------------|----------|
+| System design | [docs/architecture/ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md) |
+| Database schema | [docs/architecture/DATABASE.md](./docs/architecture/DATABASE.md) |
+| Product requirements | [docs/architecture/PRD.md](./docs/architecture/PRD.md) |
+| Development setup | [docs/development/DEVELOPMENT.md](./docs/development/DEVELOPMENT.md) |
+| MCP playbook | [docs/playbook/MCP_PLAYBOOK.md](./docs/playbook/MCP_PLAYBOOK.md) |
+| API endpoints | [docs/api/api-contract.md](./docs/api/api-contract.md) |
+| Testing approach | [docs/testing/integration-testing.md](./docs/testing/integration-testing.md) |
+| Test plan & results | [docs/testing/](./docs/testing/) |
+| Project progress | [docs/PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) |
+| Quick start | [README.md](./README.md) |
 
 ## Remember
+
 This is an MVP. Every line of code should directly support a requirement in the PRD. When in doubt, choose the simpler option.
-
-## API Contract-First Development Rules
-
-### 1. Single Source of Truth
-- **OpenAPI Specification (`/api-spec.yaml`)** is the canonical API contract
-- All frontend-backend interfaces MUST match the specification exactly
-- No ad-hoc field renaming or response format changes
-
-### 2. Documentation Structure
-```
-/api-spec.yaml           # OpenAPI specification (source of truth)
-/docs/api-contract.md    # Human-readable API documentation
-/docs/interface-mapping.md # Frontend-backend type mappings
-/docs/integration-testing.md # Docker & testing guidelines
-```
-
-### 3. Required Validation Steps Before Implementation
-1. **Check API spec first**: `cat /api-spec.yaml` for endpoint definition
-2. **Verify field names**: Use exact names from OpenAPI schema
-3. **Match response format**: Responses must match nested structure
-4. **Test in Docker**: Always verify integration in Docker environment
-
-### 4. Common Interface Patterns
-```typescript
-// ✅ CORRECT: Nested response format
-{
-  voiceNote: { id, title, status, ... },
-  message: "Success"
-}
-
-// ❌ WRONG: Flat response format
-{
-  id, title, status, ...,
-  message: "Success"
-}
-
-// ✅ CORRECT: Field mapping in route handler
-const domainFile = {
-  originalName: formData.filename,  // Map frontend field
-  mimeType: formData.mimetype,      // Map frontend field
-  buffer: await file.toBuffer()
-}
-
-// ❌ WRONG: Direct pass-through without mapping
-const domainFile = formData  // Will fail due to field mismatches
-```
-
-### 5. Pre-commit Checklist
-- [ ] Does API implementation match `/api-spec.yaml`?
-- [ ] Are all field names consistent with specification?
-- [ ] Is response format properly nested?
-- [ ] Does Prisma client generation run in Docker?
-- [ ] Have you tested the full flow in Docker?
-
-### 6. When Adding New Endpoints
-1. **Update `/api-spec.yaml` FIRST**
-2. Generate types from OpenAPI spec
-3. Implement backend following the spec
-4. Implement frontend using generated types
-5. Test end-to-end in Docker environment
-
-### 7. Error Prevention
-- Never rename fields at the route level without updating spec
-- Always wrap single entities in response objects
-- Include `RUN npx prisma generate` in Dockerfiles
-- Test multipart form data handling thoroughly
-
-## Project Progress Report
-
-### Step 1: Initial Setup ✅ COMPLETED
-
-#### Tasks Accomplished:
-1. **Project Scaffolding** ✅
-   - Created monorepo structure with `/frontend` (Next.js) and `/backend` (Fastify)
-   - Set up TypeScript configurations for both services
-   - Initialized package.json with appropriate dependencies
-   - Created proper DDD folder structure in backend
-
-2. **Docker Configuration** ✅
-   - Created `docker-compose.yml` with frontend and backend services
-   - Set up development Dockerfiles with hot reloading
-   - Configured volume mounts for development
-   - Changed ports to 3100 (frontend) and 3101 (backend) to avoid conflicts
-   - SQLite database volume configured at `/data`
-
-3. **YAML Configuration System** ✅
-   - Implemented comprehensive Zod schema for validation
-   - Created ConfigLoader that merges YAML with environment variables
-   - Environment variables properly override YAML settings
-   - Configuration includes all required sections: server, database, transcription, summarization, storage, processing
-   - Default prompts configured for EN/PL support
-
-4. **Observability Hooks** ✅
-   - Created stub implementations for LangSmith and OpenLLMetry
-   - Composite pattern allows multiple providers
-   - Auto-enables based on API key presence in environment
-   - Health check endpoint reports observability status
-
-#### Current Status:
-- Application running successfully via `docker compose up`
-- Frontend accessible at http://localhost:3100
-- Backend health check at http://localhost:3101/health
-- Both observability providers showing as enabled
-- Configuration loaded from `config.yaml` with .env overrides working
-
-#### Key Technical Decisions:
-- Used non-standard ports (3100/3101) to avoid conflicts
-- Chose file-based SQLite for simplicity (as per PRD)
-- Implemented configuration hierarchy: YAML → Environment variables
-- Created stub observability that's ready for real implementation later
-
-### Step 2: Domain Models & Testing Infrastructure ✅ COMPLETED
-
-#### Tasks Accomplished:
-1. **Core Domain Entities** ✅
-   - Created VoiceNote entity with full business logic
-   - Created Transcription entity for storing transcription results
-   - Created Summary entity with sections (summary, key_points, action_items)
-   - All entities follow DDD principles with private constructors and factory methods
-
-2. **Value Objects** ✅
-   - VoiceNoteId: UUID-based identifier with validation
-   - Language: Enum-based value object supporting EN/PL
-   - ProcessingStatus: Status tracking (pending, processing, completed, failed)
-   - All value objects are immutable with proper equality checks
-
-3. **Domain Events** ✅
-   - Created base DomainEvent interface and BaseDomainEvent class
-   - Implemented all voice note lifecycle events:
-     - VoiceNoteUploadedEvent
-     - VoiceNoteProcessingStartedEvent
-     - VoiceNoteTranscribedEvent
-     - VoiceNoteSummarizedEvent
-     - VoiceNoteProcessingCompletedEvent
-     - VoiceNoteProcessingFailedEvent
-     - VoiceNoteReprocessedEvent
-
-4. **Repository Interfaces** ✅
-   - VoiceNoteRepository with pagination and filtering support
-   - EventStore for domain event persistence
-   - Interfaces are framework-agnostic following DDD principles
-
-5. **Prisma Schema Setup** ✅
-   - Configured SQLite database at /data/nano-grazynka.db
-   - Created all necessary tables: VoiceNote, Transcription, Summary, Event
-   - Added proper indexes for performance
-   - Set up cascade deletes for data integrity
-   - Added Prisma scripts to package.json
-
-6. **Testing Infrastructure** ✅
-   - Set up Jest with TypeScript support (ts-jest)
-   - Created comprehensive test suite for all domain models
-   - Achieved 100% test coverage for value objects
-   - Achieved 85% test coverage for domain entities
-   - All 49 tests passing successfully
-   - Added npm scripts for testing (test, test:watch, test:coverage)
-
-#### Key Technical Decisions:
-- Used CUID for primary keys (better than UUIDs for SQLite)
-- JSON storage for tags and event payloads (SQLite doesn't have native arrays)
-- Separate Event table for event sourcing capability
-- Indexes on commonly queried fields (userId, status, dates)
-- Jest for testing framework (simple, well-supported, TypeScript-friendly)
-
-### Step 3: Infrastructure Layer ✅ COMPLETED
-
-#### Tasks Accomplished:
-1. **Database Client Setup** ✅
-   - Created Prisma client singleton to manage database connections
-   - Configured with proper logging for development mode
-   - Ensures single database connection instance
-
-2. **Repository Implementations** ✅
-   - VoiceNoteRepositoryImpl with full CRUD operations
-   - Implements pagination with proper offset calculations
-   - Handles complex queries with filtering and search
-   - Proper transaction handling for related entities
-   - EventStoreImpl for domain event persistence
-   - JSON serialization for event payloads
-
-3. **External Service Adapters** ✅
-   - WhisperAdapter for OpenAI/OpenRouter transcription
-   - LLMAdapter for summarization with configurable models
-   - LocalStorageAdapter for file system operations
-   - All adapters implement proper error handling
-
-4. **Observability Integration** ✅
-   - LangSmithObservabilityProvider with trace tracking
-   - OpenLLMetryObservabilityProvider for metrics
-   - CompositeObservabilityProvider to support multiple providers
-   - Auto-enables based on API key presence
-
-5. **Integration Tests** ✅
-   - Comprehensive test coverage for repositories
-   - Mocked Prisma client for database operations
-   - All 13 infrastructure tests passing
-   - Total of 67 tests passing across the backend
-
-#### Key Technical Decisions:
-- Used transactions for saving related entities (VoiceNote + Transcription + Summary)
-- JSON serialization for arrays in SQLite (tags, keyPoints, actionItems)
-- Stub implementations for external services ready for real integration
-- Composite pattern for observability to support multiple providers
-- Proper separation between domain interfaces and infrastructure implementations
-
-### Step 4: Application Layer ✅ COMPLETED
-
-#### Tasks Accomplished:
-1. **Base Abstractions** ✅
-   - UseCase abstract class for all use cases
-   - Result type for consistent error handling
-   - Application-specific error types (ValidationError, NotFoundError, etc.)
-
-2. **Core Use Cases** ✅
-   - UploadVoiceNoteUseCase: File validation, storage, entity creation
-   - ProcessVoiceNoteUseCase: Full processing pipeline orchestration
-   - GetVoiceNoteUseCase: Retrieve with transcriptions/summaries
-   - ListVoiceNotesUseCase: Search, filter, paginate library
-   - DeleteVoiceNoteUseCase: Cascade delete with file cleanup
-   - ReprocessVoiceNoteUseCase: New LLM run with version tracking
-   - ExportVoiceNoteUseCase: Generate Markdown/JSON exports
-
-3. **ProcessingOrchestrator** ✅
-   - Coordinates complete processing pipeline
-   - Transcription → Classification → Summarization flow
-   - Handles reprocessing with new prompts
-   - Implements canonical failure handling
-   - Manages domain events at each stage
-
-4. **Key Features Implemented** ✅
-   - File validation (formats, size limits)
-   - Automatic title extraction from filenames
-   - Language detection and mirroring
-   - Project classification using GPT-5-nano
-   - System prompt templating with variables
-   - Version tracking for reprocessing
-   - Export to Markdown with proper formatting
-
-#### Key Technical Decisions:
-- Dependency injection for all services
-- Transactional boundaries in use cases
-- Domain events emitted for state changes
-- Result pattern for explicit error handling
-- Separation between orchestration and business logic
-
-### Step 5: API Layer ✅ COMPLETED
-
-#### Tasks Accomplished:
-1. **Middleware Setup** ✅
-   - Error handler middleware with structured error responses
-   - Request/response logging with trace IDs
-   - CORS configuration for cross-origin requests
-   - Rate limiting (100 requests per minute)
-   - Multipart form data handling for file uploads
-
-2. **Dependency Injection Container** ✅
-   - Singleton container pattern
-   - Manages all service instances
-   - Provides dependency resolution
-   - Lazy initialization of services
-
-3. **API Routes Implementation** ✅
-   - Health check endpoints (/health, /ready)
-   - Voice note CRUD operations
-   - File upload endpoint with validation
-   - Processing trigger endpoint
-   - Reprocessing endpoint
-   - Export endpoint (Markdown/JSON)
-   - Search and filter endpoints
-
-4. **Request/Response DTOs** ✅
-   - Input validation schemas (removed Zod due to Fastify incompatibility)
-   - Consistent response formats
-   - Error response standardization
-   - Pagination metadata in responses
-
-5. **Fixed Critical Issues** ✅
-   - Fixed ProcessingOrchestrator compilation errors (method names, event store interface)
-   - Fixed use case compilation errors (value object ID access)
-   - Fixed configuration loading and validation
-   - Fixed Fastify schema validation incompatibility
-   - Fixed repository implementation to match domain interfaces
-   - Fixed Prisma relation names (transcriptions/summaries plural)
-   - Added proper error handling for all routes
-
-#### Key Technical Decisions:
-- Removed Zod schema validation from routes (Fastify expects JSON Schema)
-- Used Result pattern for consistent error handling
-- Implemented proper repository interface alignment
-- Fixed domain entity method calls (addTranscription vs setTranscription)
-
-#### Current Status:
-- Backend API server running successfully on port 3101
-- All endpoints operational and tested
-- Health check shows database connected and observability enabled
-- Ready for frontend integration
-
-### Next Steps:
-Ready to proceed to Step 6 - Frontend Implementation (Next.js UI) when requested.

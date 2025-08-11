@@ -30,36 +30,49 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
             language: transcription.getLanguage().toString(),
             confidence: transcription.getConfidence() || 0,
             duration: transcription.getDuration() || 0,
-            wordCount: transcription.getWordCount()
+            wordCount: transcription.getWordCount(),
+            timestamp: transcription.getTimestamp() || new Date()
           },
           update: {
             text: transcription.getText(),
             language: transcription.getLanguage().toString(),
             confidence: transcription.getConfidence() || 0,
             duration: transcription.getDuration() || 0,
-            wordCount: transcription.getWordCount()
+            wordCount: transcription.getWordCount(),
+            timestamp: transcription.getTimestamp() || new Date()
           }
         });
       }
 
       if (voiceNote.getSummary()) {
         const summary = voiceNote.getSummary()!;
+        
+        // Get the transcription ID from the database
+        const transcription = await tx.transcription.findUnique({
+          where: { voiceNoteId: data.id }
+        });
+        
+        if (!transcription) {
+          throw new Error('Cannot save summary without a transcription');
+        }
+        
         await tx.summary.upsert({
           where: { voiceNoteId: data.id },
           create: {
             voiceNoteId: data.id,
+            transcriptionId: transcription.id,
             summary: summary.getSummary(),
-            keyPoints: summary.getKeyPoints(),
-            actionItems: summary.getActionItems(),
-            category: summary.getCategory() || null,
-            sentiment: summary.getSentiment() || null
+            keyPoints: JSON.stringify(summary.getKeyPoints()),
+            actionItems: JSON.stringify(summary.getActionItems()),
+            language: summary.getLanguage().getValue(),
+            timestamp: summary.getTimestamp() || new Date()
           },
           update: {
             summary: summary.getSummary(),
-            keyPoints: summary.getKeyPoints(),
-            actionItems: summary.getActionItems(),
-            category: summary.getCategory() || null,
-            sentiment: summary.getSentiment() || null
+            keyPoints: JSON.stringify(summary.getKeyPoints()),
+            actionItems: JSON.stringify(summary.getActionItems()),
+            language: summary.getLanguage().getValue(),
+            timestamp: summary.getTimestamp() || new Date()
           }
         });
       }
@@ -74,8 +87,8 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
     const result = await this.prisma.voiceNote.findUnique({
       where: { id: id.toString() },
       include: {
-        transcriptions: includeTranscription || false,
-        summaries: includeSummary || false
+        transcriptions: true,  // Always include transcriptions
+        summaries: true        // Always include summaries
       }
     });
 
@@ -284,8 +297,9 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       const transcription = Transcription.create(
         latestTranscription.text,
         Language.fromString(latestTranscription.language),
-        latestTranscription.confidence || undefined,
-        latestTranscription.duration || undefined
+        latestTranscription.duration || 1,  // duration is required, use 1 as default
+        latestTranscription.confidence || 0.0,  // confidence defaults to 0.0
+        latestTranscription.timestamp
       );
       voiceNote.addTranscription(transcription);
     }
@@ -294,10 +308,10 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       const latestSummary = data.summaries[data.summaries.length - 1];
       const summary = Summary.create(
         latestSummary.summary,
-        latestSummary.keyPoints || [],
-        latestSummary.actionItems || [],
-        latestSummary.category || undefined,
-        latestSummary.sentiment || undefined
+        JSON.parse(latestSummary.keyPoints || '[]'),
+        JSON.parse(latestSummary.actionItems || '[]'),
+        Language.fromString(latestSummary.language),
+        latestSummary.timestamp
       );
       voiceNote.addSummary(summary);
     }

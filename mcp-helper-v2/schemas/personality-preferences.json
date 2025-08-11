@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Helper Personality Preferences",
+  "description": "User preferences for MCP Helper interaction style",
+  "type": "object",
+  "properties": {
+    "verbosity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Level of detail in responses (1=minimal, 5=comprehensive)",
+      "default": 3
+    },
+    "tone": {
+      "type": "string",
+      "enum": ["professional", "friendly", "casual", "technical", "mentoring"],
+      "description": "Communication style",
+      "default": "friendly"
+    },
+    "depth": {
+      "type": "string",
+      "enum": ["quick", "balanced", "thorough"],
+      "description": "Amount of context and explanation",
+      "default": "balanced"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When preferences were last modified"
+    }
+  },
+  "required": ["verbosity", "tone", "depth"],
+  "additionalProperties": false
+}

@@ -1,0 +1,174 @@
+{
+  "id": "memory",
+  "name": "Official MCP Memory Server",
+  "status": "active",
+  "transports": ["stdio"],
+  "runtime": "docker",
+  "deploy": {
+    "kind": "docker",
+    "image": "mcp/memory",
+    "command": "docker",
+    "args": ["run", "-i", "-v", "claude-memory:/app/dist", "--rm", "mcp/memory"]
+  },
+  "envSchema": [],
+  "ports": [],
+  "healthCheck": {
+    "command": "docker volume inspect claude-memory > /dev/null 2>&1 && echo 'Memory volume exists' || echo 'Memory volume missing'"
+  },
+  "docs": [
+    {
+      "title": "MCP Memory Server",
+      "url": "https://github.com/modelcontextprotocol/servers/tree/main/src/memory"
+    },
+    {
+      "title": "MCP Documentation",
+      "url": "https://modelcontextprotocol.io"
+    }
+  ],
+  "useCases": {
+    "generic": [
+      "Persistent storage of KNOWLEDGE GRAPHS (not markdown notes)",
+      "Creating entities with typed relationships",
+      "Cross-project context that persists globally",
+      "Building semantic networks of interconnected knowledge"
+    ],
+    "project": [
+      "Track entities and relationships (NOT project files)",
+      "Store structured metadata with relations",
+      "Remember decisions as graph nodes with connections",
+      "Maintain global context (use Serena for project-specific notes)"
+    ]
+  },
+  "differenceFromSerena": {
+    "critical": "Memory MCP is a KNOWLEDGE GRAPH system, Serena memory is PROJECT MARKDOWN files",
+    "memoryMCP": {
+      "type": "Knowledge graph with entities and relations",
+      "scope": "Global across all projects",
+      "structure": "Entities with observations and typed relationships",
+      "persistence": "Docker volume at ~/mcp-data/memory/",
+      "query": "Graph traversal and semantic search"
+    },
+    "serenaMemory": {
+      "type": "Simple markdown files (.md)",
+      "scope": "Project-specific (per activated project)",
+      "structure": "Free-form markdown documents",
+      "persistence": "Local .serena folder in project",
+      "query": "List and read specific files"
+    },
+    "whenToUseEach": {
+      "useMemoryMCP": [
+        "Building knowledge graphs with relationships",
+        "Tracking entities across multiple projects",
+        "Creating semantic networks of information",
+        "Storing structured, queryable knowledge"
+      ],
+      "useSerenaMemory": [
+        "Saving project-specific code patterns",
+        "Documenting architectural decisions for THIS project",
+        "Quick markdown notes about the current codebase",
+        "Project-specific refactoring strategies"
+      ]
+    },
+    "synergyPattern": "Use Memory MCP for structured knowledge graphs, Serena for project markdown documentation"
+  },
+  "prosCons": {
+    "pros": [
+      "Official MCP implementation",
+      "Persistent storage with Docker volumes",
+      "Graph-based knowledge representation",
+      "No external API dependencies"
+    ],
+    "cons": [
+      "Requires Docker to be installed",
+      "Limited to local storage",
+      "No built-in backup mechanism"
+    ]
+  },
+  "toolSelectionProtocol": {
+    "primaryUse": [
+      "ALWAYS save project state at milestones",
+      "Store design decisions and rationale",
+      "Track completed work and progress",
+      "Remember user preferences and context"
+    ],
+    "preferOverNative": [
+      "Use for persistent storage across sessions",
+      "Use instead of comments for decision tracking",
+      "Use to maintain context between conversations"
+    ],
+    "mandatory": [
+      "Save state when closing session",
+      "Save after completing major features",
+      "Save important discoveries or decisions",
+      "AUTO-SAVE when context reaches 94% capacity (6% remaining)",
+      "Create checkpoint before auto-compaction at 95%"
+    ]
+  },
+  "advancedCapabilities": [
+    "Graph-based knowledge representation with entities and relations",
+    "Semantic search across stored memories",
+    "Observation-based entity tracking",
+    "Persistent storage with Docker volumes at ~/mcp-data/memory/",
+    "Multiple storage backends (local, cloud)",
+    "Automatic context maintenance across sessions",
+    "Knowledge graph visualization capabilities",
+    "Auto-save on low context (6% remaining) via hooks integration",
+    "Context-aware state preservation before auto-compaction",
+    "Checkpoint creation and restoration for context recovery"
+  ],
+  "contextManagement": {
+    "autoSaveCapability": "Integrates with Claude Code hooks to automatically save state when context window reaches 94% capacity (6% remaining)",
+    "implementation": {
+      "preCompactHook": "Triggers automatic state save before context compaction at 95% capacity",
+      "stateCapture": [
+        "Current project status and progress",
+        "Active to-dos and work items",
+        "Important decisions and findings",
+        "Checkpoint for post-compaction restoration"
+      ],
+      "hookConfiguration": {
+        "event": "PreCompact or UserPromptSubmit",
+        "triggerThreshold": "94% context usage",
+        "action": "Execute save_state_script.py to store critical context"
+      }
+    },
+    "monitoringOptions": [
+      "MCP Token Monitor for usage tracking",
+      "Custom hooks for threshold detection",
+      "Manual checkpoint commands in CLAUDE.md"
+    ],
+    "recoveryStrategy": "After auto-compaction, query stored memories to restore working context and continue seamlessly"
+  },
+  "integrationPatterns": {
+    "knowledgeBuilding": "Serena discovers → Memory stores → Future sessions leverage",
+    "decisionTracking": "Sequential Thinking reasons → Memory persists → Decisions auditable",
+    "contextMaintenance": "Session ends → Memory saves state → Next session restores context",
+    "researchCaching": "Perplexity/Context7 research → Memory caches → Avoid repeated lookups"
+  },
+  "agenticUsefulness": {
+    "humanVerificationRating": 3,
+    "aiAgentRating": 5,
+    "ratingRationale": {
+      "human": "Moderate - Provides audit trail of AI decisions and progress. Humans can review what the agent remembered and why, helping validate its context understanding.",
+      "agent": "Essential - Enables persistent context across sessions. Critical for maintaining project state, tracking decisions, and avoiding repeated work. Extends effective context window."
+    },
+    "bestPractices": [
+      "Save project state at every major milestone",
+      "Create knowledge graph of entities and relationships",
+      "Store design decisions with rationale",
+      "Query memory before starting new sessions",
+      "Configure hooks for auto-save at 94% context usage",
+      "Create checkpoint commands in CLAUDE.md for manual saves",
+      "Use with Token Monitor to track context consumption",
+      "Restore from checkpoint after auto-compaction events"
+    ],
+    "humanRole": "Review stored memories to understand AI's context and decisions",
+    "agentRole": "Persistent knowledge base - MANDATORY for session continuity",
+    "integrationSynergies": [
+      "Sequential Thinking decisions get persisted",
+      "Serena discoveries about codebase get saved",
+      "Perplexity/Context7 research gets cached",
+      "GitHub PR/issue context gets maintained"
+    ]
+  }
+}

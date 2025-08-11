@@ -5,7 +5,7 @@ import { DomainEvent } from '../../domain/events/DomainEvent';
 export class EventStoreImpl implements EventStore {
   constructor(private prisma: PrismaClient) {}
 
-  async save(event: DomainEvent): Promise<void> {
+  async append(event: DomainEvent): Promise<void> {
     await this.prisma.event.create({
       data: {
         eventId: event.eventId,
@@ -17,19 +17,43 @@ export class EventStoreImpl implements EventStore {
     });
   }
 
-  async findByAggregateId(aggregateId: string): Promise<DomainEvent[]> {
+  async getEvents(aggregateId: string): Promise<DomainEvent[]> {
     const events = await this.prisma.event.findMany({
       where: { aggregateId },
       orderBy: { occurredAt: 'asc' }
     });
 
     return events.map(e => ({
+      eventId: e.eventId,
       aggregateId: e.aggregateId,
       eventType: e.eventType,
-      payload: e.eventData as any,
-      occurredAt: e.occurredAt,
-      userId: e.userId
+      payload: JSON.parse(e.payload as string),
+      occurredAt: e.occurredAt
     }));
+  }
+
+  async getAllEvents(fromDate?: Date): Promise<DomainEvent[]> {
+    const events = await this.prisma.event.findMany({
+      where: fromDate ? { occurredAt: { gte: fromDate } } : undefined,
+      orderBy: { occurredAt: 'asc' }
+    });
+
+    return events.map(e => ({
+      eventId: e.eventId,
+      aggregateId: e.aggregateId,
+      eventType: e.eventType,
+      payload: JSON.parse(e.payload as string),
+      occurredAt: e.occurredAt
+    }));
+  }
+
+  // Legacy methods for backward compatibility
+  async save(event: DomainEvent): Promise<void> {
+    return this.append(event);
+  }
+
+  async findByAggregateId(aggregateId: string): Promise<DomainEvent[]> {
+    return this.getEvents(aggregateId);
   }
 
   async findByEventType(eventType: string, limit?: number): Promise<DomainEvent[]> {
@@ -40,11 +64,11 @@ export class EventStoreImpl implements EventStore {
     });
 
     return events.map(e => ({
+      eventId: e.eventId,
       aggregateId: e.aggregateId,
       eventType: e.eventType,
-      payload: e.eventData as any,
-      occurredAt: e.occurredAt,
-      userId: e.userId
+      payload: JSON.parse(e.payload as string),
+      occurredAt: e.occurredAt
     }));
   }
 }

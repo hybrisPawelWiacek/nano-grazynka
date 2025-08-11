@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Launch Claude Code with project-specific MCP server environment
+# Makes local overrides take precedence over global settings
+
+# Load global environment variables first (if they exist)
+if [ -f ~/.claude-env ]; then
+    source ~/.claude-env
+fi
+
+# Override with project-specific environment variables
+if [ -f .env.mcp ]; then
+    source .env.mcp
+else
+    echo "Warning: .env.mcp not found. Create it from the template:"
+    echo "  cp /path/to/mcp-helper-v2/configurations/templates/.env.mcp.template .env.mcp"
+    echo "  Then edit .env.mcp with your project-specific values"
+fi
+
+# Launch Claude Code with the combined environment
+exec claude "$@"

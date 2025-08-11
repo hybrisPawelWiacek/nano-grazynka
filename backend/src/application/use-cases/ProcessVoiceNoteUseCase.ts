@@ -2,10 +2,12 @@ import { UseCase } from '../base/UseCase';
 import { Result, NotFoundError, ProcessingError } from '../base/Result';
 import { VoiceNoteRepository } from '../../domain/repositories/VoiceNoteRepository';
 import { VoiceNoteId } from '../../domain/value-objects/VoiceNoteId';
+import { Language } from '../../domain/value-objects/Language';
 import { ProcessingOrchestrator } from '../services/ProcessingOrchestrator';
 
 export interface ProcessVoiceNoteInput {
   voiceNoteId: string;
+  language?: string;
   userPrompt?: string;
 }
 
@@ -49,25 +51,30 @@ export class ProcessVoiceNoteUseCase extends UseCase<
       }
 
       // Process the voice note
-      const result = await this.processingOrchestrator.processVoiceNote(
+      const processedVoiceNote = await this.processingOrchestrator.processVoiceNote(
         voiceNote,
-        input.userPrompt
+        input.language ? Language.fromString(input.language) : undefined
       );
 
-      if (!result.success) {
+      // Check if processing was successful
+      if (processedVoiceNote.getStatus().getValue() === 'failed') {
         return {
           success: false,
-          error: result.error || new ProcessingError('Processing failed')
+          error: new ProcessingError(processedVoiceNote.getErrorMessage() || 'Processing failed')
         };
       }
 
+      // Get the transcription and summary IDs
+      const transcription = processedVoiceNote.getTranscription();
+      const summary = processedVoiceNote.getSummary();
+      
       return {
         success: true,
         data: {
-          voiceNoteId: voiceNote.getId().getValue(),
-          status: voiceNote.getStatus().getValue(),
-          transcriptionId: result.transcription?.getId(),
-          summaryId: result.summary?.getId()
+          voiceNoteId: processedVoiceNote.getId().getValue(),
+          status: processedVoiceNote.getStatus().getValue(),
+          transcriptionId: transcription ? processedVoiceNote.getId().getValue() : undefined,
+          summaryId: summary ? processedVoiceNote.getId().getValue() : undefined
         }
       };
     } catch (error) {

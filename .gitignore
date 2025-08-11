@@ -13,6 +13,7 @@ lerna-debug.log*
 .env.development
 .env.test
 .env.production
+.env.mcp
 
 # Next.js
 frontend/.next/
@@ -79,3 +80,4 @@ temp/
 
 # Memory files (context management)
 .serena/memories/
+.memory/

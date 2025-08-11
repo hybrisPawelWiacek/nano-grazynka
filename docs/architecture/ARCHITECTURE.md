@@ -1,0 +1,314 @@
+# System Architecture
+
+## Overview
+
+nano-Grazynka is a voice note transcription and summarization system built with Domain-Driven Design (DDD) principles. The system processes audio files through a pipeline that includes transcription, language detection, and intelligent summarization.
+
+## High-Level Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │
+│   Next.js UI    │────▶│  Fastify API    │
+│   (Port 3100)   │     │   (Port 3101)   │
+│                 │     │                 │
+└─────────────────┘     └────────┬────────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    │                         │
+              ┌─────▼──────┐         ┌───────▼────────┐
+              │             │         │                │
+              │   SQLite    │         │  External APIs │
+              │  Database   │         │  (OpenAI/LLM)  │
+              │             │         │                │
+              └─────────────┘         └────────────────┘
+```
+
+## Domain-Driven Design Implementation
+
+### Layer Architecture
+
+```
+/backend/src
+├── domain/              # Core Business Logic (Pure)
+│   ├── entities/       # Business Entities
+│   ├── value-objects/  # Immutable Values
+│   ├── events/         # Domain Events
+│   └── repositories/   # Repository Interfaces
+│
+├── application/        # Use Cases & Orchestration
+│   ├── use-cases/     # Business Operations
+│   └── services/      # Process Coordination
+│
+├── infrastructure/     # External Dependencies
+│   ├── persistence/   # Database Implementation
+│   ├── external/      # Third-party APIs
+│   └── storage/       # File System
+│
+└── presentation/      # API Layer
+    ├── routes/        # HTTP Endpoints
+    └── middleware/    # Cross-cutting Concerns
+```
+
+### Layer Responsibilities
+
+#### Domain Layer
+- **Purpose**: Contains pure business logic with no external dependencies
+- **Components**:
+  - **Entities**: VoiceNote, Transcription, Summary - mutable objects with identity
+  - **Value Objects**: Language, ProcessingStatus, VoiceNoteId - immutable values
+  - **Domain Events**: State change notifications for event-driven architecture
+  - **Repository Interfaces**: Contracts for data persistence (no implementation)
+- **Key Principle**: Framework-agnostic, testable in isolation
+
+#### Application Layer
+- **Purpose**: Orchestrates use cases and coordinates domain operations
+- **Components**:
+  - **Use Cases**: Single business operations (Upload, Process, Export, etc.)
+  - **ProcessingOrchestrator**: Coordinates the transcription → summarization pipeline
+  - **Result Type**: Explicit error handling without exceptions
+- **Key Principle**: Transaction boundaries, dependency injection
+
+#### Infrastructure Layer
+- **Purpose**: Implements interfaces and handles external dependencies
+- **Components**:
+  - **Prisma Repositories**: Database persistence implementation
+  - **WhisperAdapter**: OpenAI Whisper API integration
+  - **LLMAdapter**: Language model integration for summarization
+  - **LocalStorageAdapter**: File system operations
+- **Key Principle**: Adapters and implementations of domain contracts
+
+#### Presentation Layer
+- **Purpose**: HTTP API and request/response handling
+- **Components**:
+  - **Fastify Routes**: RESTful endpoints
+  - **Middleware**: Error handling, logging, CORS, rate limiting
+  - **Dependency Container**: Service composition and injection
+- **Key Principle**: Thin layer, delegates to application layer
+
+## Data Flow
+
+### Voice Note Processing Pipeline
+
+```
+1. File Upload
+   └─> Presentation: Multipart form handling
+       └─> Application: UploadVoiceNoteUseCase
+           └─> Domain: VoiceNote.create()
+               └─> Infrastructure: Save file & entity
+
+2. Processing Trigger
+   └─> Application: ProcessVoiceNoteUseCase
+       └─> ProcessingOrchestrator.process()
+           ├─> Transcription: WhisperAdapter → OpenAI API
+           ├─> Classification: LLMAdapter → Categorization
+           └─> Summarization: LLMAdapter → Summary generation
+
+3. Status Transitions
+   pending → processing → completed/failed
+   (Each transition emits domain events)
+```
+
+## Design Patterns
+
+### 1. Repository Pattern
+- **Purpose**: Abstract data access from domain logic
+- **Implementation**: Interfaces in domain, implementations in infrastructure
+- **Benefit**: Testability and database independence
+
+### 2. Factory Pattern
+- **Purpose**: Controlled entity creation with validation
+- **Implementation**: Private constructors with static factory methods
+- **Example**: `VoiceNote.create()`, `Summary.create()`
+
+### 3. Value Object Pattern
+- **Purpose**: Represent concepts without identity
+- **Implementation**: Immutable objects with equality by value
+- **Example**: `Language`, `ProcessingStatus`, `VoiceNoteId`
+
+### 4. Domain Events
+- **Purpose**: Decouple state changes from side effects
+- **Implementation**: Events emitted on state transitions
+- **Use Case**: Audit logging, future webhook notifications
+
+### 5. Result Pattern
+- **Purpose**: Explicit error handling without exceptions
+- **Implementation**: `Result<T, E>` type with success/failure states
+- **Benefit**: Forced error handling, better type safety
+
+### 6. Dependency Injection
+- **Purpose**: Loose coupling and testability
+- **Implementation**: Constructor injection with container
+- **Benefit**: Easy mocking, clear dependencies
+
+### 7. Unit of Work (via Transactions)
+- **Purpose**: Ensure data consistency
+- **Implementation**: Prisma transactions for related entities
+- **Example**: Saving VoiceNote with Transcription and Summary
+
+## Technology Stack
+
+### Backend
+- **Runtime**: Node.js 20+ with TypeScript
+- **Framework**: Fastify (high performance, schema validation)
+- **Database**: SQLite via Prisma ORM
+- **Testing**: Jest with ts-jest
+
+### Frontend
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State**: React hooks and context
+
+### Infrastructure
+- **Containerization**: Docker & Docker Compose
+- **File Storage**: Local filesystem (MVP phase)
+- **API Integration**: OpenAI/OpenRouter for AI services
+
+## Processing Pipeline Details
+
+### 1. Transcription
+- **Service**: OpenAI Whisper API
+- **Languages**: English, Polish (auto-detected)
+- **Output**: Plain text transcription with confidence score
+
+### 2. Classification
+- **Service**: GPT-4/Claude for categorization
+- **Purpose**: Identify project/context from transcription
+- **Output**: Project tag for organization
+
+### 3. Summarization
+- **Service**: Configurable LLM (GPT-4/Claude)
+- **Components**:
+  - Executive summary
+  - Key points extraction
+  - Action items identification
+- **Language**: Mirrors transcription language
+
+## Security Considerations
+
+### Current Implementation (MVP)
+- Single-user system (no authentication)
+- Local file storage
+- API keys in environment variables
+- CORS configured for local development
+- Rate limiting (100 req/min)
+
+### Future Considerations
+- JWT authentication for multi-user
+- Encrypted file storage
+- API key rotation
+- HTTPS in production
+- Input sanitization
+
+## Performance Metrics
+
+### Target Performance
+- **File Upload**: < 100ms response
+- **Transcription**: 2-3s for 30s audio
+- **Summarization**: 1-2s processing
+- **Total Pipeline**: < 5s end-to-end
+- **Database Queries**: < 10ms single entity
+
+### Optimization Strategies
+- Database indexes on frequently queried fields
+- File streaming for large uploads
+- Async processing with status polling
+- Connection pooling for database
+- Caching for repeated operations (future)
+
+## Scalability Considerations
+
+### Current Limitations (MVP)
+- Single SQLite database
+- Local file storage
+- Synchronous processing
+- No horizontal scaling
+
+### Future Scaling Path
+- PostgreSQL for concurrent access
+- S3/CloudStorage for files
+- Queue-based async processing
+- Microservice decomposition
+- Load balancing
+
+## Error Handling Strategy
+
+### Canonical Failure Message
+```
+"Processing failed. Please try again or contact support if the issue persists."
+```
+
+### Error Categories
+1. **Validation Errors**: User input issues
+2. **Processing Errors**: Transcription/summarization failures
+3. **System Errors**: Database/filesystem issues
+4. **External Service Errors**: API failures
+
+### Error Recovery
+- Automatic retries for transient failures
+- Graceful degradation for non-critical features
+- Comprehensive logging with trace IDs
+- User-friendly error messages
+
+## Event-Driven Architecture
+
+### Domain Events
+```typescript
+VoiceNoteUploadedEvent
+VoiceNoteProcessingStartedEvent
+VoiceNoteTranscribedEvent
+VoiceNoteSummarizedEvent
+VoiceNoteProcessingCompletedEvent
+VoiceNoteProcessingFailedEvent
+VoiceNoteReprocessedEvent
+```
+
+### Future Event Usage
+- Webhook notifications
+- Real-time UI updates via WebSocket
+- Audit logging
+- Analytics and metrics
+- Workflow automation
+
+## Configuration Management
+
+### Configuration Hierarchy
+1. `config.yaml` - Default settings
+2. `.env` - Environment overrides
+3. Runtime parameters - Dynamic configuration
+
+### Configurable Elements
+- API endpoints and keys
+- Model selection (GPT-4, Claude, etc.)
+- File size limits
+- Timeout values
+- System prompts
+- Language settings
+
+## Monitoring & Observability
+
+### Current Implementation
+- Health check endpoints
+- Structured logging with trace IDs
+- LangSmith integration (when configured)
+- OpenLLMetry support (when configured)
+
+### Metrics to Track
+- Processing success/failure rates
+- API response times
+- Transcription accuracy
+- User engagement metrics
+- Resource utilization
+
+## Testing Strategy
+
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for detailed testing approach.
+
+## API Documentation
+
+See [api-contract.md](./api-contract.md) for complete API specifications.
+
+## Database Schema
+
+See [DATABASE.md](./DATABASE.md) for schema details and relationships.

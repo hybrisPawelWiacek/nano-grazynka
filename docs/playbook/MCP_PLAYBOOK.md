@@ -1,8 +1,29 @@
-# MCP Server Best Practices for nano-grazynka
+# MCP Playbook for nano-grazynka
+
+> **Note:** This playbook extends the MCP configuration in [CLAUDE.md](/CLAUDE.md) with practical examples and workflows.
+> CLAUDE.md is the source of truth for configuration; this document provides implementation guidance.
 
 ## Project-Specific MCP Usage Guidelines
 
-This document outlines how to effectively use MCP servers for developing nano-grazynka, your voice note transcription and summarization MVP.
+This playbook shows how to effectively use MCP servers for developing nano-grazynka, your voice note transcription and summarization MVP.
+
+## 🚫 Do's and Don'ts
+
+### ✅ DO's
+1. **DO use Serena before Read/Grep** - 37% faster, reads only necessary symbols
+2. **DO use Context7 first** - Official docs prevent hallucination
+3. **DO use Memory for patterns** - Store solutions to avoid solving twice
+4. **DO use Sequential Thinking for complex tasks** - Break down before executing
+5. **DO check GitHub for examples** - Learn from public implementations
+6. **DO batch MCP operations** - Multiple searches in parallel when possible
+
+### ❌ DON'Ts
+1. **DON'T use Read for code exploration** - Use Serena's semantic navigation
+2. **DON'T use Grep for symbol search** - Use Serena's find_symbol
+3. **DON'T use GitHub MCP for local commits** - Use Git CLI via Bash
+4. **DON'T use Perplexity when you have URLs** - Use Firecrawl directly
+5. **DON'T skip root cause analysis** - Always use Sequential Thinking for bugs
+6. **DON'T solve same problem twice** - Check Memory first
 
 ## 🎯 Core Development Servers
 
@@ -149,7 +170,7 @@ firecrawl.scrape("https://todoist.com/features")
 
 ## 🧪 Testing Servers
 
-### 8. Puppeteer (E2E Testing)
+### 8. Playwright (E2E Testing)
 **When to use:**
 - Testing file upload flows
 - Verifying transcription status updates
@@ -159,15 +180,73 @@ firecrawl.scrape("https://todoist.com/features")
 **Test scenarios for nano-grazynka:**
 ```javascript
 // Test voice note upload
-puppeteer.navigate("http://localhost:3100")
-puppeteer.fill("#file-input", "test-audio.mp3")
-puppeteer.click("#upload-btn")
-puppeteer.wait_for("Processing complete")
+playwright.browser_navigate("http://localhost:3100")
+playwright.browser_type("#file-input", "test-audio.mp3")
+playwright.browser_click("#upload-btn")
+playwright.browser_wait_for("Processing complete")
 
 // Test reprocessing
-puppeteer.click(".voice-note-item")
-puppeteer.click("#reprocess-btn")
-puppeteer.screenshot("reprocessing-state")
+playwright.browser_click(".voice-note-item")
+playwright.browser_click("#reprocess-btn")
+playwright.browser_take_screenshot("reprocessing-state")
+```
+
+## 🔄 Advanced Cross-Server Patterns
+
+### Pattern 1: Knowledge Retrieval + Execution
+**Use Case**: Implementing new framework feature
+**Servers**: Context7 → GitHub → Serena → Memory
+
+```yaml
+Workflow:
+  1. Context7.get_library_docs("/vercel/next.js", topic="server-actions")
+  2. GitHub.search_code("server actions implementation repo:vercel/next.js")
+  3. Serena.find_symbol("ActionHandler") # Apply pattern locally
+  4. Memory.create_entity("ServerActionPattern", observations=[...])
+  
+Why This Works:
+  - Context7 provides official spec
+  - GitHub shows real implementation
+  - Serena applies to your codebase
+  - Memory prevents re-learning
+```
+
+### Pattern 2: Dual Memory Strategy
+**Use Case**: Project-specific patterns vs global knowledge
+**Servers**: Memory MCP + Serena Memory
+
+```yaml
+Global Knowledge (Memory MCP):
+  - Entity: "WhisperAPIPattern"
+  - Relations: "uses" → "OpenRouter", "handles" → "AudioFiles"
+  - Observations: ["25MB limit", "Supports EN/PL"]
+
+Project Notes (Serena Memory):
+  - File: "audio_processing_decisions.md"
+  - Content: "We chose chunking strategy X because..."
+  
+Usage:
+  - Query Memory MCP for: "How does Whisper API work?"
+  - Query Serena Memory for: "Why did we choose this approach?"
+```
+
+### Pattern 3: Bug Root Cause Analysis
+**Use Case**: Complex production bug
+**Servers**: Serena → Sequential → Perplexity → GitHub → Memory
+
+```yaml
+Phase 1 - Local Analysis:
+  1. Serena.get_symbols_overview(error_file)
+  2. Serena.find_referencing_symbols("problematic_function")
+  3. Sequential.think("What could cause this error?")
+
+Phase 2 - External Research:  
+  4. Perplexity.ask("Production bug: [error] in Node.js Fastify")
+  5. GitHub.search_code("error message repo:fastify/fastify")
+  
+Phase 3 - Solution:
+  6. Sequential.synthesize("Best fix given our constraints")
+  7. Memory.create_entity("BugFix-[ID]", solution_pattern)
 ```
 
 ## 📋 Workflow Patterns
@@ -179,7 +258,7 @@ puppeteer.screenshot("reprocessing-state")
 4. **Document** with Memory (decisions/patterns)
 5. **Reference** with Context7 (framework docs)
 6. **Implement** using native tools
-7. **Test** with Puppeteer (E2E scenarios)
+7. **Test** with Playwright (E2E scenarios)
 8. **Commit** with GitHub (version control)
 
 ### Bug Investigation Workflow
@@ -187,7 +266,7 @@ puppeteer.screenshot("reprocessing-state")
 2. **Think** with Sequential Thinking (root cause)
 3. **Research** with Perplexity (known issues)
 4. **Fix** using native tools
-5. **Test** with Puppeteer
+5. **Test** with Playwright
 6. **Track** with GitHub (issue/PR)
 
 ### Performance Optimization Workflow
@@ -218,21 +297,70 @@ puppeteer.screenshot("reprocessing-state")
 1. Use Serena's symbolic tools instead of reading entire files
 2. Cache Context7 documentation lookups in Memory
 3. Batch GitHub operations when possible
-4. Reuse Puppeteer sessions for multiple tests
+4. Reuse Playwright sessions for multiple tests
 5. Store Perplexity research findings in Memory
+
+## 🎨 Server Synergies
+
+### Power Combinations
+
+#### 🧠 "The Thinker" Combo
+**Sequential + Memory + Perplexity**
+- Plan complex tasks
+- Store insights
+- Research best practices
+
+#### 🔍 "The Explorer" Combo  
+**Serena + GitHub + Context7**
+- Navigate local code
+- Find external examples
+- Verify against docs
+
+#### 🧪 "The Validator" Combo
+**Playwright + Memory**
+- Run tests
+- Store failing scenarios
+- Track test patterns
+
+#### 📚 "The Researcher" Combo
+**Perplexity + Firecrawl + Memory**
+- Broad research
+- Deep extraction
+- Knowledge persistence
 
 ## 🚀 Quick Reference
 
-| Task | Primary Server | Fallback |
-|------|---------------|----------|
-| Find code | Serena | Native Grep |
-| Get docs | Context7 | Firecrawl |
-| Store context | Memory | Local files |
-| Research | Perplexity | Firecrawl |
-| Complex planning | Sequential Thinking | Manual breakdown |
-| Version control | GitHub | Native git |
-| E2E testing | Puppeteer | Playwright |
-| Code editing | Native tools | - |
-| File operations | Native tools | - |
+### Primary → Fallback Chains
+
+| Task | Primary | Fallback 1 | Fallback 2 |
+|------|---------|------------|------------|
+| Find code locally | Serena | Native Grep | Native Read |
+| Get framework docs | Context7 | Firecrawl (with URL) | Perplexity |
+| Store knowledge | Memory MCP | Serena Memory | Local files |
+| Web research | Perplexity | Firecrawl | - |
+| Complex planning | Sequential | Manual breakdown | - |
+| Public repo search | GitHub MCP | Perplexity | - |
+| Local git ops | Git CLI | - | - |
+| E2E testing | Playwright | - | - |
+| Code editing | Native tools | - | - |
+
+### Decision Tree
+
+```
+Need to understand code?
+├─ Local code? → Serena
+├─ Public repo? → GitHub MCP
+└─ Framework docs? → Context7
+
+Need to research?
+├─ Have URL? → Firecrawl
+├─ Need synthesis? → Perplexity
+└─ Need examples? → GitHub MCP
+
+Need to remember?
+├─ Global knowledge? → Memory MCP
+├─ Project notes? → Serena Memory
+└─ Quick note? → Local file
+```
 
 Remember: This is an MVP. Use MCP servers to accelerate development, not to over-engineer. Focus on shipping working features that match the PRD requirements.

@@ -58,7 +58,7 @@ export class UploadVoiceNoteUseCase extends UseCase<
     private readonly voiceNoteRepository: VoiceNoteRepository,
     private readonly storageService: StorageService,
     private readonly eventStore: EventStore,
-    private readonly config: Config
+    private readonly config: any  // ConfigLoader instance
   ) {
     super();
   }
@@ -149,12 +149,13 @@ export class UploadVoiceNoteUseCase extends UseCase<
     }
 
     // Check file size
-    const maxSize = this.config.transcription.maxFileSizeMB * 1024 * 1024;
+    const maxSizeMB = this.config.get('transcription.maxFileSizeMB');
+    const maxSize = maxSizeMB * 1024 * 1024;
     if (file.size > maxSize) {
       return {
         success: false,
         error: new ValidationError(
-          `File size exceeds maximum allowed size of ${this.config.transcription.maxFileSizeMB}MB`
+          `File size exceeds maximum allowed size of ${maxSizeMB}MB`
         )
       };
     }

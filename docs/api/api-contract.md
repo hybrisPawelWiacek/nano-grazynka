@@ -347,3 +347,13 @@ Allowed origins in development:
 
 Allowed methods: `GET, POST, PUT, DELETE, OPTIONS`
 Allowed headers: `Content-Type, Authorization, X-Trace-Id`
+
+## Known Issues
+
+### Issue #1: Missing Transcription/Summary in API Response
+- **Endpoint**: GET /api/voice-notes/:id
+- **Status**: Active (as of 2025-08-11)
+- **Description**: Transcription and summary data are successfully saved to database but not returned in API response
+- **Impact**: Frontend cannot display transcription or summary content
+- **Workaround**: Data exists in database and can be retrieved directly
+- **Fix**: Update GetVoiceNoteUseCase to properly include relations when fetching

@@ -41,6 +41,7 @@ model Transcription {
   language        String
   duration        Float
   confidence      Float    @default(0.0)
+  wordCount       Int      @default(0)
   timestamp       DateTime @default(now())
 
   voiceNote       VoiceNote @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)

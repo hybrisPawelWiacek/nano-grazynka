@@ -1,0 +1,157 @@
+# CLAUDE.md - Project MCP Configuration
+
+This file documents the MCP servers configured for this project and how to use them.
+
+## Configured MCP Servers
+
+### Essential Servers
+- **serena** - Semantic code navigation and analysis (37% faster than grep)
+- **sequentialthinking** - Complex problem planning
+- **memory** - Persistent context across sessions
+
+### Development Tools
+- **github-official** - GitHub integration
+- **context7** - Framework documentation
+- **firecrawl** - Web scraping
+
+### Research & Discovery
+- **perplexity-ask** - Deep research
+- **brave-search** - Web search
+
+### Collaboration (if configured)
+- **slack** - Team communication
+- **notion** - Documentation
+- **atlassian** - Jira/Confluence
+
+### Data (if configured)
+- **postgres** - Database operations
+
+## Subagent Configuration
+
+### Configured Subagents
+[Configure specialized AI assistants with tailored MCP protocols]
+
+#### Example: Backend Architect
+- **Type**: Code Development
+- **Description**: Specializes in backend architecture and API design
+- **MCP Protocol**:
+  - Primary: serena, github-official, sequential-thinking
+  - Fallback: grep, web-search
+  - Restricted: None
+- **Performance**: Serena 3x faster for code navigation
+
+### Organizational Pattern
+Choose your team structure:
+- **Role-Based**: Agents grouped by function (backend, frontend, QA)
+- **Technology-Based**: Agents specialized in specific stacks
+- **Hierarchical**: Lead agents coordinate specialist teams
+
+### Creating Subagents
+To create or configure subagents, say:
+- "I want to create a new subagent"
+- "Help me configure MCP protocols for my agents"
+- "I need to assemble a subagent team"
+
+## Launch Instructions
+
+Always start Claude Code using the project launcher:
+```bash
+./claude-mcp-env.sh
+```
+
+This ensures project-specific configurations override global settings.
+
+## Environment Variables
+
+Project-specific overrides are in `.env.mcp`:
+- `GITHUB_PAT` - Project GitHub token
+- `POSTGRES_CONNECTION_STRING` - Project database
+- `PERPLEXITY_API_KEY` - Project API key
+- `SERENA_PROJECT_PATH` - Project directory for Serena
+- See `.env.mcp` for complete list
+
+## Usage Examples
+
+### Code Navigation (Serena)
+```
+Using serena, find all React components in this project
+Using serena, show me the implementation of the auth module
+Using serena, search for MCP configurations
+```
+
+### Planning (Sequential Thinking)
+```
+Using sequentialthinking, plan the implementation of user authentication
+Using sequentialthinking, break down this complex refactoring task
+Using sequentialthinking, design our subagent architecture
+```
+
+### Research (Perplexity)
+```
+Using perplexity, research best practices for React state management
+Using perplexity, find solutions for this error message
+Using perplexity, research MCP server integration patterns
+```
+
+### GitHub Operations
+```
+Using github, create a pull request for the current branch
+Using github, search for issues related to authentication
+Using github, check for MCP server updates
+```
+
+### Memory Operations
+```
+Using memory, save our architecture decisions
+Using memory, recall our API design patterns
+Using memory, track subagent configurations
+```
+
+## MCP Protocol Performance Notes
+
+- **Serena**: 37% faster than native grep for code navigation
+- **Parallel Execution**: Multiple MCP servers can run simultaneously
+- **Smart Caching**: Memory server reduces redundant operations
+- **Fallback Chains**: Automatic failover prevents single points of failure
+- **Tool Hierarchy**: Primary tools tried first, then fallbacks
+
+## Project-Specific Notes
+
+[Add any project-specific configuration notes here]
+
+## Troubleshooting
+
+If servers aren't available:
+1. Exit Claude Code
+2. Source environment: `./claude-mcp-env.sh`
+3. Check servers: `/mcp list`
+4. Verify environment variables are set
+
+For subagent issues:
+1. Verify MCP servers are configured: `/mcp list`
+2. Check subagent definition in this file
+3. Ensure primary tools are available
+4. Test fallback chains if primaries fail
+
+## Configuration Scope
+
+- **Global servers**: Available in all projects (see `~/.claude.json`)
+- **Local overrides**: Project-specific (see `.env.mcp`)
+- **Precedence**: Local overrides global when using `./claude-mcp-env.sh`
+- **Subagents**: Defined per-project in this CLAUDE.md file
+
+## Quick Reference
+
+### MCP Helper Commands
+- `/mcp list` - List all available MCP servers
+- `/mcp test <server>` - Test specific server connection
+
+### Subagent Management
+- Create new subagent configurations
+- Optimize MCP protocols for existing agents
+- Assemble coordinated teams
+- Test agent performance
+
+---
+*MCP Helper V2 - Conversational Framework*
+*Subagent Configuration System v1.0*
