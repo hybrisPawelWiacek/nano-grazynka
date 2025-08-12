@@ -69,6 +69,12 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
       // Get user or sessionId (from fields or header)
       const user = request.user;
       const sessionId = fields.sessionId || (request.headers['x-session-id'] as string);
+      console.log('[UPLOAD] Session info:', {
+        hasUser: !!user,
+        sessionIdFromFields: fields.sessionId,
+        sessionIdFromHeader: request.headers['x-session-id'],
+        finalSessionId: sessionId
+      });
       let anonymousSession = (request as any).anonymousSession;
       
       // Must have either user or sessionId

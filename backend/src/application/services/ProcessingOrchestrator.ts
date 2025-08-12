@@ -2,6 +2,7 @@ import { VoiceNote } from '../../domain/entities/VoiceNote';
 import { Transcription } from '../../domain/entities/Transcription';
 import { Summary } from '../../domain/entities/Summary';
 import { Language } from '../../domain/value-objects/Language';
+import { ProcessingStatusValue } from '../../domain/value-objects/ProcessingStatus';
 import { VoiceNoteRepository } from '../../domain/repositories/VoiceNoteRepository';
 import { EventStore } from '../../domain/repositories/EventStore';
 import { TranscriptionService } from '../../domain/services/TranscriptionService';
@@ -122,16 +123,24 @@ export class ProcessingOrchestrator {
     _language?: Language
   ): Promise<VoiceNote> {
     try {
-      // Must have transcription to reprocess
+      // Must have transcription to generate/regenerate summary
       const transcription = voiceNote.getTranscription();
       if (!transcription) {
-        throw new Error('Cannot reprocess without transcription');
+        throw new Error('Cannot generate summary without transcription');
       }
 
-      voiceNote.reprocess();
-      await this.voiceNoteRepository.save(voiceNote);
+      // Check current status to determine if this is initial generation or regeneration
+      const currentStatus = voiceNote.getStatus();
+      const isInitialGeneration = currentStatus !== ProcessingStatusValue.COMPLETED;
+      
+      // Only update status if not already completed (for initial generation after skip)
+      if (isInitialGeneration) {
+        voiceNote.reprocess();
+        voiceNote.startProcessing(); // Transition from PENDING to PROCESSING
+        await this.voiceNoteRepository.save(voiceNote);
+      }
 
-      // Re-run summarization with new prompts
+      // Generate or regenerate summarization with prompts
       const summaryResult = await this.performSummarization(
         voiceNote,
         transcription,
@@ -142,19 +151,27 @@ export class ProcessingOrchestrator {
       if (!summaryResult.success) {
         return await this.handleProcessingFailure(
           voiceNote,
-          summaryResult.error || new Error('Reprocessing failed')
+          summaryResult.error || new Error('Summary generation failed')
         );
       }
 
       voiceNote.addSummary(summaryResult.summary!);
-      voiceNote.markAsCompleted();
+      
+      // Only mark as completed if this was initial generation
+      if (isInitialGeneration) {
+        voiceNote.markAsCompleted();
+      }
       
       await this.voiceNoteRepository.save(voiceNote);
+      
+      const eventReason = isInitialGeneration 
+        ? 'User requested initial summary generation'
+        : 'User requested summary regeneration with new prompts';
       
       const reprocessedEvent = new VoiceNoteReprocessedEvent(
         voiceNote.getId().toString(),
         {
-          reason: 'User requested reprocessing with new prompts',
+          reason: eventReason,
           customPrompt: userPrompt
         }
       );

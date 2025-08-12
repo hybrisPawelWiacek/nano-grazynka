@@ -286,10 +286,6 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
   }
 
   private fromDatabase(data: any): VoiceNote {
-    // Debug logging
-    console.log('fromDatabase data.status:', data.status);
-    console.log('fromDatabase data.language:', data.language);
-    
     const status = ProcessingStatus.fromString(data.status);
     const language = Language.fromString(data.language);
     

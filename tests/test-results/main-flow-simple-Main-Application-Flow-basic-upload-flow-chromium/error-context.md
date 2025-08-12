@@ -1,0 +1,41 @@
+# Page snapshot
+
+```yaml
+- banner:
+  - heading "nano-Grażynka" [level=1]
+  - navigation:
+    - text: "Free uses: 5 / 5 remaining No sign-up required!"
+    - link "Login":
+      - /url: /login
+    - link "Sign Up":
+      - /url: /register
+- main:
+  - heading "Voice Note Transcription & Summarization" [level=2]
+  - paragraph: Upload your voice recording and get an AI-powered transcription and summary
+  - text: Select Audio File
+  - img
+  - paragraph: Click to upload or drag and drop
+  - paragraph: MP3, M4A, WAV up to 100MB
+  - button "Click to upload or drag and drop MP3, M4A, WAV up to 100MB"
+  - text: Language
+  - button "Auto-detect"
+  - button "English"
+  - button "Polish"
+  - button "Advanced Options"
+  - button "Upload and Process" [disabled]
+  - heading "Try it free - no signup required!" [level=4]
+  - list:
+    - listitem: ✓ 5 free transcriptions remaining
+    - listitem: ✓ Full quality AI transcription & summary
+    - listitem: ✓ No credit card required
+  - img
+  - heading "High-Quality Transcription" [level=3]
+  - paragraph: Powered by OpenAI Whisper for accurate voice-to-text conversion
+  - img
+  - heading "Smart Summaries" [level=3]
+  - paragraph: AI-generated key points, action items, and insights
+  - img
+  - heading "Real-Time Status" [level=3]
+  - paragraph: Track processing progress with live status updates
+- alert
+```

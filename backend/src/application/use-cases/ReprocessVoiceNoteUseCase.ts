@@ -85,7 +85,7 @@ export class ReprocessVoiceNoteUseCase extends UseCase<
         data: {
           voiceNoteId: voiceNote.getId().getValue(),
           status: result.getStatus().getValue(),
-          summaryId: result.getSummary()?.getId() || '',
+          summaryId: result.getSummary() ? result.getId().getValue() : '',
           version: result.getVersion()
         }
       };

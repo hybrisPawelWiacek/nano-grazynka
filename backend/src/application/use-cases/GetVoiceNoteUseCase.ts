@@ -15,6 +15,7 @@ export interface GetVoiceNoteInput {
 export interface GetVoiceNoteOutput {
   id: string;
   userId: string;
+  sessionId?: string;  // Add sessionId field
   title: string;
   originalFilePath?: string;
   fileSize: number;
@@ -80,6 +81,7 @@ export class GetVoiceNoteUseCase extends UseCase<
       const output: GetVoiceNoteOutput = {
         id: voiceNote.getId().toString(),
         userId: voiceNote.getUserId(),
+        sessionId: voiceNote.getSessionId(),  // Include sessionId
         title: voiceNote.getTitle(),
         originalFilePath: voiceNote.getOriginalFilePath(),
         fileSize: voiceNote.getFileSize(),

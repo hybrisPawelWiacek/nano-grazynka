@@ -117,9 +117,17 @@ export default function HomePage() {
 
     try {
       // Upload file
+      const uploadHeaders: Record<string, string> = {};
+      
+      // Add x-session-id header for anonymous users
+      if (isAnonymous && anonymousSessionId) {
+        uploadHeaders['x-session-id'] = anonymousSessionId;
+      }
+      
       const uploadResponse = await fetch('http://localhost:3101/api/voice-notes', {
         method: 'POST',
         credentials: 'include',
+        headers: uploadHeaders,
         body: formData
       });
 
@@ -135,12 +143,19 @@ export default function HomePage() {
       setStatus({ stage: 'processing', progress: 40, message: 'Processing audio file...' });
       
       // Start processing
+      const processHeaders: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      
+      // Add x-session-id header for anonymous users
+      if (isAnonymous && anonymousSessionId) {
+        processHeaders['x-session-id'] = anonymousSessionId;
+      }
+      
       const processResponse = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}/process`, {
         method: 'POST',
         credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: processHeaders,
         body: JSON.stringify(
           language === 'AUTO' 
             ? {} 
@@ -161,8 +176,16 @@ export default function HomePage() {
       const pollInterval = 2000; // 2 seconds
 
       const pollForCompletion = async () => {
+        const statusHeaders: Record<string, string> = {};
+        
+        // Add x-session-id header for anonymous users
+        if (isAnonymous && anonymousSessionId) {
+          statusHeaders['x-session-id'] = anonymousSessionId;
+        }
+        
         const statusResponse = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}?includeTranscription=true&includeSummary=true`, {
-          credentials: 'include'
+          credentials: 'include',
+          headers: statusHeaders
         });
 
         if (!statusResponse.ok) {
