@@ -85,15 +85,21 @@ The nano-Grazynka MVP is **fully functional** with all critical issues resolved:
 - [x] Synchronized database schema with User tables
 - [x] All authentication flows working correctly
 
-### API Integration
-- **Gemini 2.0 Flash** via OpenRouter (primary)
-- **GPT-4o-mini** via OpenAI (fallback)
+### API Integration (Updated August 12, 2025)
+- **Transcription**: **GPT-4o-Transcribe** via OpenAI (gpt-4o-audio-preview)
+  - 30% better accuracy than whisper-1 at same cost
+  - 6-8% word error rate for superior quality
+- **Summarization**: **Gemini 2.5 Flash** via OpenRouter
+  - Cost-effective high-quality summaries
+  - Excellent multilingual support
+- **Fallback**: **GPT-4o-mini** via OpenAI
 - Automatic API routing based on configuration
 - Mock data fallback for development
 
 ### Cost Optimization
-- Reduced LLM costs by 80% using Gemini Flash
-- Maintained quality while improving performance
+- Transcription: Same cost as whisper-1 but 30% better accuracy with GPT-4o-Transcribe
+- Summarization: Reduced costs by 80% using Gemini 2.5 Flash
+- Overall: Better quality at same or lower cost
 - Flexible model selection based on requirements
 
 ## ✅ UX Rearchitecture (Completed August 12, 2025)

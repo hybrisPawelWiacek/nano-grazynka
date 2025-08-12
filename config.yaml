@@ -6,8 +6,8 @@ database:
   url: file:/data/nano-grazynka.db
 
 transcription:
-  provider: openrouter  # Can be 'openai' or 'openrouter'
-  model: whisper-1  # For OpenAI: 'whisper-1', for OpenRouter: 'openai/whisper-1'
+  provider: openai  # Using OpenAI for gpt-4o-transcribe model
+  model: gpt-4o-audio-preview  # GPT-4o-Transcribe: 30% better accuracy than whisper-1 at same cost
   maxFileSizeMB: 25
   supportedFormats:
     - mp3

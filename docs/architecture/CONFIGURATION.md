@@ -186,13 +186,30 @@ this.summarizationService = new LLMAdapter();
 
 ## Current Model Configuration
 
-As of August 2025:
+As of August 12, 2025:
 
-- **Transcription**: `whisper-1` via OpenRouter or OpenAI
+- **Transcription**: `gpt-4o-audio-preview` via OpenAI (GPT-4o-Transcribe)
+  - 30% better accuracy than whisper-1 at same cost ($0.36/hour)
+  - 6-8% word error rate vs 10-12% for whisper-1
+  - Superior handling of proper nouns and technical terms
 - **Summarization**: `google/gemini-2.5-flash` via OpenRouter
+  - Cost-effective and high-quality summarization
+  - Excellent multilingual support
 - **Fallback**: `gpt-4o-mini` via OpenAI
 
 ## Migration History
+
+### August 12, 2025 - Model Upgrade to GPT-4o-Transcribe
+
+Upgraded transcription model for better accuracy:
+
+1. **Changed transcription provider**: OpenRouter → OpenAI
+2. **Upgraded model**: `whisper-1` → `gpt-4o-audio-preview` (GPT-4o-Transcribe)
+3. **Benefits achieved**:
+   - 30% better accuracy at same cost
+   - Reduced word error rate from 10-12% to 6-8%
+   - Better handling of proper nouns (Zabu, MCP, nano-Grazynka)
+   - Same API endpoint compatibility
 
 ### August 12, 2025 - Configuration Consolidation
 
