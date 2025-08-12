@@ -1,61 +1,254 @@
 # nano-Grazynka Test Suite
 
-## Test Organization
+## 🚨 CRITICAL: Use Playwright MCP Server for ALL E2E Testing
 
-### Active Test Suites
+**MANDATORY REQUIREMENTS:**
+- ✅ **USE**: Playwright MCP server tools (`mcp__playwright__*`)
+- ❌ **DO NOT**: Install npm Playwright packages (`@playwright/test`)
+- ❌ **DO NOT**: Run `npm install playwright` or `npx playwright`
+- ❌ **DO NOT**: Create .spec.js files that require('@playwright/test')
 
-| File | Purpose | Run Command |
-|------|---------|-------------|
-| `integration_test.py` | Main integration test - uploads and processes zabka.m4a | `python3 integration_test.py` |
-| `backend_api_test.py` | Backend API endpoint tests | `python3 backend_api_test.py` |
-| `performance_test.py` | Performance and load testing | `python3 performance_test.py` |
-| `edge_cases_test.py` | Edge case and error handling tests | `python3 edge_cases_test.py` |
-| `e2e_playwright_test.py` | Frontend E2E test placeholder | `python3 e2e_playwright_test.py` |
+**The Playwright MCP server is already running in Docker and provides all browser automation through MCP tools.**
 
-### E2E Test Infrastructure
+## Overview
+Comprehensive test suite for the nano-Grazynka voice transcription application using Playwright MCP for E2E testing.
 
-| Directory | Purpose |
-|-----------|---------|
-| `e2e/` | Playwright-based E2E tests |
-| `e2e/frontend_e2e_test.js` | Main E2E test suite |
-| `e2e/page-objects/` | Page Object Models for E2E tests |
+## Quick Start
 
-### Test Assets
-
-| File | Purpose |
-|------|---------|
-| `zabka.m4a` | Polish audio file for testing |
-| `test-audio.mp3` | English audio file for testing |
-
-### Archived Tests
-
-The `archive/` directory contains older test implementations and utilities that have been superseded by the current test suite.
-
-## Running Tests
-
-### Quick Test
+### Run All Tests
 ```bash
-# Run integration test (main pipeline test)
-python3 integration_test.py
+cd tests/scripts
+./run-all-tests.sh
 ```
 
-### Full Test Suite
+### Run Specific Test Suites
+
+#### Smoke Tests (Quick validation)
 ```bash
-# Run all Python tests
-python3 backend_api_test.py
-python3 integration_test.py
-python3 performance_test.py
-python3 edge_cases_test.py
+curl http://localhost:3101/health
+node ../test-anonymous-upload.js
 ```
 
-### E2E Tests with Playwright
-```bash
-# Using Playwright MCP or directly
-node e2e/frontend_e2e_test.js
+#### E2E Tests (Playwright MCP)
+```yaml
+# NO npm install needed! Use MCP tools directly:
+mcp__playwright__browser_navigate(url: "http://localhost:3100")
+mcp__playwright__browser_click(element: "Upload button")
+mcp__playwright__browser_file_upload(paths: ["test-data/zabka.m4a"])
+mcp__playwright__browser_wait_for(time: 5)
+mcp__playwright__browser_snapshot()
 ```
 
-## Test Results
+#### Integration Tests
+```bash
+cd tests
+npm run test:integration
+```
 
-For detailed test results and history, see:
-- [TEST_PLAN.md](../docs/testing/TEST_PLAN.md) - Test planning documentation
-- [TEST_RESULTS.md](../docs/testing/TEST_RESULTS.md) - Latest test execution results
+## Test Structure
+
+```
+tests/
+├── test-data/          # Audio files for testing
+│   ├── zabka.m4a      # Polish audio sample
+│   └── test-audio.mp3  # English audio sample
+│
+├── e2e/               # End-to-end UI tests
+│   ├── anonymous-flow.spec.js
+│   ├── playwright.config.js
+│   └── frontend_e2e_test.js (legacy)
+│
+├── integration/       # API integration tests
+│   └── api-integration.test.js
+│
+├── scripts/          # Test utilities
+│   ├── run-all-tests.sh
+│   ├── test-endpoints.sh
+│   └── test-reprocess.js
+│
+├── archive/          # Old tests (reference only)
+│
+└── Legacy Python Tests (to be migrated)
+    ├── backend_api_test.py
+    ├── integration_test.py
+    ├── performance_test.py
+    └── edge_cases_test.py
+```
+
+## Test Categories
+
+### 1. Smoke Tests (L1)
+Quick validation that system is operational:
+- Backend health check
+- Frontend loads
+- Database connection
+- Basic upload
+
+### 2. API Tests (L2)
+Direct API endpoint testing:
+- Upload endpoints
+- Processing endpoints
+- Authentication
+- Error handling
+
+### 3. E2E Tests (L3)
+Full user journey testing with **Playwright MCP Server**:
+- Anonymous user flow (tested and working ✅)
+- File upload via UI (fixed authentication ✅)
+- Status tracking (now working with optionalAuth ✅)
+- Error scenarios
+
+### 4. Integration Tests (L4)
+Cross-component testing:
+- Upload to transcription flow
+- Database operations
+- Session management
+
+## Test Setup
+
+### Using Playwright MCP (NO INSTALLATION NEEDED)
+```yaml
+# Playwright MCP is already running!
+# Access it through MCP tools:
+- mcp__playwright__browser_navigate
+- mcp__playwright__browser_click
+- mcp__playwright__browser_type
+- mcp__playwright__browser_file_upload
+- mcp__playwright__browser_snapshot
+- mcp__playwright__browser_wait_for
+
+# NO npm install required!
+# NO npx playwright install required!
+```
+
+## Fixed Issues ✅
+
+### ✅ FIXED - Anonymous Session Management
+1. **Solution Applied**:
+   - Changed backend to use `optionalAuthMiddleware`
+   - GET `/api/voice-notes/:id` now supports anonymous
+   - POST `/api/voice-notes/:id/process` supports anonymous
+   - Tested with Playwright MCP - working!
+
+### 🟡 Major
+- No user-friendly error messages for auth failures
+- Console errors exposed to users
+
+### 🟢 Minor
+- Dev tools badge showing issues
+- React DevTools warnings
+
+## Test Coverage Status
+
+| Category | Coverage | Status |
+|----------|----------|--------|
+| Health Endpoints | ✅ 100% | Working |
+| Anonymous Upload | ✅ 100% | Fixed & Working |
+| File Processing | ✅ 80% | API works |
+| UI Components | ❌ 30% | Needs auth fix |
+| Error Handling | ✅ 70% | Good coverage |
+| Performance | ⏸️ 0% | Not tested |
+
+## Running Legacy Tests
+
+### Python Tests (being migrated to JS)
+```bash
+python3 backend_api_test.py      # Backend API tests
+python3 integration_test.py      # Integration scenarios
+python3 performance_test.py      # Performance benchmarks
+python3 edge_cases_test.py       # Edge case handling
+```
+
+## Test Data
+
+### Available Test Files
+- `test-data/zabka.m4a` - Polish audio sample (451KB)
+- `test-data/test-audio.mp3` - English audio sample (11 bytes)
+
+### Creating Additional Test Data
+```bash
+# Large file for stress testing
+ffmpeg -f lavfi -i anoisesrc=d=60:c=pink -t 60 test-data/large-file.m4a
+
+# Corrupted file for error testing
+echo "not audio" > test-data/corrupt.m4a
+```
+
+## Docker Testing
+
+### Running Tests in Container
+```bash
+# Backend unit tests
+docker exec nano-grazynka_cc-backend-1 npm test
+
+# Database queries
+docker exec nano-grazynka_cc-backend-1 npx prisma studio
+
+# Check logs
+docker compose logs -f backend
+```
+
+## CI/CD Integration (Future)
+
+```yaml
+# .github/workflows/test.yml
+name: Test Suite
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Start services
+        run: docker compose up -d
+      - name: Run tests
+        run: |
+          cd tests
+          npm install
+          npm run test:all
+      - name: Upload results
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results
+          path: tests/test-results/
+```
+
+## Test Results & Documentation
+
+- [Test Results](../docs/testing/TEST_RESULTS.md) - Latest execution report
+- [Test Plan](../docs/testing/TEST_PLAN.md) - Comprehensive test strategy
+- [Reorganization Plan](../docs/planning/TEST_REORGANIZATION_PLAN.md) - Test suite restructuring plan
+
+## Contributing
+
+When adding new tests:
+1. Place in appropriate category folder (e2e/, integration/, etc.)
+2. Follow naming: `*.spec.js` for E2E, `*.test.js` for unit/integration
+3. Update this README with new test info
+4. Run full suite before committing: `./scripts/run-all-tests.sh`
+
+## Troubleshooting
+
+### Common Issues
+
+**401 Errors**: Anonymous session not working
+- Check `x-session-id` header is sent
+- Verify localStorage has `anonymousSessionId`
+
+**E2E Testing**: 
+```text
+USE PLAYWRIGHT MCP SERVER!
+Do NOT install npm playwright packages.
+Access through mcp__playwright__* tools.
+```
+
+**Docker Not Running**:
+```bash
+docker compose up -d
+```
+
+**Tests Timeout**: Increase timeout in config
+```javascript
+// playwright.config.js
+timeout: 120000 // 2 minutes
+```

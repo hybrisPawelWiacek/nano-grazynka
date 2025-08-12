@@ -45,7 +45,11 @@ As the main agent, I will:
 |----------|---------|-------------|
 | [System Architecture](./docs/architecture/ARCHITECTURE.md) | System design & patterns | Understanding system structure |
 | [Database Schema](./docs/architecture/DATABASE.md) | Schema & data models | Database work, queries |
-| [Product Requirements](./docs/architecture/PRD.md) | Product requirements document | Feature planning, scope |
+
+#### Requirements (Human-Managed)
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [Product Requirements](./docs/requirements/PRD_ACTUAL.md) | Complete requirements & implementation | All features, status, roadmap |
 
 #### Development & Operations
 | Document | Purpose | When to Use |
@@ -57,15 +61,23 @@ As the main agent, I will:
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
 | [API Contract](./docs/api/api-contract.md) | API specifications | Frontend-backend integration |
+| [Frontend Routes](./docs/api/FRONTEND_ROUTES.md) | Frontend routing patterns | UI navigation & API mapping |
 | [Integration Testing](./docs/testing/integration-testing.md) | Testing guide | E2E testing, Docker testing |
 | [Test Plan](./docs/testing/TEST_PLAN.md) | Test planning & strategy | Test execution planning |
-| [Test Results](./docs/testing/TEST_RESULTS.md) | Latest test results | Review test outcomes |
+| [Test Results](./docs/testing/TEST_RESULTS.md) | Latest test results (33% pass) | Review test outcomes |
+| [Test Suite](./tests/README.md) | Test organization & usage | Running tests |
 
-#### Project Management
+#### Project Management (Canonical)
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
 | [README.md](./README.md) | Quick start & overview | First time setup, basic usage |
-| [PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) | Progress tracker | Current status, next steps |
+| [PROJECT_STATUS.md](./PROJECT_STATUS.md) | Progress tracker | Current status, next steps |
+| [Documentation Guide](./docs/DOCUMENTATION_STRUCTURE.md) | Doc organization guide | Understanding where docs live |
+
+#### Planning Documents (Ephemeral)
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [UX Rearchitecture](./docs/planning/UX_REARCHITECTURE_PLAN.md) | Public homepage plan | Anonymous usage implementation |
 
 ## Project Overview
 
@@ -76,7 +88,7 @@ As the main agent, I will:
 - Built with Domain-Driven Design principles
 - MVP-focused with no unnecessary features
 
-**Current Status**: Backend complete (Steps 1-6), ready for frontend implementation (Step 7)
+**Current Status**: MVP mostly complete but has critical auth bug blocking anonymous users (401 errors)
 
 ## Working with This Codebase
 
@@ -212,6 +224,102 @@ When making choices, ask:
 
 **For detailed patterns and examples → See [MCP Playbook](./docs/playbook/MCP_PLAYBOOK.md)**
 
+## Memory Management System
+
+### Entity Namespace Organization
+
+#### Feature Implementation Entities
+For features with dedicated planning documents, use the plan name as entity:
+- **Pattern**: `{PLAN_NAME}_IMPLEMENTATION`
+- **Examples**:
+  - `UX_REARCHITECTURE_IMPLEMENTATION` (from UX_REARCHITECTURE_PLAN.md)
+  - `USER_SYSTEM_IMPLEMENTATION` (from PRD_ACTUAL.md)
+  - `MONETIZATION_IMPLEMENTATION` (if implementing monetization features)
+
+#### Core Project Entities (Predefined Namespaces)
+For work outside specific feature plans, use these standardized entities:
+
+| Entity Name | Purpose | When to Use |
+|-------------|---------|-------------|
+| `ARCHITECTURE_DECISIONS` | System design choices | DDD patterns, API design, database schema changes |
+| `BUG_FIXES` | Bug solutions & patterns | Root causes, fixes, prevention strategies |
+| `TECHNICAL_DEBT` | Refactoring & improvements | Code cleanup, performance optimizations |
+| `INTEGRATION_PATTERNS` | External service integrations | Whisper, OpenAI, authentication flows |
+| `TESTING_STRATEGIES` | Test patterns & results | E2E tests, unit tests, test data |
+| `DEPLOYMENT_CONFIG` | Infrastructure & deployment | Docker, environment variables, CI/CD |
+| `API_CONTRACT` | API specifications | Endpoint changes, response formats |
+| `UI_PATTERNS` | Frontend patterns | Component patterns, styling solutions |
+| `ERROR_HANDLING` | Error patterns & solutions | Common errors, handling strategies |
+| `PERFORMANCE_OPTIMIZATIONS` | Performance improvements | Caching, query optimization, bundling |
+
+### Memory Save Rules
+
+1. **During Feature Implementation**:
+   ```
+   Entity: {FEATURE_PLAN}_IMPLEMENTATION
+   Observations: 
+   - Current phase/step completed
+   - Technical decisions made
+   - Blockers encountered
+   - Solutions applied
+   ```
+
+2. **For General Development**:
+   ```
+   Entity: Choose from Core Project Entities
+   Observations:
+   - What was done
+   - Why it was done
+   - Impact on system
+   - Future considerations
+   ```
+
+3. **Auto-Save Pattern at 94% Context**:
+   ```
+   Entities to save:
+   - CONTEXT_CHECKPOINT (automatic)
+   - Current feature entity (if applicable)
+   - Any modified core entities
+   ```
+
+### Memory Reading Protocol (MANDATORY)
+
+**ALWAYS read relevant memory entities when starting ANY new task:**
+
+1. **On Task Start - Immediate Actions**:
+   ```
+   a) Identify task type from user prompt
+   b) Load relevant memory entities BEFORE any other action:
+      - If feature work → Load {FEATURE}_IMPLEMENTATION
+      - If bug fix → Load BUG_FIXES
+      - If UI work → Load UI_PATTERNS
+      - If API work → Load API_CONTRACT
+   c) Check for recent CONTEXT_CHECKPOINT if applicable
+   ```
+
+2. **Memory Reading Examples**:
+   - User: "Continue implementing the UX rearchitecture"
+     → Read: UX_REARCHITECTURE_IMPLEMENTATION
+   - User: "Fix the upload error we had yesterday"
+     → Read: BUG_FIXES, ERROR_HANDLING
+   - User: "Update the API endpoints"
+     → Read: API_CONTRACT, ARCHITECTURE_DECISIONS
+   - User: "Style the dashboard component"
+     → Read: UI_PATTERNS
+
+3. **What to Extract from Memory**:
+   - Previous decisions and their rationale
+   - Known issues and solutions
+   - Patterns to follow
+   - Work completed so far
+   - Next steps identified
+
+### Memory Query Pattern
+When starting work:
+1. Check if working on a planned feature → Load `{PLAN}_IMPLEMENTATION`
+2. Load relevant core entities based on task type
+3. Check for recent `CONTEXT_CHECKPOINT` if resuming
+
 ## Context Management & Auto-Save
 
 ### When to Save Context
@@ -271,8 +379,11 @@ When encountering issues:
 - **Backend**: Node.js + Fastify + TypeScript
 - **Frontend**: Next.js 15 + TypeScript  
 - **Database**: SQLite via Prisma
+  - **Location in Docker**: `/app/prisma/data/nano-grazynka.db`
+  - **Query via Prisma**: `docker exec nano-grazynka_cc-backend-1 sh -c 'echo "SELECT * FROM TableName;" | npx prisma db execute --url "file:/app/prisma/data/nano-grazynka.db" --stdin'`
 - **Container**: Docker Compose
 - **AI Services**: OpenAI/OpenRouter
+- **Environment**: Single root .env file (NO backend/.env - use only root .env)
 
 ### Ports
 - Frontend: `http://localhost:3100`
@@ -308,20 +419,40 @@ docker compose logs -f
 └── types/        # TypeScript definitions
 ```
 
+## 🔴 Critical Issues (MUST FIX)
+
+### Anonymous Authentication Broken (401 Errors)
+- **Problem**: Frontend doesn't send `x-session-id` headers with API requests
+- **Impact**: Users can't upload or process files
+- **Location**: `/frontend/app/page.tsx` line 101+
+- **Fix Required**: Add sessionId to all API calls
+- **Test**: Run `node test-anonymous-upload.js` to verify
+
 ## Where to Find What
 
 | Looking for... | Check... |
 |----------------|----------|
 | System design | [docs/architecture/ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md) |
 | Database schema | [docs/architecture/DATABASE.md](./docs/architecture/DATABASE.md) |
-| Product requirements | [docs/architecture/PRD.md](./docs/architecture/PRD.md) |
+| Product requirements | [docs/requirements/PRD_ACTUAL.md](./docs/requirements/PRD_ACTUAL.md) |
 | Development setup | [docs/development/DEVELOPMENT.md](./docs/development/DEVELOPMENT.md) |
 | MCP playbook | [docs/playbook/MCP_PLAYBOOK.md](./docs/playbook/MCP_PLAYBOOK.md) |
 | API endpoints | [docs/api/api-contract.md](./docs/api/api-contract.md) |
 | Testing approach | [docs/testing/integration-testing.md](./docs/testing/integration-testing.md) |
 | Test plan & results | [docs/testing/](./docs/testing/) |
-| Project progress | [docs/PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) |
+| Test runner | [tests/scripts/run-all-tests.sh](./tests/scripts/run-all-tests.sh) |
+| Project progress | [PROJECT_STATUS.md](./PROJECT_STATUS.md) |
 | Quick start | [README.md](./README.md) |
+
+## Progress Tracking Rule (MANDATORY)
+
+**After EVERY completed todo item or bug fix, you MUST:**
+1. **Update Memory MCP** - Create or update entities with implementation details, decisions made, and lessons learned
+2. **Update Progress Files** - Modify PROJECT_STATUS.md or relevant documentation
+3. **Document Bug Fixes** - If a bug was fixed, document the root cause and solution in memory
+4. **Update Architecture Docs** - If architecture changed, update relevant .md files in docs/
+
+This ensures knowledge persistence across sessions and helps future development.
 
 ## Remember
 

@@ -15,7 +15,8 @@ import {
 
 export class VoiceNote {
   private id: VoiceNoteId;
-  private userId: string;
+  private userId?: string;  // Made optional for anonymous users
+  private sessionId?: string;  // For anonymous users
   private title: string;
   private originalFilePath: string;
   private fileSize: number;
@@ -33,7 +34,6 @@ export class VoiceNote {
 
   private constructor(
     id: VoiceNoteId,
-    userId: string,
     title: string,
     originalFilePath: string,
     fileSize: number,
@@ -41,13 +41,14 @@ export class VoiceNote {
     language: Language,
     status: ProcessingStatus,
     tags: string[],
+    userId?: string,  // Optional for anonymous
+    sessionId?: string,  // For anonymous users
     errorMessage?: string,
     createdAt?: Date,
     updatedAt?: Date,
     version?: number
   ) {
     this.id = id;
-    this.userId = userId;
     this.title = title;
     this.originalFilePath = originalFilePath;
     this.fileSize = fileSize;
@@ -55,6 +56,8 @@ export class VoiceNote {
     this.language = language;
     this.status = status;
     this.tags = tags;
+    this.userId = userId;
+    this.sessionId = sessionId;
     this.errorMessage = errorMessage;
     this.createdAt = createdAt || new Date();
     this.updatedAt = updatedAt || new Date();
@@ -62,7 +65,8 @@ export class VoiceNote {
   }
 
   static create(params: {
-    userId: string;
+    userId?: string;  // Optional for anonymous
+    sessionId?: string;  // For anonymous users
     title: string;
     originalFilePath: string;
     fileSize: number;
@@ -73,18 +77,20 @@ export class VoiceNote {
   }): VoiceNote {
     const voiceNote = new VoiceNote(
       VoiceNoteId.generate(),
-      params.userId,
       params.title,
       params.originalFilePath,
       params.fileSize,
       params.mimeType,
       params.language,
       new ProcessingStatus(ProcessingStatusValue.PENDING),
-      params.tags || []
+      params.tags || [],
+      params.userId,
+      params.sessionId
     );
 
     voiceNote.addDomainEvent(new VoiceNoteUploadedEvent(voiceNote.id.getValue(), {
-      userId: params.userId,
+      userId: params.userId || 'anonymous',
+      sessionId: params.sessionId,
       fileName: params.originalFilePath,
       fileHash: '',
       fileSizeBytes: params.fileSize,
@@ -96,7 +102,6 @@ export class VoiceNote {
 
   static reconstitute(
     id: VoiceNoteId,
-    userId: string,
     title: string,
     originalFilePath: string,
     fileSize: number,
@@ -104,6 +109,8 @@ export class VoiceNote {
     language: Language,
     status: ProcessingStatus,
     tags: string[],
+    userId?: string,  // Made optional
+    sessionId?: string,  // Added for anonymous users
     errorMessage?: string,
     createdAt?: Date,
     updatedAt?: Date,
@@ -111,7 +118,6 @@ export class VoiceNote {
   ): VoiceNote {
     return new VoiceNote(
       id,
-      userId,
       title,
       originalFilePath,
       fileSize,
@@ -119,6 +125,8 @@ export class VoiceNote {
       language,
       status,
       tags,
+      userId,
+      sessionId,
       errorMessage,
       createdAt,
       updatedAt,
@@ -131,8 +139,12 @@ export class VoiceNote {
     return this.id;
   }
 
-  getUserId(): string {
+  getUserId(): string | undefined {
     return this.userId;
+  }
+
+  getSessionId(): string | undefined {
+    return this.sessionId;
   }
 
   getTitle(): string {

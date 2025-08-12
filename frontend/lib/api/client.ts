@@ -62,6 +62,7 @@ export class ApiClient {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Send cookies for authentication
         signal: controller.signal,
       });
 
@@ -90,6 +91,7 @@ export class ApiClient {
           'Content-Type': 'application/json',
         },
         body: body ? JSON.stringify(body) : undefined,
+        credentials: 'include', // Send cookies for authentication
         signal: controller.signal,
       });
 
@@ -115,6 +117,7 @@ export class ApiClient {
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Send cookies for authentication
         signal: controller.signal,
         // Don't set Content-Type header - browser will set it with boundary
       });
@@ -144,6 +147,7 @@ export class ApiClient {
           'Content-Type': 'application/json',
         },
         body: body ? JSON.stringify(body) : undefined,
+        credentials: 'include', // Send cookies for authentication
         signal: controller.signal,
       });
 
@@ -171,6 +175,7 @@ export class ApiClient {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Send cookies for authentication
         signal: controller.signal,
       });
 

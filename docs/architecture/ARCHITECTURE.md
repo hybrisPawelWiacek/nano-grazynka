@@ -86,6 +86,32 @@ nano-Grazynka is a voice note transcription and summarization system built with 
   - **Dependency Container**: Service composition and injection
 - **Key Principle**: Thin layer, delegates to application layer
 
+## Authentication Architecture
+
+### User System Components
+- **User Entity**: Core user model with email, password hash, tier, credits
+- **Session Management**: JWT-based sessions with httpOnly cookies
+- **UsageLog**: Tracks every transcription for billing and analytics
+- **AnonymousSession**: Enables usage without registration
+
+### Middleware Chain
+```
+Request → CORS → OptionalAuth → UsageLimit → Route Handler
+                      ↓
+                Check JWT Cookie
+                      ↓
+            Valid? → Set req.user
+            Invalid? → Continue as anonymous
+```
+
+### Key Endpoints
+- **POST /api/auth/register**: Create new user account
+- **POST /api/auth/login**: Authenticate and create session
+- **POST /api/auth/logout**: Invalidate session
+- **GET /api/auth/me**: Get current user info
+- **GET /api/anonymous/usage**: Check anonymous usage count
+- **POST /api/anonymous/migrate**: Convert anonymous to registered
+
 ## Data Flow
 
 ### Voice Note Processing Pipeline
@@ -187,19 +213,39 @@ nano-Grazynka is a voice note transcription and summarization system built with 
 
 ## Security Considerations
 
-### Current Implementation (MVP)
-- Single-user system (no authentication)
-- Local file storage
-- API keys in environment variables
-- CORS configured for local development
-- Rate limiting (100 req/min)
+### Current Implementation
+- **JWT Authentication** with httpOnly cookies for secure session management
+- **Multi-user support** with User, Session, and UsageLog tables
+- **Anonymous sessions** allowing 5 free transcriptions without registration
+- **Bcrypt password hashing** with configurable salt rounds
+- **API keys** in environment variables
+- **CORS configured** for production domains
+- **Rate limiting** (100 req/min baseline, tier-specific limits planned)
 
-### Future Considerations
-- JWT authentication for multi-user
-- Encrypted file storage
-- API key rotation
-- HTTPS in production
-- Input sanitization
+### Authentication Flow
+1. **Registration**: `/api/auth/register` creates user with hashed password
+2. **Login**: `/api/auth/login` validates credentials, creates session, sets JWT cookie
+3. **Session validation**: Middleware verifies JWT on protected routes
+4. **Logout**: `/api/auth/logout` invalidates session and clears cookie
+
+### Anonymous User Flow
+1. **Session creation**: First visit generates unique sessionId in localStorage
+2. **Usage tracking**: Anonymous uploads tracked via AnonymousSession table
+3. **Limit enforcement**: 5 free transcriptions, then 403 with upgrade prompt
+4. **Migration path**: Anonymous notes linked to user account on registration
+
+### User Tiers
+- **Free**: 5 transcriptions/month, auto-reset on 1st
+- **Pro**: Unlimited transcriptions ($9.99/month)
+- **Business**: Unlimited + priority support ($29.99/month)
+
+### Security Best Practices
+- Passwords never stored in plain text
+- JWT secrets rotated regularly
+- Session timeout after 30 days
+- HTTPS enforced in production
+- Input validation on all endpoints
+- SQL injection prevention via Prisma ORM
 
 ## Performance Metrics
 

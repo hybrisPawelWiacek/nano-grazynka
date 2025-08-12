@@ -25,6 +25,139 @@ Content-Type: multipart/form-data
 
 ## API Endpoints
 
+### Authentication Endpoints
+
+#### POST /api/auth/register
+Create a new user account.
+
+**Request:**
+```typescript
+{
+  email: string,      // Valid email address
+  password: string,   // Minimum 8 characters
+  tier?: "free" | "pro" | "business" // Default: "free"
+}
+```
+
+**Response:**
+```typescript
+{
+  user: {
+    id: string,
+    email: string,
+    tier: string,
+    credits: number
+  }
+}
+```
+
+**Errors:**
+- 400: Invalid input or email already exists
+- 500: Server error
+
+#### POST /api/auth/login
+Authenticate user and create session.
+
+**Request:**
+```typescript
+{
+  email: string,
+  password: string
+}
+```
+
+**Response:**
+```typescript
+{
+  user: {
+    id: string,
+    email: string,
+    tier: string,
+    credits: number
+  }
+}
+```
+
+**Side Effect:** Sets httpOnly JWT cookie
+
+**Errors:**
+- 401: Invalid credentials
+- 500: Server error
+
+#### POST /api/auth/logout
+Invalidate current session.
+
+**Response:**
+```typescript
+{
+  message: "Logged out successfully"
+}
+```
+
+**Side Effect:** Clears JWT cookie
+
+#### GET /api/auth/me
+Get current authenticated user.
+
+**Response:**
+```typescript
+{
+  user: {
+    id: string,
+    email: string,
+    tier: string,
+    credits: number,
+    createdAt: string
+  }
+}
+```
+
+**Errors:**
+- 401: Not authenticated
+
+### Anonymous Session Endpoints
+
+#### GET /api/anonymous/usage
+Check anonymous session usage count.
+
+**Request Headers:**
+```
+X-Session-Id: string // From localStorage
+```
+
+**Response:**
+```typescript
+{
+  sessionId: string,
+  usageCount: number,
+  remainingCredits: number,
+  limit: number
+}
+```
+
+#### POST /api/anonymous/migrate
+Convert anonymous session to registered user.
+
+**Request:**
+```typescript
+{
+  sessionId: string,
+  userId: string
+}
+```
+
+**Response:**
+```typescript
+{
+  migrated: number, // Number of notes migrated
+  message: string
+}
+```
+
+**Errors:**
+- 400: Invalid session or user ID
+- 404: Session not found
+
 ### 1. Health Check
 
 #### GET /health
@@ -54,6 +187,12 @@ Upload a new voice note file.
   - Max size: 50MB
 - `title`: string (optional) - Custom title for the note
 - `tags`: string (optional) - Comma-separated tags
+- `sessionId`: string (optional) - Session ID for anonymous users
+
+**Request Headers (for anonymous users):**
+```
+X-Session-Id: string // From localStorage
+```
 
 **Response:** `201 Created`
 ```typescript
@@ -238,7 +377,8 @@ interface VoiceNote {
   filePath: string;
   tags: string[];
   language: Language | null;
-  userId: string;
+  userId?: string;        // Optional for anonymous users
+  sessionId?: string;      // For anonymous users
   transcriptions: Transcription[];
   summaries: Summary[];
 }
@@ -313,9 +453,15 @@ All error responses follow this structure:
 When data crosses the boundary:
 1. Frontend `filename` → Backend `originalName`
 2. Frontend `mimetype` → Backend `mimeType`
-3. URL params use kebab-case: `/voice-notes/:id`
-4. Query params use camelCase: `?sortBy=createdAt`
-5. Response bodies use camelCase throughout
+3. Backend API params use kebab-case: `/api/voice-notes/:id`
+4. Frontend routes use different pattern: `/note/:id` (NOT `/voice-notes/:id`)
+5. Query params use camelCase: `?sortBy=createdAt`
+6. Response bodies use camelCase throughout
+
+### Important: Frontend Routes vs Backend API
+- **Backend API**: `/api/voice-notes/:id` (kebab-case, plural)
+- **Frontend Route**: `/note/:id` (singular, no "voice-")
+- See [FRONTEND_ROUTES.md](./FRONTEND_ROUTES.md) for complete frontend routing documentation
 
 ## Versioning
 

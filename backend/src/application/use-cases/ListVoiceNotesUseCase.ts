@@ -85,12 +85,12 @@ export class ListVoiceNotesUseCase extends UseCase<
       // Map voice notes to output format
       const items = result.items.map(voiceNote => ({
         id: voiceNote.getId().toString(),
-        userId: voiceNote.getUserId(),
+        userId: voiceNote.getUserId() || '',  // Handle optional userId
         title: voiceNote.getTitle(),
         fileSize: voiceNote.getFileSize(),
         mimeType: voiceNote.getMimeType(),
         language: voiceNote.getLanguage().getValue(),
-        status: voiceNote.getStatus().getValue(),
+        status: voiceNote.getStatus().getValue() as string,  // Cast to string
         tags: voiceNote.getTags(),
         createdAt: voiceNote.getCreatedAt(),
         updatedAt: voiceNote.getUpdatedAt(),

@@ -28,10 +28,8 @@ export const voiceNotesApi = {
     const formData = new FormData();
     formData.append('file', file);
     
-    // TODO: MVP Simplification - hardcoded userId
-    // When user authentication is implemented, replace with actual user ID from auth context
-    // This is a temporary solution for the MVP phase where we don't have user management
-    formData.append('userId', 'default-user');
+    // Authentication is now handled by the backend via cookies
+    // No need to send userId - the backend will use the authenticated user's ID
     
     // Add custom prompt if provided
     if (customPrompt) {
@@ -67,6 +65,7 @@ export const voiceNotesApi = {
       headers: {
         'Accept': format === 'json' ? 'application/json' : 'text/markdown',
       },
+      credentials: 'include', // Send cookies for authentication
     });
     
     if (!response.ok) {

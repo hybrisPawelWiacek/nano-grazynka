@@ -14,6 +14,31 @@ nano-Grazynka uses SQLite as its database engine with Prisma ORM for type-safe d
 ## Entity Relationship Diagram
 
 ```
+┌─────────────────┐      ┌─────────────────┐
+│      User       │      │AnonymousSession │
+│─────────────────│      │─────────────────│
+│ id (PK)         │      │ id (PK)         │
+│ email           │      │ sessionId       │
+│ passwordHash    │      │ usageCount      │
+│ tier            │      │ createdAt       │
+│ credits         │      │ updatedAt       │
+│ createdAt       │      └─────────────────┘
+│ updatedAt       │
+└────────┬────────┘
+         │ 1:n
+    ┌────┴───────────────┐
+    │                    │
+┌───▼────────┐    ┌─────▼────┐
+│  Session   │    │ UsageLog │
+│────────────│    │──────────│
+│ id (PK)    │    │ id (PK)  │
+│ userId     │    │ userId   │
+│ token      │    │ action   │
+│ expiresAt  │    │ credits  │
+│ createdAt  │    │ metadata │
+└────────────┘    │ createdAt│
+                  └──────────┘
+                        
 ┌─────────────────┐
 │   VoiceNote     │
 │─────────────────│
@@ -24,7 +49,8 @@ nano-Grazynka uses SQLite as its database engine with Prisma ORM for type-safe d
 │ fileSize        │
 │ duration        │
 │ language        │
-│ userId          │
+│ userId?         │◄── Optional (anonymous support)
+│ sessionId?      │◄── For anonymous users
 │ tags[]          │
 │ createdAt       │
 │ updatedAt       │
@@ -41,6 +67,84 @@ nano-Grazynka uses SQLite as its database engine with Prisma ORM for type-safe d
 
 ## Tables
 
+### User
+
+Core user entity for authentication and authorization.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | String | PK, CUID | Unique identifier |
+| email | String | UNIQUE, NOT NULL | User email address |
+| passwordHash | String | NOT NULL | Bcrypt hashed password |
+| tier | String | DEFAULT 'free' | User tier (free/pro/business) |
+| credits | Int | DEFAULT 5 | Monthly transcription credits |
+| createdAt | DateTime | NOT NULL | Account creation timestamp |
+| updatedAt | DateTime | NOT NULL | Last update timestamp |
+
+**Indexes:**
+- Unique constraint on (email)
+- `idx_user_tier` on (tier)
+
+**Relations:**
+- Has many Sessions (1:n)
+- Has many UsageLogs (1:n)
+- Has many VoiceNotes (1:n)
+
+### Session
+
+JWT session management for authenticated users.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | String | PK, CUID | Unique identifier |
+| userId | String | FK, NOT NULL | Reference to User |
+| token | String | UNIQUE, NOT NULL | JWT token |
+| expiresAt | DateTime | NOT NULL | Token expiration time |
+| createdAt | DateTime | NOT NULL | Session creation timestamp |
+
+**Indexes:**
+- Unique constraint on (token)
+- `idx_session_userid` on (userId)
+- `idx_session_expires` on (expiresAt)
+
+**Relations:**
+- Belongs to User
+
+### UsageLog
+
+Tracks user actions for billing and analytics.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | String | PK, CUID | Unique identifier |
+| userId | String | FK, NOT NULL | Reference to User |
+| action | String | NOT NULL | Action type (transcription/summary) |
+| credits | Int | DEFAULT 1 | Credits consumed |
+| metadata | String | JSON | Additional data |
+| createdAt | DateTime | NOT NULL | Action timestamp |
+
+**Indexes:**
+- `idx_usagelog_userid` on (userId)
+- `idx_usagelog_created` on (createdAt)
+
+**Relations:**
+- Belongs to User
+
+### AnonymousSession
+
+Tracks usage for non-authenticated users.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | String | PK, CUID | Unique identifier |
+| sessionId | String | UNIQUE, NOT NULL | Browser session ID |
+| usageCount | Int | DEFAULT 0 | Number of transcriptions |
+| createdAt | DateTime | NOT NULL | Session creation timestamp |
+| updatedAt | DateTime | NOT NULL | Last activity timestamp |
+
+**Indexes:**
+- Unique constraint on (sessionId)
+
 ### VoiceNote
 
 Primary entity representing an uploaded audio file.
@@ -48,7 +152,8 @@ Primary entity representing an uploaded audio file.
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | String | PK, CUID | Unique identifier |
-| userId | String | NOT NULL | User identifier |
+| userId | String? | NULL | User identifier (optional for anonymous) |
+| sessionId | String? | NULL | Session ID for anonymous users |
 | title | String | NOT NULL | User-provided or extracted title |
 | originalFilePath | String | NOT NULL | Path to uploaded audio file |
 | fileSize | Int | NOT NULL | File size in bytes |
@@ -62,7 +167,8 @@ Primary entity representing an uploaded audio file.
 | version | Int | DEFAULT 1 | Version number for tracking |
 
 **Indexes:**
-- `idx_voicenote_userid` on (userId)
+- `idx_voicenote_userid` on (userId) - for authenticated users
+- `idx_voicenote_sessionid` on (sessionId) - for anonymous users
 - `idx_voicenote_status` on (status)
 - `idx_voicenote_created` on (createdAt)
 

@@ -1,3 +1,10 @@
+---
+ARCHIVED: August 12, 2025
+STATUS: Reference material for Docker-first testing approach
+NOTE: This document contains valuable Docker testing patterns and troubleshooting guides.
+      See TEST_PLAN.md for current test strategy.
+---
+
 # Integration Testing Guide
 
 ## Overview

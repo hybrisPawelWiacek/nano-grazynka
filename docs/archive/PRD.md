@@ -1,8 +1,42 @@
 # nano‑Grazynka — Product Requirements Document (PRD)
 
-> **Status:** v1.1 (Updated for completeness)  
+## ⚠️ ARCHIVED DOCUMENT
+
+**This document has been archived as of August 12, 2025.**
+
+**➡️ Please refer to [PRD_ACTUAL.md](./PRD_ACTUAL.md) for the current, comprehensive requirements documentation.**
+
+This archive contains the original MVP requirements and is preserved for historical reference only. All active development should reference PRD_ACTUAL.md, which includes:
+- All original requirements from this document
+- Additional requirements from prd_add_1.md  
+- Complete implementation status
+- Pending features and roadmap
+
+---
+
+> **Status:** v1.1 (ARCHIVED)  
 > **Owner:** Paweł  
-> **Editor:** (Dev AI Agent)  
+> **Editor:** (Dev AI Agent)
+> **Archived:** August 12, 2025
+
+---
+**📌 IMPLEMENTATION STATUS: ✅ FEATURE-COMPLETE**
+
+**Note**: This document represents the original MVP requirements. The actual implementation has exceeded these requirements significantly. 
+
+**See [PRD_ACTUAL.md](./PRD_ACTUAL.md) for the complete feature set that was implemented.**
+
+**Key Enhancements Beyond This PRD**:
+- Multi-user authentication system with JWT
+- Usage tracking and credit limits (5/50/200 by tier)
+- Payment integration with MockStripeAdapter
+- Anonymous user support (5 free transcriptions without signup)
+- Rate limiting by tier (10/60/120 req/min)
+- Public-first UX for immediate value delivery
+- Real-time processing indicators
+- CSS Modules design system
+
+---  
 > **Date:** 2025‑08‑08  
 > **Phase:** MVP (local Docker, local file upload)
 
