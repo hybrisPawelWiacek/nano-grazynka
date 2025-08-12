@@ -1,22 +1,21 @@
 .container {
   min-height: 100vh;
-  background-color: var(--background);
+  background-color: var(--color-surface);
 }
 
 .nav {
-  background-color: white;
-  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.95);
+  border-bottom: 1px solid var(--color-border-subtle);
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: var(--z-dropdown);
   backdrop-filter: blur(10px);
-  background-color: rgba(255, 255, 255, 0.95);
 }
 
 .navContent {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--spacing-xl);
+  padding: 0 var(--space-6);
   height: 60px;
   display: flex;
   align-items: center;
@@ -24,54 +23,54 @@
 }
 
 .logo {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .navLinks {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--space-4);
 }
 
 .navLink {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   text-decoration: none;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .navLink:hover {
-  color: var(--text-primary);
-  background-color: var(--gray-50);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
 }
 
 .main {
   max-width: 900px;
   margin: 0 auto;
-  padding: var(--spacing-xl);
+  padding: var(--space-6);
 }
 
 .breadcrumb {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin-bottom: var(--spacing-xl);
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-6);
 }
 
 .breadcrumb a {
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   text-decoration: none;
 }
 
 .breadcrumb a:hover {
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   text-decoration: underline;
 }
 
@@ -80,18 +79,18 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-4xl);
-  color: var(--text-secondary);
+  padding: var(--space-16);
+  color: var(--color-text-secondary);
 }
 
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid var(--gray-200);
-  border-top-color: var(--gray-500);
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-text-secondary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--space-3);
 }
 
 @keyframes spin {
@@ -102,26 +101,26 @@
 
 .error {
   text-align: center;
-  padding: var(--spacing-4xl);
+  padding: var(--space-16);
 }
 
 .error h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-3) 0;
 }
 
 .error p {
-  color: var(--text-secondary);
-  margin: 0 0 var(--spacing-xl) 0;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-6) 0;
 }
 
 .backButton {
   display: inline-block;
-  background-color: var(--text-primary);
+  background-color: var(--color-text-primary);
   color: white;
-  padding: var(--spacing-sm) var(--spacing-xl);
+  padding: var(--space-2) var(--space-6);
   border-radius: var(--radius-md);
   text-decoration: none;
   font-weight: 500;
@@ -129,7 +128,7 @@
 }
 
 .backButton:hover {
-  background-color: var(--gray-700);
+  background-color: var(--color-text-primary);
   transform: translateY(-1px);
 }
 
@@ -137,20 +136,20 @@
   background-color: #fef2f2;
   border: 1px solid #fecaca;
   color: #991b1b;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: var(--space-6);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-md);
+  gap: var(--space-3);
 }
 
 .dismissButton {
   background-color: white;
   color: #991b1b;
   border: 1px solid #fecaca;
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-weight: 500;
@@ -166,10 +165,10 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: var(--spacing-xl);
-  margin-bottom: var(--spacing-2xl);
-  padding-bottom: var(--spacing-xl);
-  border-bottom: 1px solid var(--border-color);
+  gap: var(--space-6);
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .headerInfo {
@@ -179,26 +178,26 @@
 .title {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-3) 0;
   letter-spacing: -0.02em;
 }
 
 .metadata {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--space-3);
   flex-wrap: wrap;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--space-3);
 }
 
 .metadata span {
   font-size: 0.875rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .status {
-  padding: var(--spacing-xs) var(--spacing-sm);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   font-weight: 500;
   text-transform: capitalize;
@@ -229,19 +228,19 @@
 .duration {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  gap: var(--space-1);
 }
 
 .tags {
   display: flex;
-  gap: var(--spacing-xs);
+  gap: var(--space-1);
   flex-wrap: wrap;
 }
 
 .tag {
-  background-color: var(--gray-100);
-  color: var(--text-secondary);
-  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 500;
@@ -249,14 +248,14 @@
 
 .headerActions {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--space-2);
 }
 
 .actionButton {
   background-color: white;
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -265,8 +264,8 @@
 }
 
 .actionButton:hover:not(:disabled) {
-  background-color: var(--gray-50);
-  border-color: var(--gray-300);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
 }
 
 .actionButton:disabled {
@@ -286,46 +285,46 @@
 
 .reprocessForm {
   background-color: white;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
 }
 
 .reprocessForm h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-3) 0;
 }
 
 .promptInput {
   width: 100%;
-  padding: var(--spacing-md);
-  border: 1px solid var(--border-color);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: 0.9375rem;
   font-family: inherit;
   resize: vertical;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--space-3);
 }
 
 .promptInput:focus {
   outline: none;
-  border-color: var(--gray-400);
+  border-color: var(--color-border);
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 
 .reprocessActions {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--space-2);
 }
 
 .primaryButton {
-  background-color: var(--text-primary);
+  background-color: var(--color-text-primary);
   color: white;
   border: none;
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -334,7 +333,7 @@
 }
 
 .primaryButton:hover:not(:disabled) {
-  background-color: var(--gray-700);
+  background-color: var(--color-text-primary);
 }
 
 .primaryButton:disabled {
@@ -344,9 +343,9 @@
 
 .secondaryButton {
   background-color: white;
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: var(--spacing-sm) var(--spacing-lg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -355,8 +354,8 @@
 }
 
 .secondaryButton:hover {
-  background-color: var(--gray-50);
-  border-color: var(--gray-300);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
 }
 
 .content {
@@ -368,14 +367,14 @@
 
 .tabs {
   display: flex;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .tab {
   flex: 1;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--space-3) var(--space-4);
   background-color: transparent;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   border: none;
   border-bottom: 2px solid transparent;
   font-size: 0.9375rem;
@@ -385,26 +384,26 @@
 }
 
 .tab:hover {
-  color: var(--text-primary);
-  background-color: var(--gray-50);
+  color: var(--color-text-primary);
+  background-color: var(--color-surface);
 }
 
 .tabActive {
-  color: var(--text-primary);
-  border-bottom-color: var(--text-primary);
+  color: var(--color-text-primary);
+  border-bottom-color: var(--color-text-primary);
 }
 
 .tabContent {
-  padding: var(--spacing-xl);
+  padding: var(--space-6);
 }
 
 .summary,
 .transcription {
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .section {
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--space-8);
 }
 
 .section:last-child {
@@ -414,57 +413,57 @@
 .section h3 {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-3) 0;
 }
 
 .section p {
   line-height: 1.6;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .list {
   margin: 0;
-  padding-left: var(--spacing-xl);
+  padding-left: var(--space-6);
   list-style-type: disc;
 }
 
 .list li {
   line-height: 1.6;
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: var(--space-1);
 }
 
 .summaryMeta,
 .transcriptionMeta {
   display: flex;
-  gap: var(--spacing-lg);
-  padding-top: var(--spacing-lg);
-  margin-top: var(--spacing-2xl);
-  border-top: 1px solid var(--border-color);
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  margin-top: var(--space-8);
+  border-top: 1px solid var(--color-border);
   font-size: 0.75rem;
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
 }
 
 .transcriptionText {
   line-height: 1.8;
   white-space: pre-wrap;
-  color: var(--text-primary);
+  color: var(--color-text-primary);
 }
 
 .noContent {
   text-align: center;
-  padding: var(--spacing-4xl);
-  color: var(--text-secondary);
+  padding: var(--space-16);
+  color: var(--color-text-secondary);
 }
 
 .noContent p {
-  margin: var(--spacing-sm) 0;
+  margin: var(--space-2) 0;
 }
 
 @media (max-width: 768px) {
   .main {
-    padding: var(--spacing-lg);
+    padding: var(--space-4);
   }
 
   .header {
@@ -495,7 +494,7 @@
   }
 
   .tabActive {
-    border-left-color: var(--text-primary);
+    border-left-color: var(--color-text-primary);
     border-bottom-color: transparent;
   }
 }
