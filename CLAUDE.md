@@ -49,8 +49,7 @@ As the main agent, I will:
 #### Requirements (Human-Managed)
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
-| [Product Requirements](./docs/requirements/PRD.md) | Original MVP requirements | Feature planning, scope |
-| [PRD Add-on 1](./docs/requirements/prd_add_1.md) | User system & monetization | Authentication, tiers, usage tracking |
+| [Product Requirements](./docs/requirements/PRD_ACTUAL.md) | Complete requirements & implementation | All features, status, roadmap |
 
 #### Development & Operations
 | Document | Purpose | When to Use |
@@ -62,9 +61,11 @@ As the main agent, I will:
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
 | [API Contract](./docs/api/api-contract.md) | API specifications | Frontend-backend integration |
+| [Frontend Routes](./docs/api/FRONTEND_ROUTES.md) | Frontend routing patterns | UI navigation & API mapping |
 | [Integration Testing](./docs/testing/integration-testing.md) | Testing guide | E2E testing, Docker testing |
 | [Test Plan](./docs/testing/TEST_PLAN.md) | Test planning & strategy | Test execution planning |
-| [Test Results](./docs/testing/TEST_RESULTS.md) | Latest test results | Review test outcomes |
+| [Test Results](./docs/testing/TEST_RESULTS.md) | Latest test results (33% pass) | Review test outcomes |
+| [Test Suite](./tests/README.md) | Test organization & usage | Running tests |
 
 #### Project Management (Canonical)
 | Document | Purpose | When to Use |
@@ -87,7 +88,7 @@ As the main agent, I will:
 - Built with Domain-Driven Design principles
 - MVP-focused with no unnecessary features
 
-**Current Status**: Backend complete (Steps 1-6), ready for frontend implementation (Step 7)
+**Current Status**: MVP mostly complete but has critical auth bug blocking anonymous users (401 errors)
 
 ## Working with This Codebase
 
@@ -232,7 +233,7 @@ For features with dedicated planning documents, use the plan name as entity:
 - **Pattern**: `{PLAN_NAME}_IMPLEMENTATION`
 - **Examples**:
   - `UX_REARCHITECTURE_IMPLEMENTATION` (from UX_REARCHITECTURE_PLAN.md)
-  - `USER_SYSTEM_IMPLEMENTATION` (from prd_add_1.md)
+  - `USER_SYSTEM_IMPLEMENTATION` (from PRD_ACTUAL.md)
   - `MONETIZATION_IMPLEMENTATION` (if implementing monetization features)
 
 #### Core Project Entities (Predefined Namespaces)
@@ -418,19 +419,29 @@ docker compose logs -f
 └── types/        # TypeScript definitions
 ```
 
+## 🔴 Critical Issues (MUST FIX)
+
+### Anonymous Authentication Broken (401 Errors)
+- **Problem**: Frontend doesn't send `x-session-id` headers with API requests
+- **Impact**: Users can't upload or process files
+- **Location**: `/frontend/app/page.tsx` line 101+
+- **Fix Required**: Add sessionId to all API calls
+- **Test**: Run `node test-anonymous-upload.js` to verify
+
 ## Where to Find What
 
 | Looking for... | Check... |
 |----------------|----------|
 | System design | [docs/architecture/ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md) |
 | Database schema | [docs/architecture/DATABASE.md](./docs/architecture/DATABASE.md) |
-| Product requirements | [docs/architecture/PRD.md](./docs/architecture/PRD.md) |
+| Product requirements | [docs/requirements/PRD_ACTUAL.md](./docs/requirements/PRD_ACTUAL.md) |
 | Development setup | [docs/development/DEVELOPMENT.md](./docs/development/DEVELOPMENT.md) |
 | MCP playbook | [docs/playbook/MCP_PLAYBOOK.md](./docs/playbook/MCP_PLAYBOOK.md) |
 | API endpoints | [docs/api/api-contract.md](./docs/api/api-contract.md) |
 | Testing approach | [docs/testing/integration-testing.md](./docs/testing/integration-testing.md) |
 | Test plan & results | [docs/testing/](./docs/testing/) |
-| Project progress | [docs/PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) |
+| Test runner | [tests/scripts/run-all-tests.sh](./tests/scripts/run-all-tests.sh) |
+| Project progress | [PROJECT_STATUS.md](./PROJECT_STATUS.md) |
 | Quick start | [README.md](./README.md) |
 
 ## Progress Tracking Rule (MANDATORY)

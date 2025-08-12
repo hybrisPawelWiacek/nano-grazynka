@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: nano-Grazynka API
-  description: Voice note transcription and summarization utility API
-  version: 1.0.0
+  description: Voice note transcription and summarization platform with multi-user support
+  version: 2.0.0
   contact:
     name: nano-Grazynka Team
 
@@ -12,12 +12,17 @@ servers:
   - url: http://backend:3101
     description: Docker internal server
 
+security:
+  - cookieAuth: []
+
 paths:
+  # System endpoints
   /health:
     get:
       summary: Health check endpoint
       tags:
         - System
+      security: []
       responses:
         '200':
           description: Service is healthy
@@ -29,24 +34,26 @@ paths:
                   status:
                     type: string
                     example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
                   database:
                     type: string
-                    example: connected
+                    enum: [connected, disconnected]
                   observability:
                     type: object
                     properties:
-                      enabled:
+                      langSmith:
                         type: boolean
-                      providers:
-                        type: array
-                        items:
-                          type: string
+                      openLLMetry:
+                        type: boolean
 
   /ready:
     get:
       summary: Readiness check endpoint
       tags:
         - System
+      security: []
       responses:
         '200':
           description: Service is ready
@@ -65,6 +72,199 @@ paths:
                       storage:
                         type: boolean
 
+  # Authentication endpoints
+  /api/auth/register:
+    post:
+      summary: Create a new user account
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Valid email address
+                password:
+                  type: string
+                  minLength: 8
+                  description: Minimum 8 characters
+                tier:
+                  type: string
+                  enum: [free, pro, business]
+                  default: free
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid input or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/login:
+    post:
+      summary: Authenticate user and create session
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                description: JWT token in httpOnly cookie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/logout:
+    post:
+      summary: Invalidate current session
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
+
+  /api/auth/me:
+    get:
+      summary: Get current authenticated user
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/UserDetailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Anonymous session endpoints
+  /api/anonymous/usage:
+    get:
+      summary: Check anonymous session usage count
+      tags:
+        - Anonymous
+      security: []
+      parameters:
+        - name: X-Session-Id
+          in: header
+          required: true
+          schema:
+            type: string
+            description: Session ID from localStorage
+      responses:
+        '200':
+          description: Usage information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessionId:
+                    type: string
+                  usageCount:
+                    type: integer
+                  remainingCredits:
+                    type: integer
+                  limit:
+                    type: integer
+
+  /api/anonymous/migrate:
+    post:
+      summary: Convert anonymous session to registered user
+      tags:
+        - Anonymous
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - userId
+              properties:
+                sessionId:
+                  type: string
+                userId:
+                  type: string
+      responses:
+        '200':
+          description: Migration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  migrated:
+                    type: integer
+                    description: Number of notes migrated
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Voice notes endpoints
   /api/voice-notes:
     get:
       summary: List voice notes with filtering and pagination
@@ -102,11 +302,20 @@ paths:
         - name: tags
           in: query
           schema:
-            type: array
-            items:
-              type: string
-          style: form
-          explode: true
+            type: string
+          description: Comma-separated tags
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, title]
+            default: createdAt
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
       responses:
         '200':
           description: List of voice notes
@@ -115,7 +324,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  voiceNotes:
+                  data:
                     type: array
                     items:
                       $ref: '#/components/schemas/VoiceNote'
@@ -126,6 +335,16 @@ paths:
       summary: Upload a new voice note
       tags:
         - Voice Notes
+      security:
+        - cookieAuth: []
+        - {}
+      parameters:
+        - name: X-Session-Id
+          in: header
+          required: false
+          schema:
+            type: string
+            description: Session ID for anonymous users
       requestBody:
         required: true
         content:
@@ -138,19 +357,19 @@ paths:
                 file:
                   type: string
                   format: binary
-                  description: Audio file (mp3, wav, m4a, webm, mp4, mpga, mpeg, ogg, oga, opus, flac)
+                  description: Audio file (mp3, m4a, wav, flac, ogg, webm)
                 title:
                   type: string
-                  description: Optional title (extracted from filename if not provided)
-                language:
-                  type: string
-                  enum: [EN, PL]
-                  description: Language of the audio (default EN)
+                  description: Optional title
                 tags:
-                  type: array
-                  items:
-                    type: string
-                  description: Optional tags
+                  type: string
+                  description: Comma-separated tags
+                sessionId:
+                  type: string
+                  description: Session ID for anonymous users
+                customPrompt:
+                  type: string
+                  description: Custom instructions for summarization
       responses:
         '201':
           description: Voice note created successfully
@@ -163,9 +382,14 @@ paths:
                     $ref: '#/components/schemas/VoiceNote'
                   message:
                     type: string
-                    example: Voice note uploaded successfully
         '400':
           $ref: '#/components/responses/ValidationError'
+        '403':
+          description: Usage limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '413':
           description: File too large
           content:
@@ -185,26 +409,13 @@ paths:
           schema:
             type: string
             format: uuid
-        - name: includeTranscription
-          in: query
-          schema:
-            type: boolean
-            default: true
-        - name: includeSummary
-          in: query
-          schema:
-            type: boolean
-            default: true
       responses:
         '200':
           description: Voice note details
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  voiceNote:
-                    $ref: '#/components/schemas/VoiceNoteDetailed'
+                $ref: '#/components/schemas/VoiceNoteDetailed'
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -220,16 +431,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        '204':
           description: Voice note deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Voice note deleted successfully
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -245,8 +448,27 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language:
+                  type: string
+                  enum: [EN, PL]
+                  description: Override detected language
+                systemPrompt:
+                  type: string
+                  description: Custom system prompt
+                classificationPrompt:
+                  type: string
+                  description: Custom classification prompt
+                summaryPrompt:
+                  type: string
+                  description: Custom summary prompt
       responses:
-        '200':
+        '202':
           description: Processing started
           content:
             application/json:
@@ -257,11 +479,10 @@ paths:
                     $ref: '#/components/schemas/VoiceNote'
                   message:
                     type: string
-                    example: Processing started successfully
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: Already processing
+          description: Already processing or completed
           content:
             application/json:
               schema:
@@ -287,12 +508,15 @@ paths:
               properties:
                 systemPrompt:
                   type: string
-                  description: Custom system prompt for reprocessing
-                userPrompt:
+                classificationPrompt:
                   type: string
-                  description: Custom user prompt for reprocessing
+                summaryPrompt:
+                  type: string
+                reason:
+                  type: string
+                  description: Reason for reprocessing
       responses:
-        '200':
+        '202':
           description: Reprocessing started
           content:
             application/json:
@@ -303,7 +527,8 @@ paths:
                     $ref: '#/components/schemas/VoiceNote'
                   message:
                     type: string
-                    example: Reprocessing started successfully
+                  version:
+                    type: integer
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -325,6 +550,16 @@ paths:
             type: string
             enum: [markdown, json]
             default: markdown
+        - name: includeTranscription
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - name: includeSummary
+          in: query
+          schema:
+            type: boolean
+            default: true
       responses:
         '200':
           description: Exported content
@@ -339,16 +574,60 @@ paths:
           $ref: '#/components/responses/NotFound'
 
 components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+      description: JWT token in httpOnly cookie
+
   schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - tier
+        - credits
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        tier:
+          type: string
+          enum: [free, pro, business]
+        credits:
+          type: integer
+          description: Credits used this month
+
+    UserDetailed:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+            creditsResetDate:
+              type: string
+              format: date-time
+            stripeCustomerId:
+              type: string
+              nullable: true
+
     VoiceNote:
       type: object
       required:
         - id
         - title
         - status
-        - language
         - createdAt
         - updatedAt
+        - fileSize
+        - filePath
       properties:
         id:
           type: string
@@ -358,78 +637,106 @@ components:
         status:
           type: string
           enum: [pending, processing, completed, failed]
-        language:
-          type: string
-          enum: [EN, PL]
-        duration:
-          type: integer
-          description: Duration in seconds
-        fileSize:
-          type: integer
-          description: File size in bytes
-        tags:
-          type: array
-          items:
-            type: string
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
-        processedAt:
-          type: string
-          format: date-time
+        duration:
+          type: integer
           nullable: true
-        errorMessage:
+          description: Duration in seconds
+        fileSize:
+          type: integer
+          description: File size in bytes
+        filePath:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        language:
+          type: string
+          enum: [EN, PL]
+          nullable: true
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional for anonymous users
+        sessionId:
           type: string
           nullable: true
+          description: For anonymous users
+        transcriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transcription'
+        summaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/Summary'
 
     VoiceNoteDetailed:
       allOf:
         - $ref: '#/components/schemas/VoiceNote'
         - type: object
           properties:
-            transcription:
-              $ref: '#/components/schemas/Transcription'
-            summary:
-              $ref: '#/components/schemas/Summary'
+            customPrompt:
+              type: string
+              nullable: true
+            errorMessage:
+              type: string
+              nullable: true
 
     Transcription:
       type: object
       required:
         - id
-        - text
+        - voiceNoteId
+        - content
         - language
         - createdAt
+        - provider
+        - model
+        - version
       properties:
         id:
           type: string
-        text:
+        voiceNoteId:
+          type: string
+        content:
           type: string
         language:
           type: string
           enum: [EN, PL]
-        confidence:
-          type: number
-          format: float
-          minimum: 0
-          maximum: 1
         createdAt:
           type: string
           format: date-time
+        provider:
+          type: string
+        model:
+          type: string
+        version:
+          type: integer
 
     Summary:
       type: object
       required:
         - id
+        - voiceNoteId
         - summary
         - keyPoints
         - actionItems
-        - project
         - createdAt
+        - provider
+        - model
+        - version
       properties:
         id:
+          type: string
+        voiceNoteId:
           type: string
         summary:
           type: string
@@ -441,18 +748,15 @@ components:
           type: array
           items:
             type: string
-        project:
-          type: string
-          nullable: true
-        systemPrompt:
-          type: string
-        userPrompt:
-          type: string
-        modelUsed:
-          type: string
         createdAt:
           type: string
           format: date-time
+        provider:
+          type: string
+        model:
+          type: string
+        version:
+          type: integer
 
     VoiceNoteExport:
       type: object
@@ -470,61 +774,61 @@ components:
             processedAt:
               type: string
               format: date-time
+              nullable: true
             language:
               type: string
             duration:
               type: integer
         transcription:
-          type: string
+          type: object
         summary:
-          type: string
-        keyPoints:
-          type: array
-          items:
-            type: string
-        actionItems:
-          type: array
-          items:
-            type: string
-        project:
-          type: string
+          type: object
 
     Pagination:
       type: object
       required:
-        - currentPage
+        - page
+        - limit
+        - total
         - totalPages
-        - totalItems
-        - itemsPerPage
       properties:
-        currentPage:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
           type: integer
         totalPages:
-          type: integer
-        totalItems:
-          type: integer
-        itemsPerPage:
           type: integer
 
     Error:
       type: object
       required:
         - error
-        - message
       properties:
         error:
-          type: string
-        message:
-          type: string
-        details:
           type: object
-          additionalProperties: true
-        traceId:
-          type: string
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+            traceId:
+              type: string
 
   responses:
     ValidationError:
       description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Unauthorized:
+      description: Not authenticated
       content:
         application/json:
           schema:
@@ -547,6 +851,10 @@ components:
 tags:
   - name: System
     description: System health and readiness endpoints
+  - name: Authentication
+    description: User authentication and session management
+  - name: Anonymous
+    description: Anonymous user session tracking
   - name: Voice Notes
     description: Voice note CRUD operations
   - name: Processing

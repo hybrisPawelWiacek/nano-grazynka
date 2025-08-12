@@ -98,7 +98,10 @@ export default function HomePage() {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('language', language);
+    // Only send language if not AUTO (AUTO means automatic detection)
+    if (language !== 'AUTO') {
+      formData.append('language', language);
+    }
     if (customPrompt) {
       formData.append('customPrompt', customPrompt);
     }
@@ -133,7 +136,11 @@ export default function HomePage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ language })
+        body: JSON.stringify(
+          language === 'AUTO' 
+            ? {} 
+            : { language }
+        )
       });
 
       if (!processResponse.ok) {
@@ -319,7 +326,7 @@ export default function HomePage() {
                   <p className={styles.statusText}>{status.message}</p>
                   {status.result && (
                     <Link
-                      href={`/voice-notes/${status.result.id}`}
+                      href={`/note/${status.result.id}`}
                       className={styles.viewResultsButton}
                     >
                       View Full Results →

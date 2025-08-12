@@ -15,8 +15,9 @@ These are the primary source of truth and should be kept up-to-date:
 ### Requirements Documents (`docs/requirements/`)
 Human-managed business requirements that drive the project:
 
-- **PRD.md** - Original MVP product requirements
-- **prd_add_1.md** - User system and monetization requirements
+- **PRD_ACTUAL.md** - Complete requirements documentation (both implemented and pending)
+- **PRD.md** - [ARCHIVED] Original MVP product requirements
+- **prd_add_1.md** - [ARCHIVED] User system and monetization requirements
 
 ### Architecture Documents (`docs/architecture/`)
 System design and technical architecture:
@@ -25,14 +26,15 @@ System design and technical architecture:
 - **DATABASE.md** - Database schema and data models
 
 ### Planning Documents (`docs/planning/`)
-Ephemeral planning documents for specific features or changes:
+Ephemeral planning documents for features currently being implemented:
 
-- **UX_REARCHITECTURE_PLAN.md** - Plan for public homepage with anonymous usage
-- Future task-specific planning documents go here
+- Active planning documents for ongoing work go here
+- Move to `docs/archive/` when implementation is complete
 
 ### API Documentation (`docs/api/`)
 - **api-contract.md** - API endpoint specifications
 - **api-spec.yaml** - OpenAPI specification
+- **FRONTEND_ROUTES.md** - Frontend routing patterns and API mapping
 
 ### Testing Documentation (`docs/testing/`)
 - **TEST_PLAN.md** - Testing strategy
@@ -41,14 +43,17 @@ Ephemeral planning documents for specific features or changes:
 
 ### Development Documentation (`docs/development/`)
 - **DEVELOPMENT.md** - Development setup and debugging
-- **GEMINI_SETUP.md** - Gemini API configuration
-- **USER_SYSTEM_IMPLEMENTATION.md** - Authentication implementation details
+- **AI_MODELS_SETUP.md** - AI models configuration (OpenRouter/OpenAI)
 
 ### Playbooks (`docs/playbook/`)
 - **MCP_PLAYBOOK.md** - MCP server usage patterns and examples
 
 ### Archive (`docs/archive/`)
-Deprecated or historical documents for reference
+Completed planning documents and deprecated documentation:
+
+- **UX_REARCHITECTURE_PLAN.md** - Completed anonymous usage implementation plan
+- **USER_SYSTEM_IMPLEMENTATION.md** - Completed authentication system plan
+- Historical documents preserved for reference
 
 ## Document Management Rules
 
@@ -66,7 +71,7 @@ Deprecated or historical documents for reference
 | What to work on | PROJECT_STATUS.md → Next Steps |
 | System design info | docs/architecture/ARCHITECTURE.md |
 | API endpoints | docs/api/api-contract.md |
-| Feature requirements | docs/requirements/PRD.md |
+| Feature requirements | docs/requirements/PRD_ACTUAL.md |
 | How to use the codebase | CLAUDE.md (root) |
 | Specific task plans | docs/planning/*.md |
 

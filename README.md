@@ -79,8 +79,7 @@ nano-grazynka/
 - [Architecture](./docs/architecture/ARCHITECTURE.md) - System design
 - [API Contract](./docs/api/api-contract.md) - API endpoints
 - [Development Guide](./docs/development/DEVELOPMENT.md) - Local setup
-- [Gemini Setup](./docs/development/GEMINI_SETUP.md) - AI configuration
-- [Changelog](./CHANGELOG.md) - Version history
+- [AI Models Setup](./docs/development/AI_MODELS_SETUP.md) - AI configuration
 
 ## 🐛 Recent Fixes (August 11, 2025)
 
@@ -92,10 +91,10 @@ nano-grazynka/
 
 ## 🏷️ MVP Limitations
 
-This is an MVP with intentional simplifications:
-- Single-user design (hardcoded userId)
-- SQLite database (not production-ready)
-- No authentication system
+This is an MVP with the following features:
+- Multi-user support with JWT authentication
+- Anonymous usage (5 free transcriptions)
+- SQLite database (suitable for MVP)
 - Basic error handling
 - No rate limiting
 
@@ -140,7 +139,6 @@ npx prisma studio  # GUI for database
 ## 🤝 Contributing
 
 This is an MVP project. For production use, consider:
-- Adding user authentication
 - Switching to PostgreSQL
 - Implementing rate limiting
 - Adding monitoring and logging

@@ -226,8 +226,10 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // Process voice note
-  fastify.post('/api/voice-notes/:id/process', async (request: any, reply: any) => {
+  // Process voice note (supports both authenticated and anonymous users)
+  fastify.post('/api/voice-notes/:id/process', 
+    { preHandler: [optionalAuthMiddleware] },
+    async (request: any, reply: any) => {
     const useCase = container.getProcessVoiceNoteUseCase();
     const result = await useCase.execute({
       voiceNoteId: request.params.id,
@@ -258,9 +260,9 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     });
   });
 
-  // Get voice note by ID (protected route with rate limiting)
+  // Get voice note by ID (optional auth with rate limiting for anonymous users)
   fastify.get('/api/voice-notes/:id', 
-    { preHandler: [authMiddleware, rateLimitMiddleware] },
+    { preHandler: [optionalAuthMiddleware, rateLimitMiddleware] },
     async (request: any, reply: any) => {
     const useCase = container.getGetVoiceNoteUseCase();
     const result = await useCase.execute({

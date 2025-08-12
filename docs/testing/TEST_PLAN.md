@@ -1,14 +1,25 @@
 # nano-Grazynka Test Plan
-Version: 1.0
-Date: 2025-08-11
-Status: PENDING APPROVAL
+Version: 2.0
+Date: 2025-08-12
+Status: UPDATED - Playwright MCP Integration
+
+## 🚨 CRITICAL: Use Playwright MCP Server for ALL E2E Testing
+
+**MANDATORY TESTING APPROACH:**
+- ✅ **USE**: Playwright MCP server tools (`mcp__playwright__*`)
+- ❌ **DO NOT**: Install npm Playwright packages
+- ❌ **DO NOT**: Run `npm install @playwright/test`
+- ❌ **DO NOT**: Create test files with `require('@playwright/test')`
+
+The Playwright MCP server is already configured in the Docker environment.
+All browser automation MUST use MCP tools directly.
 
 ## Test Strategy Overview
 
 ### Testing Levels
 1. **L1: Backend API Tests** - Direct API testing (existing scripts)
-2. **L2: Frontend E2E Tests** - UI automation with Playwright MCP
-3. **L3: Integration Tests** - Full stack user journeys
+2. **L2: Frontend E2E Tests** - UI automation with **Playwright MCP Server** (NOT npm packages)
+3. **L3: Integration Tests** - Full stack user journeys using **Playwright MCP**
 4. **L4: Performance Tests** - Load and stress testing
 
 ### Test Environment
@@ -25,11 +36,25 @@ Status: PENDING APPROVAL
 | Test ID | Test Case | Tool | Priority |
 |---------|-----------|------|----------|
 | S1.1 | Backend health check | curl/bash | P1 |
-| S1.2 | Frontend loads homepage | Playwright | P1 |
+| S1.2 | Frontend loads homepage | Playwright MCP | P1 |
 | S1.3 | Database connection | backend test | P1 |
 | S1.4 | Basic file upload | test-upload.js | P1 |
 
-### Suite 2: Backend API Tests (15 min)
+### Suite 2: Authentication Tests (10 min)
+**Purpose**: Validate authentication and anonymous flow
+
+| Test ID | Test Case | Expected Result |
+|---------|-----------|-----------------|
+| A2.1 | Register new user | 200 OK, user created |
+| A2.2 | Login with credentials | 200 OK, JWT cookie set |
+| A2.3 | Access protected route | 200 OK with valid JWT |
+| A2.4 | Access without auth | 401 Unauthorized |
+| A2.5 | Logout | 200 OK, cookie cleared |
+| A2.6 | Anonymous upload | 201 Created with sessionId |
+| A2.7 | Anonymous usage limit | 403 after 5 uploads |
+| A2.8 | Migrate anonymous to user | 200 OK, notes transferred |
+
+### Suite 3: Backend API Tests (15 min)
 **Purpose**: Validate all API endpoints and contracts
 
 | Test ID | Test Case | Script | Expected Result |
@@ -45,7 +70,7 @@ Status: PENDING APPROVAL
 | B2.9 | Large file rejection | new test | 413 Payload Too Large |
 | B2.10 | Concurrent uploads | new test | All succeed |
 
-### Suite 3: Frontend E2E Tests with Playwright (20 min)
+### Suite 4: Frontend E2E Tests with Playwright MCP Server (20 min)
 **Purpose**: Validate all UI functionality
 
 | Test ID | Test Case | Steps | Validation |
@@ -62,21 +87,25 @@ Status: PENDING APPROVAL
 | F3.10 | Processing status | 1. Upload file<br>2. Watch status | Updates: pending → processing → completed |
 | F3.11 | Error handling | 1. Upload invalid file | Error message displayed |
 | F3.12 | Empty state | 1. View empty library | "No notes yet" message |
+| F3.13 | Login flow | 1. Click login<br>2. Enter credentials<br>3. Submit | Redirects to dashboard |
+| F3.14 | Register flow | 1. Click register<br>2. Fill form<br>3. Submit | Account created, logged in |
+| F3.15 | Logout | 1. Click logout button | Session cleared, redirect to home |
+| F3.16 | Anonymous limit | 1. Upload 5 files<br>2. Try 6th upload | Shows upgrade modal |
 
-### Suite 4: Integration Tests (30 min)
+### Suite 5: Integration Tests (30 min)
 **Purpose**: Test complete user journeys
 
 | Test ID | Test Case | Scenario | Tools |
 |---------|-----------|----------|-------|
-| I4.1 | Polish audio journey | Upload → Process → View → Export zabka.m4a | Playwright + API |
-| I4.2 | English audio journey | Upload → Process → View → Export test.mp3 | Playwright + API |
-| I4.3 | Reprocess flow | Upload → Process → Reprocess with different language | Playwright + API |
-| I4.4 | Multi-file workflow | Upload 3 files → View library → Search → Export all | Playwright + API |
-| I4.5 | Error recovery | Upload → Fail processing → Retry → Success | Playwright + API |
-| I4.6 | Session persistence | Upload → Refresh → Data persists | Playwright |
-| I4.7 | Concurrent users | 2 users upload simultaneously | Playwright + API |
+| I4.1 | Polish audio journey | Upload → Process → View → Export zabka.m4a | Playwright MCP + API |
+| I4.2 | English audio journey | Upload → Process → View → Export test.mp3 | Playwright MCP + API |
+| I4.3 | Reprocess flow | Upload → Process → Reprocess with different language | Playwright MCP + API |
+| I4.4 | Multi-file workflow | Upload 3 files → View library → Search → Export all | Playwright MCP + API |
+| I4.5 | Error recovery | Upload → Fail processing → Retry → Success | Playwright MCP + API |
+| I4.6 | Session persistence | Upload → Refresh → Data persists | Playwright MCP |
+| I4.7 | Concurrent users | 2 users upload simultaneously | Playwright MCP + API |
 
-### Suite 5: Performance Tests (15 min)
+### Suite 6: Performance Tests (15 min)
 **Purpose**: Validate system performance
 
 | Test ID | Test Case | Metric | Target |
@@ -88,7 +117,7 @@ Status: PENDING APPROVAL
 | P5.5 | Concurrent uploads | 5 simultaneous | All succeed |
 | P5.6 | Memory usage | After 10 uploads | < 500MB |
 
-### Suite 6: Edge Cases (10 min)
+### Suite 7: Edge Cases (10 min)
 **Purpose**: Test boundary conditions
 
 | Test ID | Test Case | Input | Expected |
@@ -109,8 +138,8 @@ Status: PENDING APPROVAL
 4. Rerun failed tests
 
 ### Phase 2: Frontend Validation (Day 1)
-1. Setup Playwright MCP
-2. Run Suite 3 (Frontend E2E) - 20 min
+1. Use existing Playwright MCP server (no setup needed)
+2. Run Suite 3 (Frontend E2E) using MCP tools - 20 min
 3. Document any UI bugs
 4. Fix critical issues
 
@@ -157,34 +186,35 @@ Status: PENDING APPROVAL
 - `final-test.js` - Complete flow test
 - `debug-upload.js` - Debug version
 
-### New Scripts to Create
-1. `playwright-e2e.test.js` - Main E2E test suite
-2. `performance-test.js` - Performance testing
-3. `integration-test.js` - Full journey tests
-4. `edge-cases-test.js` - Boundary testing
+### Testing with Playwright MCP
+**NO TEST SCRIPTS NEEDED!** Use Playwright MCP tools directly:
+- `mcp__playwright__browser_navigate` - Navigate to URLs
+- `mcp__playwright__browser_click` - Click elements
+- `mcp__playwright__browser_type` - Type text
+- `mcp__playwright__browser_file_upload` - Upload files
+- `mcp__playwright__browser_snapshot` - Get page state
+- `mcp__playwright__browser_wait_for` - Wait for conditions
 
-### Playwright MCP Tests Structure
-```javascript
-// tests/e2e/upload.spec.js
-test.describe('Upload Flow', () => {
-  test('should upload via drag and drop', async ({ page }) => {
-    // Test implementation
-  });
-});
+### Example Playwright MCP Test Flow
+```yaml
+# NO JS FILES! Use MCP tools directly:
+1. Navigate to app:
+   mcp__playwright__browser_navigate(url: "http://localhost:3100")
 
-// tests/e2e/library.spec.js
-test.describe('Library View', () => {
-  test('should display all voice notes', async ({ page }) => {
-    // Test implementation
-  });
-});
+2. Click upload area:
+   mcp__playwright__browser_click(element: "Click to upload", ref: "e24")
 
-// tests/e2e/search.spec.js
-test.describe('Search and Filter', () => {
-  test('should filter by status', async ({ page }) => {
-    // Test implementation
-  });
-});
+3. Upload file:
+   mcp__playwright__browser_file_upload(paths: ["/path/to/zabka.m4a"])
+
+4. Click process button:
+   mcp__playwright__browser_click(element: "Upload and Process", ref: "e36")
+
+5. Wait for completion:
+   mcp__playwright__browser_wait_for(time: 5)
+
+6. Verify results:
+   mcp__playwright__browser_snapshot()
 ```
 
 ## Success Criteria
