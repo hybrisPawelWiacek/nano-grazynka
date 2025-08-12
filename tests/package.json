@@ -12,7 +12,7 @@
     "test:performance": "node performance/load-test.js",
     "test:smoke": "node scripts/smoke-test.js",
     "test:all": "npm run test && npm run test:e2e",
-    "test:anonymous": "node ../test-anonymous-upload.js && node ../test-anonymous-limit.js"
+    "test:anonymous": "node scripts/test-anonymous-upload.js && node scripts/test-anonymous-limit.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",

@@ -69,8 +69,8 @@ run_test "Database connected" "curl -s http://localhost:3101/ready | grep -q rea
 
 echo ""
 echo "2️⃣  API Tests"
-run_test "Anonymous upload" "node ../test-anonymous-upload.js"
-run_test "Usage limits" "node ../test-anonymous-limit.js"
+run_test "Anonymous upload" "node test-anonymous-upload.js"
+run_test "Usage limits" "node test-anonymous-limit.js"
 
 echo ""
 echo "3️⃣  Backend Tests"
@@ -127,7 +127,7 @@ else
     echo "- Status polling authentication"
     echo ""
     echo "Run individual test suites for details:"
-    echo "  node test-anonymous-upload.js"
+    echo "  node tests/scripts/test-anonymous-upload.js"
     echo "  python3 backend_api_test.py"
     echo "  npx playwright test"
     exit 1

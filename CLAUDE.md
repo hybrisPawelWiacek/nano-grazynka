@@ -426,7 +426,7 @@ docker compose logs -f
 - **Impact**: Users can't upload or process files
 - **Location**: `/frontend/app/page.tsx` line 101+
 - **Fix Required**: Add sessionId to all API calls
-- **Test**: Run `node test-anonymous-upload.js` to verify
+- **Test**: Run `node tests/scripts/test-anonymous-upload.js` to verify
 
 ## Where to Find What
 
