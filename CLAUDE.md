@@ -273,6 +273,7 @@ When encountering issues:
 - **Database**: SQLite via Prisma
 - **Container**: Docker Compose
 - **AI Services**: OpenAI/OpenRouter
+- **Environment**: Single root .env file (NO backend/.env - use only root .env)
 
 ### Ports
 - Frontend: `http://localhost:3100`
@@ -322,6 +323,16 @@ docker compose logs -f
 | Test plan & results | [docs/testing/](./docs/testing/) |
 | Project progress | [docs/PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) |
 | Quick start | [README.md](./README.md) |
+
+## Progress Tracking Rule (MANDATORY)
+
+**After EVERY completed todo item or bug fix, you MUST:**
+1. **Update Memory MCP** - Create or update entities with implementation details, decisions made, and lessons learned
+2. **Update Progress Files** - Modify PROJECT_STATUS.md or relevant documentation
+3. **Document Bug Fixes** - If a bug was fixed, document the root cause and solution in memory
+4. **Update Architecture Docs** - If architecture changed, update relevant .md files in docs/
+
+This ensures knowledge persistence across sessions and helps future development.
 
 ## Remember
 

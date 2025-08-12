@@ -2,11 +2,14 @@ import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
+import cookie from '@fastify/cookie';
 import { Container } from './container';
 import { errorHandler } from './middleware/errorHandler';
 import { healthRoutes } from './routes/health';
 import { voiceNoteRoutes } from './routes/voiceNotes';
 import { testRoutes } from './routes/test';
+import authRoutes from './routes/auth';
+import paymentsRoutes from './routes/payments';
 
 export async function createApp(): Promise<FastifyInstance> {
   const container = Container.getInstance();
@@ -56,6 +59,12 @@ export async function createApp(): Promise<FastifyInstance> {
     }
   });
 
+  // Register cookie support for auth
+  await fastify.register(cookie, {
+    secret: process.env.JWT_SECRET || 'default-secret-change-in-production',
+    parseOptions: {}
+  });
+
   fastify.setErrorHandler(errorHandler);
 
   fastify.addHook('onRequest', async (request: any, reply) => {
@@ -79,7 +88,9 @@ export async function createApp(): Promise<FastifyInstance> {
   });
 
   await fastify.register(healthRoutes);
+  await fastify.register(authRoutes, { prefix: '/api/auth' });
   await fastify.register(voiceNoteRoutes);
+  await fastify.register(paymentsRoutes);
   await fastify.register(testRoutes);
 
   fastify.get('/', async (request, reply) => {

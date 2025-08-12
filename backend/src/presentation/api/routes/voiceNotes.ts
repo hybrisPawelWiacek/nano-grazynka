@@ -2,12 +2,27 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { MultipartFile } from '@fastify/multipart';
 import { Container } from '../container';
 import { Language } from '../../../domain/value-objects/Language';
+import { createAuthenticateMiddleware } from '../middleware/authenticate';
+import { createUsageLimitMiddleware } from '../middleware/usageLimit';
+import { createRateLimitMiddleware } from '../middleware/rateLimit';
+import { UserEntity } from '../../../domain/entities/User';
+import { JwtService } from '../../../infrastructure/auth/JwtService';
 
 export async function voiceNoteRoutes(fastify: FastifyInstance) {
   const container = Container.getInstance();
+  
+  // Create middleware instances
+  const jwtService = new JwtService();
+  const authMiddleware = createAuthenticateMiddleware(jwtService, container.getUserRepository());
+  const usageLimitMiddleware = createUsageLimitMiddleware(container.getUserRepository());
+  const rateLimitMiddleware = createRateLimitMiddleware();
 
-  // Upload voice note
-  fastify.post('/api/voice-notes', async (request: FastifyRequest, reply: FastifyReply) => {
+  // Upload voice note (protected route with usage limits and rate limiting)
+  fastify.post('/api/voice-notes', 
+    { 
+      preHandler: [authMiddleware, rateLimitMiddleware, usageLimitMiddleware] 
+    }, 
+    async (request: FastifyRequest & { user?: UserEntity }, reply: FastifyReply) => {
     try {
       const parts = request.parts();
       let fileData: { buffer: Buffer; filename: string; mimetype: string } | null = null;
@@ -39,11 +54,12 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         });
       }
 
-      // Validate userId is provided
-      if (!fields.userId) {
-        return reply.status(400).send({
-          error: 'Bad Request',
-          message: 'userId is required'
+      // Get authenticated user
+      const user = request.user;
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required'
         });
       }
 
@@ -77,13 +93,17 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         },
         userPrompt: fields.customPrompt || fields.userPrompt,  // Support both field names for compatibility
         tags: fields.tags ? fields.tags.split(',') : undefined,
-        userId: fields.userId,
+        userId: user.id!, // Use authenticated user's ID
         language: fields.language as 'EN' | 'PL' | undefined
       });
 
       if (!result.success) {
         throw result.error;
       }
+      
+      // Increment user's credits after successful upload
+      const userRepository = container.getUserRepository();
+      await userRepository.incrementCredits(user.id!);
 
       // Fetch the created voice note to return full object
       const getUseCase = container.getGetVoiceNoteUseCase();
@@ -153,8 +173,10 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     });
   });
 
-  // Get voice note by ID
-  fastify.get('/api/voice-notes/:id', async (request: any, reply: any) => {
+  // Get voice note by ID (protected route with rate limiting)
+  fastify.get('/api/voice-notes/:id', 
+    { preHandler: [authMiddleware, rateLimitMiddleware] },
+    async (request: any, reply: any) => {
     const useCase = container.getGetVoiceNoteUseCase();
     const result = await useCase.execute({
       voiceNoteId: request.params.id,
@@ -169,10 +191,13 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     return reply.send(result.data);
   });
 
-  // List voice notes
-  fastify.get('/api/voice-notes', async (request: any, reply: any) => {
+  // List voice notes (protected route with rate limiting)
+  fastify.get('/api/voice-notes', 
+    { preHandler: [authMiddleware, rateLimitMiddleware] },
+    async (request: FastifyRequest & { user?: UserEntity }, reply: FastifyReply) => {
     const useCase = container.getListVoiceNotesUseCase();
-    const query = request.query || {};
+    const query = (request as any).query || {};
+    const user = request.user;
     
     const result = await useCase.execute({
       page: parseInt(query.page) || 1,
@@ -186,7 +211,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         endDate: query.toDate ? new Date(query.toDate) : undefined,
         projects: query.projects ? query.projects.split(',') : undefined
       },
-      userId: query.userId,
+      userId: user?.id || 'default-user', // Use authenticated user's ID
       sortBy: query.sortBy || 'createdAt',
       sortOrder: query.sortOrder || 'desc'
     });
@@ -198,8 +223,10 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     return reply.send(result.data);
   });
 
-  // Delete voice note
-  fastify.delete('/api/voice-notes/:id', async (request: any, reply: any) => {
+  // Delete voice note (protected route)
+  fastify.delete('/api/voice-notes/:id', 
+    { preHandler: [authMiddleware] },
+    async (request: any, reply: any) => {
     const useCase = container.getDeleteVoiceNoteUseCase();
     const result = await useCase.execute({
       voiceNoteId: request.params.id,

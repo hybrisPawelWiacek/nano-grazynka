@@ -4,6 +4,7 @@ import { CompositeObservabilityProvider } from '../../infrastructure/observabili
 import { LangSmithObservabilityProvider } from '../../infrastructure/observability/LangSmithObservabilityProvider';
 import { OpenLLMetryObservabilityProvider } from '../../infrastructure/observability/OpenLLMetryObservabilityProvider';
 import { VoiceNoteRepositoryImpl } from '../../infrastructure/persistence/VoiceNoteRepositoryImpl';
+import { UserRepositoryImpl } from '../../infrastructure/persistence/UserRepositoryImpl';
 import { EventStoreImpl } from '../../infrastructure/persistence/EventStoreImpl';
 import { WhisperAdapter } from '../../infrastructure/external/WhisperAdapter';
 import { LLMAdapter } from '../../infrastructure/external/LLMAdapter';
@@ -27,6 +28,7 @@ export class Container {
   private observability: CompositeObservabilityProvider;
   
   private voiceNoteRepository: VoiceNoteRepositoryImpl;
+  private userRepository: UserRepositoryImpl;
   private eventStore: EventStoreImpl;
   private transcriptionService: WhisperAdapter;
   private summarizationService: LLMAdapter;
@@ -45,6 +47,7 @@ export class Container {
     ]);
     
     this.voiceNoteRepository = new VoiceNoteRepositoryImpl(this.prisma);
+    this.userRepository = new UserRepositoryImpl(this.prisma);
     this.eventStore = new EventStoreImpl(this.prisma);
     
     this.transcriptionService = new WhisperAdapter(this.config, this.observability);
@@ -77,6 +80,10 @@ export class Container {
   
   getObservability(): CompositeObservabilityProvider {
     return this.observability;
+  }
+  
+  getUserRepository(): UserRepositoryImpl {
+    return this.userRepository;
   }
   
   getUploadVoiceNoteUseCase(): UploadVoiceNoteUseCase {

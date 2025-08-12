@@ -10,6 +10,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User management models
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  tier              String    @default("free") // free, pro, business
+  creditsUsed       Int       @default(0)
+  creditsResetDate  DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  lastLoginAt       DateTime?
+  
+  voiceNotes        VoiceNote[]
+  sessions          Session[]
+  usageLogs         UsageLog[]
+  
+  @@index([email])
+  @@index([tier])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([token])
+  @@index([userId])
+}
+
+model UsageLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String   // upload, process, export, reprocess
+  timestamp DateTime @default(now())
+  metadata  String?  // JSON for additional data
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, timestamp])
+}
+
 model VoiceNote {
   id               String   @id @default(cuid())
   userId           String
@@ -25,6 +69,7 @@ model VoiceNote {
   updatedAt        DateTime @updatedAt
   version          Int      @default(1)
 
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   transcriptions   Transcription[]
   summaries        Summary[]
   events           Event[]

@@ -1,8 +1,8 @@
 # Project Status - nano-Grazynka
 
-**Last Updated**: August 12, 2025 (00:05)  
-**Current Phase**: MVP Complete - Production Ready  
-**Status**: ✅ Fully Functional with Polished UI
+**Last Updated**: August 12, 2025 (00:47)  
+**Current Phase**: User System Implementation (prd_add_1)  
+**Status**: 🚧 Phase 2 - Usage Tracking & Monetization
 
 ## 🎯 Current State
 
@@ -64,15 +64,39 @@ The nano-Grazynka MVP is **fully functional** with all critical bugs resolved. T
 - Maintained quality while improving performance
 - Flexible model selection based on requirements
 
+## 🚧 Current Implementation Progress (prd_add_1)
+
+### Phase 1: Core User System ✅
+- [x] Database schema with User, Session, UsageLog tables
+- [x] JWT authentication with httpOnly cookies
+- [x] Login/Register endpoints with bcrypt password hashing
+- [x] Frontend AuthContext and protected routes
+- [x] Authentication middleware for API endpoints
+
+### Phase 2: Usage Tracking & Limits (In Progress)
+- [x] Credit system with monthly limits (Phase 2.1)
+  - Free tier: 5 transcriptions/month
+  - Pro/Business: Unlimited
+  - Automatic monthly reset
+  - Usage tracking per upload
+- [ ] Rate limiting per tier (Phase 2.2)
+- [ ] Mocked Stripe payments (Phase 2.3)
+
+### Phase 3: Enhanced UX (Pending)
+- [ ] User dashboard with usage stats (Phase 3.1)
+- [ ] Account settings page (Phase 3.2)
+- [ ] Processing status indicators (Phase 3.3)
+
 ## 🏗️ Technical Debt / MVP Simplifications
 
-| Item | Description | Priority | Location |
-|------|-------------|----------|----------|
-| User Authentication | Hardcoded 'default-user' | High | `frontend/lib/api/voiceNotes.ts` |
-| Multi-tenancy | Single-user design | Medium | Throughout |
-| Rate Limiting | No API rate limiting | Medium | Backend API |
-| Error Recovery | Basic error handling | Low | Frontend components |
-| Caching | No caching layer | Low | Backend services |
+| Item | Description | Priority | Status | Location |
+|------|-------------|----------|--------|----------|
+| User Authentication | ~~Hardcoded 'default-user'~~ | ~~High~~ | ✅ Fixed | ~~`frontend/lib/api/voiceNotes.ts`~~ |
+| Multi-tenancy | Now supports multiple users | Medium | ✅ Fixed | Throughout |
+| Rate Limiting | No API rate limiting | Medium | 🚧 Next | Backend API |
+| Payment Integration | Mocked Stripe for MVP | Medium | 📋 Planned | Backend services |
+| Error Recovery | Basic error handling | Low | Pending | Frontend components |
+| Caching | No caching layer | Low | Pending | Backend services |
 
 ## 📋 Next Steps (Post-MVP)
 
