@@ -20,8 +20,9 @@ transcription:
 
 summarization:
   provider: openrouter  # Primary provider (fallback to openai)
-  model: google/gemini-2.0-flash-001  # Cost-effective model via OpenRouter
+  model: google/gemini-2.5-flash  # Latest Gemini Flash model via OpenRouter
   # Alternative models:
+  # - google/gemini-2.0-flash-001 (previous version)
   # - google/gemini-2.5-pro-exp-03-25 (higher reasoning)
   # - gpt-4o-mini (OpenAI fallback)
   maxTokens: 2000

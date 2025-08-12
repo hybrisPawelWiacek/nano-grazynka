@@ -24,7 +24,7 @@ services:
       - TRACELOOP_BASE_URL=https://api.traceloop.com
     volumes:
       - ./data:/data
-      - ./backend/config.yaml:/app/config.yaml:ro
+      - ./config.yaml:/app/config.yaml:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3101/health"]

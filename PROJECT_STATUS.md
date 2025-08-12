@@ -187,7 +187,7 @@ The nano-Grazynka MVP is **fully functional** with all critical issues resolved:
 ### Implemented but Needs Documentation Review
 | Feature | Location | Status | Notes |
 |---------|----------|--------|-------|
-| YAML Configuration | `backend/config.yaml` exists | ✅ Partial | Basic config exists, but not the full system prompt customization from PRD |
+| YAML Configuration | `config.yaml` (root) | ✅ Implemented | Config exists with provider/model settings, but not the full system prompt customization from PRD |
 | Library Page | `frontend/app/library/page.tsx` | ✅ Implemented | Working but not documented in PRD_ACTUAL |
 | Password Reset | `backend/src/presentation/api/routes/auth.ts` | ✅ Partial | Endpoint exists but simplified for MVP |
 | Remember Me | Frontend login page | ✅ Implemented | Checkbox exists in login |
