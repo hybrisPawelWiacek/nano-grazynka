@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ConversionModal from '@/components/ConversionModal';
+import styles from './page.module.css';
 
 interface ProcessingStatus {
   stage: 'idle' | 'uploading' | 'processing' | 'transcribing' | 'summarizing' | 'complete' | 'error';
@@ -17,23 +19,24 @@ interface ProcessingStatus {
 }
 
 export default function HomePage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isAnonymous, anonymousUsageCount, anonymousSessionId, refreshAnonymousUsage } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [file, setFile] = useState<File | null>(null);
   const [customPrompt, setCustomPrompt] = useState('');
   const [language, setLanguage] = useState<'AUTO' | 'EN' | 'PL'>('AUTO');
+  const [showConversionModal, setShowConversionModal] = useState(false);
   const [status, setStatus] = useState<ProcessingStatus>({
     stage: 'idle',
     progress: 0,
     message: ''
   });
 
-  // Redirect to dashboard if logged in
+  // Check usage limits
   useEffect(() => {
     if (user) {
-      // Check remaining credits
+      // Check remaining credits for authenticated users
       const creditsRemaining = (user.creditLimit || 5) - (user.creditsUsed || 0);
       if (creditsRemaining <= 0 && status.stage === 'idle') {
         setStatus({
@@ -42,8 +45,15 @@ export default function HomePage() {
           message: `You've used all ${user.creditLimit} transcriptions this month. Upgrade your plan for more.`
         });
       }
+    } else if (isAnonymous && anonymousUsageCount >= 5 && status.stage === 'idle') {
+      // Check anonymous usage limit
+      setStatus({
+        stage: 'error',
+        progress: 0,
+        message: `You've used all 5 free transcriptions. Create an account to continue!`
+      });
     }
-  }, [user]);
+  }, [user, isAnonymous, anonymousUsageCount]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -77,8 +87,9 @@ export default function HomePage() {
   const handleUpload = async () => {
     if (!file) return;
     
-    if (!user) {
-      router.push('/login');
+    // Check if anonymous user has reached limit
+    if (isAnonymous && anonymousUsageCount >= 5) {
+      setShowConversionModal(true);
       return;
     }
 
@@ -90,6 +101,10 @@ export default function HomePage() {
     formData.append('language', language);
     if (customPrompt) {
       formData.append('customPrompt', customPrompt);
+    }
+    // Add sessionId for anonymous users
+    if (isAnonymous && anonymousSessionId) {
+      formData.append('sessionId', anonymousSessionId);
     }
 
     try {
@@ -163,6 +178,11 @@ export default function HomePage() {
           if (fileInputRef.current) {
             fileInputRef.current.value = '';
           }
+          
+          // Update anonymous usage count
+          if (isAnonymous) {
+            refreshAnonymousUsage();
+          }
         } else if (data.status === 'failed') {
           throw new Error('Processing failed');
         } else if (attempts < maxAttempts) {
@@ -191,17 +211,6 @@ export default function HomePage() {
     }
   };
 
-  const getProgressColor = () => {
-    switch (status.stage) {
-      case 'error':
-        return 'bg-red-600';
-      case 'complete':
-        return 'bg-green-600';
-      default:
-        return 'bg-indigo-600';
-    }
-  };
-
   const resetUpload = () => {
     setFile(null);
     setCustomPrompt('');
@@ -213,86 +222,88 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white">
+    <div className={styles.page}>
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">nano-Grażynka</h1>
-            <div className="flex items-center space-x-4">
-              {user ? (
-                <>
-                  <span className="text-sm text-gray-600">
-                    Credits: {(user.creditLimit || 5) - (user.creditsUsed || 0)} / {user.creditLimit || 5}
-                  </span>
-                  <Link
-                    href="/dashboard"
-                    className="text-indigo-600 hover:text-indigo-500 font-medium"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/settings"
-                    className="text-gray-600 hover:text-gray-900"
-                  >
-                    Settings
-                  </Link>
-                  <button
-                    onClick={async () => {
-                      await logout();
-                      router.push('/login');
-                    }}
-                    className="text-red-600 hover:text-red-500 font-medium"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/login"
-                    className="text-indigo-600 hover:text-indigo-500 font-medium"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <h1 className={styles.logo}>nano-Grażynka</h1>
+          <nav className={styles.nav}>
+            {/* Anonymous User Info */}
+            {isAnonymous && !user && (
+              <>
+                <span className={styles.usageInfo}>
+                  Free uses: {5 - anonymousUsageCount} / 5 remaining
+                </span>
+                <span className={styles.usageHint}>
+                  No sign-up required!
+                </span>
+              </>
+            )}
+            
+            {user ? (
+              <>
+                <span className={styles.usageInfo}>
+                  Credits: {(user.creditLimit || 5) - (user.creditsUsed || 0)} / {user.creditLimit || 5}
+                </span>
+                <Link href="/dashboard" className={styles.navLink}>
+                  Dashboard
+                </Link>
+                <Link href="/settings" className={styles.navLink}>
+                  Settings
+                </Link>
+                <button
+                  onClick={async () => {
+                    await logout();
+                    router.push('/login');
+                  }}
+                  className={styles.logoutButton}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className={styles.navLink}>
+                  Login
+                </Link>
+                <Link href="/register" className={styles.signupButton}>
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </nav>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+      <main className={styles.main}>
+        <div className={styles.uploadCard}>
+          <div className={styles.hero}>
+            <h2 className={styles.title}>
               Voice Note Transcription & Summarization
             </h2>
-            <p className="text-gray-600">
+            <p className={styles.subtitle}>
               Upload your voice recording and get an AI-powered transcription and summary
             </p>
           </div>
 
           {/* Status Display */}
           {status.stage !== 'idle' && (
-            <div className="mb-8 p-6 bg-gray-50 rounded-lg">
+            <div className={styles.statusContainer}>
               {/* Progress Bar */}
               {status.stage !== 'complete' && status.stage !== 'error' && (
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <div className={styles.progressContainer}>
+                  <div className={styles.progressHeader}>
                     <span>{status.message}</span>
                     <span>{status.progress}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className={styles.progressBar}>
                     <div
-                      className={`h-2 rounded-full transition-all duration-500 ${getProgressColor()}`}
+                      className={`${styles.progressFill} ${
+                        status.stage === 'error' ? styles.progressError : 
+                        status.stage === 'complete' ? styles.progressSuccess : 
+                        styles.progressActive
+                      }`}
                       style={{ width: `${status.progress}%` }}
                     />
                   </div>
@@ -300,118 +311,95 @@ export default function HomePage() {
               )}
 
               {/* Status Message */}
-              <div className={`text-center ${
-                status.stage === 'error' ? 'text-red-600' : 
-                status.stage === 'complete' ? 'text-green-600' : 
-                'text-gray-700'
-              }`}>
-                {status.stage === 'complete' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-center mb-4">
-                      <svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <p className="font-semibold text-lg">{status.message}</p>
-                    {status.result && (
-                      <div className="mt-4 space-y-4 text-left">
-                        <Link
-                          href={`/voice-notes/${status.result.id}`}
-                          className="inline-block px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                        >
-                          View Full Results →
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {status.stage === 'error' && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-center mb-4">
-                      <svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <p className="font-semibold">{status.message}</p>
-                    <button
-                      onClick={resetUpload}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              {status.stage === 'complete' && (
+                <div className={styles.successMessage}>
+                  <svg className={styles.successIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className={styles.statusText}>{status.message}</p>
+                  {status.result && (
+                    <Link
+                      href={`/voice-notes/${status.result.id}`}
+                      className={styles.viewResultsButton}
                     >
-                      Try Again
-                    </button>
-                  </div>
-                )}
+                      View Full Results →
+                    </Link>
+                  )}
+                </div>
+              )}
+              
+              {status.stage === 'error' && (
+                <div className={styles.errorMessage}>
+                  <svg className={styles.errorIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className={styles.statusText}>{status.message}</p>
+                  <button onClick={resetUpload} className={styles.retryButton}>
+                    Try Again
+                  </button>
+                </div>
+              )}
 
-                {/* Processing Animation */}
-                {!['idle', 'complete', 'error'].includes(status.stage) && (
-                  <div className="flex justify-center mt-4">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                  </div>
-                )}
-              </div>
+              {/* Processing Animation */}
+              {!['idle', 'complete', 'error'].includes(status.stage) && (
+                <div className={styles.spinner} />
+              )}
             </div>
           )}
 
           {/* Upload Form */}
           {(status.stage === 'idle' || status.stage === 'error') && (
-            <div className="space-y-6">
+            <div className={styles.uploadForm}>
               {/* File Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
                   Select Audio File
                 </label>
-                <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      {file ? (
-                        <>
-                          <svg className="w-8 h-8 mb-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <p className="text-sm text-gray-900 font-semibold">{file.name}</p>
-                          <p className="text-xs text-gray-500">
-                            {(file.size / (1024 * 1024)).toFixed(2)} MB
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                          <p className="mb-2 text-sm text-gray-500">
-                            <span className="font-semibold">Click to upload</span> or drag and drop
-                          </p>
-                          <p className="text-xs text-gray-500">MP3, M4A, WAV up to 100MB</p>
-                        </>
-                      )}
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      className="hidden"
-                      accept="audio/*"
-                      onChange={handleFileSelect}
-                    />
-                  </label>
-                </div>
+                <label className={styles.dropzone}>
+                  <div className={styles.dropzoneContent}>
+                    {file ? (
+                      <>
+                        <svg className={styles.checkIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className={styles.fileName}>{file.name}</p>
+                        <p className={styles.fileSize}>
+                          {(file.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <svg className={styles.uploadIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p className={styles.dropzoneText}>
+                          <span>Click to upload</span> or drag and drop
+                        </p>
+                        <p className={styles.dropzoneHint}>MP3, M4A, WAV up to 100MB</p>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className={styles.hiddenInput}
+                    accept="audio/*"
+                    onChange={handleFileSelect}
+                  />
+                </label>
               </div>
 
               {/* Language Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
                   Language
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className={styles.languageButtons}>
                   {(['AUTO', 'EN', 'PL'] as const).map((lang) => (
                     <button
                       key={lang}
                       onClick={() => setLanguage(lang)}
-                      className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                        language === lang
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                      className={`${styles.languageButton} ${language === lang ? styles.languageButtonActive : ''}`}
                     >
                       {lang === 'AUTO' ? 'Auto-detect' : lang === 'EN' ? 'English' : 'Polish'}
                     </button>
@@ -420,8 +408,8 @@ export default function HomePage() {
               </div>
 
               {/* Custom Prompt */}
-              <div>
-                <label htmlFor="customPrompt" className="block text-sm font-medium text-gray-700 mb-2">
+              <div className={styles.formGroup}>
+                <label htmlFor="customPrompt" className={styles.label}>
                   Custom Instructions (Optional)
                 </label>
                 <textarea
@@ -430,30 +418,49 @@ export default function HomePage() {
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
                   placeholder="Add any specific instructions for the AI summary..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className={styles.textarea}
                 />
               </div>
 
               {/* Submit Button */}
               <button
                 onClick={handleUpload}
-                disabled={!file || (status.stage !== 'idle' && status.stage !== 'error')}
-                className={`w-full py-3 px-4 rounded-md font-semibold transition-colors ${
-                  file && status.stage === 'idle'
-                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                disabled={!file || (status.stage !== 'idle' && status.stage !== 'error') || (isAnonymous && anonymousUsageCount >= 5)}
+                className={`${styles.submitButton} ${
+                  !file || (isAnonymous && anonymousUsageCount >= 5) ? styles.submitButtonDisabled : ''
                 }`}
               >
-                {user ? 'Upload and Process' : 'Login to Upload'}
+                {isAnonymous && anonymousUsageCount >= 5 
+                  ? 'Sign Up to Continue' 
+                  : 'Upload and Process'}
               </button>
+
+              {/* Anonymous User Benefits */}
+              {isAnonymous && !user && (
+                <div className={styles.benefitsCard}>
+                  <h4 className={styles.benefitsTitle}>
+                    Try it free - no signup required!
+                  </h4>
+                  <ul className={styles.benefitsList}>
+                    <li>✓ {5 - anonymousUsageCount} free transcriptions remaining</li>
+                    <li>✓ Full quality AI transcription & summary</li>
+                    <li>✓ No credit card required</li>
+                  </ul>
+                  {anonymousUsageCount > 0 && (
+                    <p className={styles.benefitsNote}>
+                      Love it? <Link href="/register" className={styles.benefitsLink}>Create an account</Link> to save your transcriptions and get more monthly credits!
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* User Status */}
               {user && (
-                <div className="text-center text-sm text-gray-600">
+                <div className={styles.userStatus}>
                   {user.tier === 'free' ? (
                     <p>
                       Free tier: {(user.creditLimit || 5) - (user.creditsUsed || 0)} transcriptions remaining this month.{' '}
-                      <Link href="/pricing" className="text-indigo-600 hover:text-indigo-500">
+                      <Link href="/pricing" className={styles.upgradeLink}>
                         Upgrade for more
                       </Link>
                     </p>
@@ -469,38 +476,45 @@ export default function HomePage() {
         </div>
 
         {/* Features */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="mx-auto h-12 w-12 text-indigo-600 mb-4">
+        <div className={styles.features}>
+          <div className={styles.feature}>
+            <div className={styles.featureIcon}>
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">High-Quality Transcription</h3>
-            <p className="mt-2 text-gray-600">Powered by OpenAI Whisper for accurate voice-to-text conversion</p>
+            <h3 className={styles.featureTitle}>High-Quality Transcription</h3>
+            <p className={styles.featureDescription}>Powered by OpenAI Whisper for accurate voice-to-text conversion</p>
           </div>
           
-          <div className="text-center">
-            <div className="mx-auto h-12 w-12 text-indigo-600 mb-4">
+          <div className={styles.feature}>
+            <div className={styles.featureIcon}>
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Smart Summaries</h3>
-            <p className="mt-2 text-gray-600">AI-generated key points, action items, and insights</p>
+            <h3 className={styles.featureTitle}>Smart Summaries</h3>
+            <p className={styles.featureDescription}>AI-generated key points, action items, and insights</p>
           </div>
           
-          <div className="text-center">
-            <div className="mx-auto h-12 w-12 text-indigo-600 mb-4">
+          <div className={styles.feature}>
+            <div className={styles.featureIcon}>
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">Real-Time Status</h3>
-            <p className="mt-2 text-gray-600">Track processing progress with live status updates</p>
+            <h3 className={styles.featureTitle}>Real-Time Status</h3>
+            <p className={styles.featureDescription}>Track processing progress with live status updates</p>
           </div>
         </div>
       </main>
+      
+      {/* Conversion Modal */}
+      <ConversionModal 
+        isOpen={showConversionModal}
+        onClose={() => setShowConversionModal(false)}
+        usageCount={5}
+      />
     </div>
   );
 }

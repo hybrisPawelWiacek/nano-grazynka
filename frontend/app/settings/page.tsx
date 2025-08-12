@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import styles from './page.module.css';
 
 interface UserSettings {
   email: string;
@@ -169,22 +170,22 @@ export default function SettingsPage() {
 
   if (loading || !settings) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner}></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={styles.container}>
+      <div className={styles.wrapper}>
         {/* Header */}
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Account Settings</h1>
+        <div className={styles.header}>
+          <div className={styles.headerContent}>
+            <h1 className={styles.headerTitle}>Account Settings</h1>
             <Link
               href="/dashboard"
-              className="text-indigo-600 hover:text-indigo-500 font-medium"
+              className={styles.backLink}
             >
               ← Back to Dashboard
             </Link>
@@ -192,67 +193,65 @@ export default function SettingsPage() {
         </div>
 
         {message && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+          <div className={`${styles.message} ${
+            message.type === 'success' ? styles.messageSuccess : styles.messageError
           }`}>
             {message.text}
           </div>
         )}
 
         {/* Account Information */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Information</h2>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <p className="mt-1 text-sm text-gray-900">{settings.email}</p>
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Account Information</h2>
+          <div className={styles.grid}>
+            <div className={styles.field}>
+              <label className={styles.label}>Email</label>
+              <p className={styles.value}>{settings.email}</p>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Account Tier</label>
+              <div className={styles.valueWithLink}>
+                <span className={styles.value}>{settings.tier}</span>
+                {settings.tier === 'free' && (
+                  <Link href="/pricing" className={styles.upgradeLink}>
+                    Upgrade
+                  </Link>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Account Tier</label>
-                <p className="mt-1 text-sm text-gray-900 capitalize">
-                  {settings.tier}
-                  {settings.tier === 'free' && (
-                    <Link href="/pricing" className="ml-2 text-indigo-600 hover:text-indigo-500">
-                      Upgrade
-                    </Link>
-                  )}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Credits Used</label>
-                <p className="mt-1 text-sm text-gray-900">
-                  {settings.creditsUsed} / {settings.creditLimit}
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Member Since</label>
-                <p className="mt-1 text-sm text-gray-900">
-                  {new Date(settings.createdAt).toLocaleDateString()}
-                </p>
-              </div>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Credits Used</label>
+              <p className={styles.value}>
+                {settings.creditsUsed} / {settings.creditLimit}
+              </p>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>Member Since</label>
+              <p className={styles.value}>
+                {new Date(settings.createdAt).toLocaleDateString()}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Preferences */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Preferences</h2>
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Preferences</h2>
           
           {/* Default Language */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div>
+            <label className={styles.label}>
               Default Transcription Language
             </label>
-            <div className="flex space-x-4">
+            <div className={styles.languageSelector}>
               {(['AUTO', 'EN', 'PL'] as const).map((lang) => (
                 <button
                   key={lang}
                   onClick={() => handleLanguageChange(lang)}
-                  className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  className={`${styles.languageButton} ${
                     settings.defaultLanguage === lang
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? styles.languageButtonActive
+                      : styles.languageButtonInactive
                   }`}
                 >
                   {lang === 'AUTO' ? 'Auto-detect' : lang === 'EN' ? 'English' : 'Polish'}
@@ -263,59 +262,62 @@ export default function SettingsPage() {
 
           {/* Email Notifications */}
           <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Email Notifications</h3>
-            <div className="space-y-3">
-              <label className="flex items-center">
+            <h3 className={styles.label}>Email Notifications</h3>
+            <div className={styles.checkboxGroup}>
+              <div className={styles.checkboxItem}>
                 <input
                   type="checkbox"
                   checked={settings.notificationPreferences.emailOnComplete}
                   onChange={() => handleNotificationChange('emailOnComplete')}
-                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  className={styles.checkbox}
+                  id="emailOnComplete"
                 />
-                <span className="ml-2 text-sm text-gray-700">
+                <label htmlFor="emailOnComplete" className={styles.checkboxLabel}>
                   Email me when transcription is complete
-                </span>
-              </label>
-              <label className="flex items-center">
+                </label>
+              </div>
+              <div className={styles.checkboxItem}>
                 <input
                   type="checkbox"
                   checked={settings.notificationPreferences.emailOnFail}
                   onChange={() => handleNotificationChange('emailOnFail')}
-                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  className={styles.checkbox}
+                  id="emailOnFail"
                 />
-                <span className="ml-2 text-sm text-gray-700">
+                <label htmlFor="emailOnFail" className={styles.checkboxLabel}>
                   Email me if transcription fails
-                </span>
-              </label>
-              <label className="flex items-center">
+                </label>
+              </div>
+              <div className={styles.checkboxItem}>
                 <input
                   type="checkbox"
                   checked={settings.notificationPreferences.weeklyReport}
                   onChange={() => handleNotificationChange('weeklyReport')}
-                  className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  className={styles.checkbox}
+                  id="weeklyReport"
                 />
-                <span className="ml-2 text-sm text-gray-700">
+                <label htmlFor="weeklyReport" className={styles.checkboxLabel}>
                   Send me weekly usage reports
-                </span>
-              </label>
+                </label>
+              </div>
             </div>
           </div>
 
           <button
             onClick={handleSaveSettings}
             disabled={saving}
-            className="mt-6 px-4 py-2 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 disabled:bg-gray-400"
+            className={styles.buttonPrimary}
           >
             {saving ? 'Saving...' : 'Save Preferences'}
           </button>
         </div>
 
         {/* Change Password */}
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Change Password</h2>
-          <form onSubmit={handleChangePassword} className="space-y-4">
-            <div>
-              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Change Password</h2>
+          <form onSubmit={handleChangePassword} className={styles.passwordForm}>
+            <div className={styles.field}>
+              <label htmlFor="currentPassword" className={styles.label}>
                 Current Password
               </label>
               <input
@@ -323,12 +325,12 @@ export default function SettingsPage() {
                 id="currentPassword"
                 value={passwordForm.currentPassword}
                 onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className={styles.input}
                 required
               />
             </div>
-            <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+            <div className={styles.field}>
+              <label htmlFor="newPassword" className={styles.label}>
                 New Password
               </label>
               <input
@@ -336,13 +338,13 @@ export default function SettingsPage() {
                 id="newPassword"
                 value={passwordForm.newPassword}
                 onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className={styles.input}
                 required
                 minLength={8}
               />
             </div>
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+            <div className={styles.field}>
+              <label htmlFor="confirmPassword" className={styles.label}>
                 Confirm New Password
               </label>
               <input
@@ -350,7 +352,7 @@ export default function SettingsPage() {
                 id="confirmPassword"
                 value={passwordForm.confirmPassword}
                 onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className={styles.input}
                 required
                 minLength={8}
               />
@@ -358,7 +360,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 disabled:bg-gray-400"
+              className={styles.buttonPrimary}
             >
               {saving ? 'Changing...' : 'Change Password'}
             </button>
@@ -366,34 +368,34 @@ export default function SettingsPage() {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-white shadow rounded-lg p-6 border-2 border-red-200">
-          <h2 className="text-lg font-semibold text-red-900 mb-4">Danger Zone</h2>
-          <p className="text-sm text-gray-600 mb-4">
+        <div className={`${styles.section} ${styles.sectionDanger}`}>
+          <h2 className={`${styles.sectionTitle} ${styles.sectionTitleDanger}`}>Danger Zone</h2>
+          <p className={styles.value}>
             Once you delete your account, there is no going back. Please be certain.
           </p>
           
           {!showDeleteConfirm ? (
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700"
+              className={styles.buttonDanger}
             >
               Delete Account
             </button>
           ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-red-600 font-semibold">
+            <div>
+              <p className={styles.modalText} style={{ color: 'var(--color-error)', marginBottom: 'var(--space-3)' }}>
                 Are you absolutely sure? This action cannot be undone.
               </p>
-              <div className="flex space-x-3">
+              <div className={styles.buttonGroup}>
                 <button
                   onClick={handleDeleteAccount}
-                  className="px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700"
+                  className={styles.buttonDanger}
                 >
                   Yes, Delete My Account
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-400"
+                  className={styles.buttonSecondary}
                 >
                   Cancel
                 </button>

@@ -11,7 +11,8 @@ export function createUsageLimitMiddleware(userRepository: UserRepository) {
       const user = request.user;
       
       if (!user) {
-        return reply.code(401).send({ error: 'Authentication required' });
+        // No authenticated user - skip this middleware (anonymous users handled separately)
+        return;
       }
 
       // Check if user needs credit reset

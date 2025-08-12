@@ -1,8 +1,8 @@
 # Project Status - nano-Grazynka
 
-**Last Updated**: August 12, 2025 (15:20)  
-**Current Phase**: User System Implementation (prd_add_1)  
-**Status**: ✅ Phase 2.1 Complete - Considering UX Rearchitecture
+**Last Updated**: August 12, 2025 (10:57)  
+**Current Phase**: UX Rearchitecture Implementation  
+**Status**: 🚧 Debugging Anonymous Upload Flow
 
 ## 🎯 Current State
 
@@ -72,7 +72,45 @@ The nano-Grazynka MVP is **fully functional** with all critical bugs resolved. T
 - Maintained quality while improving performance
 - Flexible model selection based on requirements
 
-## 🚧 Current Implementation Progress (prd_add_1)
+## 🚧 Current Implementation Progress (UX Rearchitecture)
+
+### Completed
+- [x] Anonymous session management system (database schema)
+- [x] Frontend AuthContext supports anonymous users  
+- [x] Homepage shows "5 free uses" for anonymous users
+- [x] Middleware updated for optional authentication
+- [x] Frontend sends sessionId with file uploads
+
+### Completed (August 12, 2025 - Session 2)
+- [x] Fixed homepage CSS styling issues
+  - Converted from Tailwind to CSS modules
+  - Established consistent pattern for all pages
+- [x] Anonymous upload flow fully functional
+  - All errors resolved (getPrisma, AUTO language, database sync)
+  - Usage limits properly enforced
+- [x] CSS Module Migration (Partial)
+  - ConversionModal component converted to CSS modules
+  - Dashboard page fully converted to CSS modules
+  - Removed duplicate frontend/src/app directory
+  - Established CSS module patterns and conventions
+
+### In Progress
+- [ ] Implement conversion modal when limit reached
+
+### Completed (August 12, 2025)
+- [x] **RESOLVED**: Fixed getPrisma undefined error
+  - Root cause: Prisma client wasn't regenerated after adding AnonymousSession model
+  - Solution: Ran `npx prisma generate` to include new model
+- [x] Fixed database sync between local and Docker
+  - Created AnonymousSession table with `npx prisma db push`
+- [x] Fixed "Unsupported language code: AUTO" error
+  - Backend now converts 'AUTO' to undefined for auto-detect
+- [x] Successfully tested complete anonymous upload flow
+  - Anonymous users can upload up to 5 files
+  - Usage limit correctly enforced with 403 response
+  - Session tracking working properly
+
+## 🚧 Previous Implementation Progress (prd_add_1)
 
 ### Phase 1: Core User System ✅
 - [x] Database schema with User, Session, UsageLog tables

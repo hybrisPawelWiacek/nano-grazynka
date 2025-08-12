@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import styles from './page.module.css';
 
 interface DashboardStats {
   creditsUsed: number;
@@ -80,36 +81,36 @@ export default function DashboardPage() {
     return Math.round((stats.creditsUsed / stats.creditLimit) * 100);
   };
 
-  const getTierColor = (tier: string) => {
+  const getTierClass = (tier: string) => {
     switch (tier) {
       case 'pro':
-        return 'text-blue-600';
+        return styles.tierPro;
       case 'business':
-        return 'text-purple-600';
+        return styles.tierBusiness;
       default:
-        return 'text-gray-600';
+        return styles.tierFree;
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusClass = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return styles.statusCompleted;
       case 'processing':
-        return 'bg-yellow-100 text-yellow-800';
+        return styles.statusProcessing;
       case 'failed':
-        return 'bg-red-100 text-red-800';
+        return styles.statusFailed;
       default:
-        return 'bg-gray-100 text-gray-800';
+        return styles.statusPending;
     }
   };
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+      <div className={styles.loadingContainer}>
+        <div className={styles.loadingContent}>
+          <div className={styles.spinner}></div>
+          <p className={styles.loadingText}>Loading dashboard...</p>
         </div>
       </div>
     );
@@ -117,12 +118,12 @@ export default function DashboardPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600">Error loading dashboard: {error}</p>
+      <div className={styles.errorContainer}>
+        <div className={styles.errorContent}>
+          <p className={styles.errorText}>Error loading dashboard: {error}</p>
           <button
             onClick={fetchDashboardStats}
-            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            className={styles.retryButton}
           >
             Retry
           </button>
@@ -136,27 +137,27 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={styles.container}>
+      <div className={styles.wrapper}>
         {/* Header */}
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
-          <div className="flex justify-between items-center">
+        <div className={styles.header}>
+          <div className={styles.headerContent}>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className={styles.headerTitle}>Dashboard</h1>
+              <p className={styles.headerSubtitle}>
                 Welcome back, {user.email}
               </p>
             </div>
-            <div className="flex space-x-4">
+            <div className={styles.headerActions}>
               <Link
                 href="/settings"
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className={styles.settingsLink}
               >
                 Settings
               </Link>
               <Link
                 href="/"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
+                className={styles.uploadLink}
               >
                 Upload Voice Note
               </Link>
@@ -165,27 +166,27 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className={styles.statsGrid}>
           {/* Usage Card */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-500">Monthly Usage</h3>
-            <div className="mt-2">
-              <div className="flex items-baseline">
-                <span className="text-2xl font-semibold text-gray-900">
+          <div className={styles.statCard}>
+            <h3 className={styles.statLabel}>Monthly Usage</h3>
+            <div className={styles.statContent}>
+              <div className={styles.statValue}>
+                <span className={styles.statNumber}>
                   {stats.creditsUsed}
                 </span>
-                <span className="ml-1 text-sm text-gray-500">
+                <span className={styles.statUnit}>
                   / {stats.creditLimit} transcriptions
                 </span>
               </div>
-              <div className="mt-3">
-                <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className={styles.progressContainer}>
+                <div className={styles.progressBar}>
                   <div
-                    className="bg-indigo-600 h-2 rounded-full"
+                    className={styles.progressFill}
                     style={{ width: `${getUsagePercentage()}%` }}
                   ></div>
                 </div>
-                <p className="mt-2 text-xs text-gray-500">
+                <p className={styles.resetDate}>
                   Resets on {stats.monthlyReset}
                 </p>
               </div>
@@ -193,17 +194,17 @@ export default function DashboardPage() {
           </div>
 
           {/* Tier Card */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-500">Current Tier</h3>
-            <div className="mt-2">
-              <span className={`text-2xl font-semibold capitalize ${getTierColor(stats.tier)}`}>
+          <div className={styles.statCard}>
+            <h3 className={styles.statLabel}>Current Tier</h3>
+            <div className={styles.statContent}>
+              <span className={`${styles.tierValue} ${getTierClass(stats.tier)}`}>
                 {stats.tier}
               </span>
               {stats.tier === 'free' && (
-                <div className="mt-3">
+                <div>
                   <Link
                     href="/pricing"
-                    className="text-sm text-indigo-600 hover:text-indigo-500"
+                    className={styles.upgradeLink}
                   >
                     Upgrade for more features →
                   </Link>

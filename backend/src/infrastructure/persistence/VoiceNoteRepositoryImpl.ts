@@ -253,7 +253,8 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
   private toDatabase(voiceNote: VoiceNote): any {
     return {
       id: voiceNote.getId().toString(),
-      userId: voiceNote.getUserId(),
+      userId: voiceNote.getUserId() || null,  // Handle optional userId
+      sessionId: voiceNote.getSessionId() || null,  // Add sessionId field
       title: voiceNote.getTitle(),
       originalFilePath: voiceNote.getOriginalFilePath(),
       fileSize: voiceNote.getFileSize(),
@@ -276,9 +277,8 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
     const status = ProcessingStatus.fromString(data.status);
     const language = Language.fromString(data.language);
     
-    const voiceNote = VoiceNote.reconstitute(
+        const voiceNote = VoiceNote.reconstitute(
       VoiceNoteId.fromString(data.id),
-      data.userId,
       data.title,
       data.originalFilePath,
       data.fileSize,
@@ -286,6 +286,8 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       language,
       status,
       JSON.parse(data.tags || '[]'),
+      data.userId,
+      data.sessionId,  // Add sessionId parameter
       data.errorMessage || undefined,
       data.createdAt,
       data.updatedAt,

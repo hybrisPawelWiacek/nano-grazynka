@@ -10,6 +10,7 @@ import { voiceNoteRoutes } from './routes/voiceNotes';
 import { testRoutes } from './routes/test';
 import authRoutes from './routes/auth';
 import paymentsRoutes from './routes/payments';
+import { anonymousRoutes } from './routes/anonymous';
 
 export async function createApp(): Promise<FastifyInstance> {
   const container = Container.getInstance();
@@ -65,6 +66,9 @@ export async function createApp(): Promise<FastifyInstance> {
     parseOptions: {}
   });
 
+  // Decorate fastify instance with container for proper access in routes
+  fastify.decorate('container', container);
+
   fastify.setErrorHandler(errorHandler);
 
   fastify.addHook('onRequest', async (request: any, reply) => {
@@ -91,6 +95,7 @@ export async function createApp(): Promise<FastifyInstance> {
   await fastify.register(authRoutes, { prefix: '/api/auth' });
   await fastify.register(voiceNoteRoutes);
   await fastify.register(paymentsRoutes);
+  await fastify.register(anonymousRoutes);
   await fastify.register(testRoutes);
 
   fastify.get('/', async (request, reply) => {

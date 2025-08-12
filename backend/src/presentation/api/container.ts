@@ -39,7 +39,9 @@ export class Container {
     this.config = new ConfigLoader();
     this.config.load();
     
+    console.log('Container: Initializing DatabaseClient...');
     this.prisma = DatabaseClient.getInstance();
+    console.log('Container: DatabaseClient initialized, prisma:', !!this.prisma);
     
     this.observability = new CompositeObservabilityProvider([
       new LangSmithObservabilityProvider(this.config),
@@ -75,6 +77,10 @@ export class Container {
   }
   
   getPrisma(): PrismaClient {
+    if (!this.prisma) {
+      console.error('Container.getPrisma(): prisma is undefined!');
+      throw new Error('PrismaClient not initialized in Container');
+    }
     return this.prisma;
   }
   

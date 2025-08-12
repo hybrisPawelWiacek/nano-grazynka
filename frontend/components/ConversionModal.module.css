@@ -1,0 +1,206 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  overflow-y: auto;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: opacity var(--transition-base);
+}
+
+.modalContainer {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background-color: var(--color-surface-elevated);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-8) var(--space-6);
+  animation: slideUp var(--transition-base);
+}
+
+.closeButton {
+  position: absolute;
+  right: var(--space-4);
+  top: var(--space-4);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.closeButton:hover {
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface);
+}
+
+.closeButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.content {
+  text-align: center;
+}
+
+.iconContainer {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(0, 122, 255, 0.05));
+  border-radius: var(--radius-full);
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  color: var(--color-accent);
+}
+
+.title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+  letter-spacing: -0.01em;
+}
+
+.message {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-8);
+  line-height: 1.6;
+}
+
+.benefitsList {
+  text-align: left;
+  max-width: 380px;
+  margin: 0 auto var(--space-8);
+  padding: 0;
+  list-style: none;
+}
+
+.benefitItem {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.benefitIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-success);
+  margin-top: 2px;
+  margin-right: var(--space-3);
+  flex-shrink: 0;
+}
+
+.benefitText {
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.benefitText strong {
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.ctaContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.primaryButton {
+  width: 100%;
+  padding: var(--space-3) var(--space-6);
+  background-color: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+  display: inline-block;
+}
+
+.primaryButton:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.secondaryButton {
+  width: 100%;
+  padding: var(--space-3) var(--space-6);
+  background-color: var(--color-surface-elevated);
+  color: var(--color-accent);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  text-decoration: none;
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+  display: inline-block;
+}
+
+.secondaryButton:hover {
+  background-color: var(--color-surface);
+  transform: translateY(-1px);
+}
+
+.laterButton {
+  background: transparent;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: var(--space-2);
+  transition: color var(--transition-fast);
+}
+
+.laterButton:hover {
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 640px) {
+  .modal {
+    padding: var(--space-6) var(--space-4);
+  }
+  
+  .title {
+    font-size: var(--text-xl);
+  }
+  
+  .benefitsList {
+    max-width: 100%;
+  }
+}

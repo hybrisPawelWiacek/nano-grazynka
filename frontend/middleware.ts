@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 // Define protected routes
 const protectedRoutes = [
-  '/',
+  // Homepage now accessible to anonymous users
   '/dashboard',
   '/settings',
   '/billing',

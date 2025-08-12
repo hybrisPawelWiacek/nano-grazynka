@@ -2,6 +2,13 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
+import { 
+  getOrCreateSessionId, 
+  getUsageCount, 
+  incrementUsageCount,
+  clearAnonymousSession,
+  getSessionIdForMigration 
+} from '@/lib/anonymousSession';
 
 interface User {
   id: string;
@@ -15,10 +22,14 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isAnonymous: boolean;
+  anonymousUsageCount: number;
+  anonymousSessionId: string | null;
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  refreshAnonymousUsage: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,9 +39,17 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3101';
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [anonymousSessionId, setAnonymousSessionId] = useState<string | null>(null);
+  const [anonymousUsageCount, setAnonymousUsageCount] = useState(0);
 
   useEffect(() => {
     checkAuth();
+    // Initialize anonymous session
+    if (typeof window !== 'undefined') {
+      const sessionId = getOrCreateSessionId();
+      setAnonymousSessionId(sessionId);
+      setAnonymousUsageCount(getUsageCount());
+    }
   }, []);
 
   const checkAuth = async () => {
@@ -70,6 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
     setUser(data.user);
+    
+    // Clear anonymous session after successful login
+    clearAnonymousSession();
+    setAnonymousSessionId(null);
+    setAnonymousUsageCount(0);
   };
 
   const register = async (email: string, password: string) => {
@@ -89,6 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const data = await response.json();
     setUser(data.user);
+    
+    // Clear anonymous session after successful login
+    clearAnonymousSession();
+    setAnonymousSessionId(null);
+    setAnonymousUsageCount(0);
   };
 
   const logout = async () => {
@@ -110,15 +139,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await checkAuth();
   };
 
+  const refreshAnonymousUsage = () => {
+    if (typeof window !== 'undefined') {
+      setAnonymousUsageCount(getUsageCount());
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
+        isAnonymous: !user,
+        anonymousSessionId,
+        anonymousUsageCount,
         login,
         register,
         logout,
         refreshUser,
+        refreshAnonymousUsage,
       }}
     >
       {children}

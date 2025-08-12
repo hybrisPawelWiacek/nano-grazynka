@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import styles from './page.module.css';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
@@ -17,12 +18,12 @@ export default function PaymentSuccessPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+    <div className={styles.container}>
+      <div className={styles.card}>
         {/* Success Icon */}
-        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+        <div className={styles.iconWrapper}>
           <svg
-            className="h-10 w-10 text-green-600"
+            className={styles.icon}
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -34,41 +35,41 @@ export default function PaymentSuccessPage() {
           </svg>
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
+        <h1 className={styles.title}>
           Payment Successful!
         </h1>
         
-        <p className="text-gray-600 mb-6">
+        <p className={styles.description}>
           Your subscription has been upgraded successfully. You now have access to all premium features.
         </p>
 
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">What's next?</h3>
-          <ul className="text-sm text-gray-600 text-left space-y-1">
-            <li>• Your new plan is active immediately</li>
-            <li>• Credits have been added to your account</li>
-            <li>• Check your dashboard for updated limits</li>
-            <li>• You'll receive a confirmation email shortly</li>
+        <div className={styles.infoBox}>
+          <h3 className={styles.infoTitle}>What's next?</h3>
+          <ul className={styles.infoList}>
+            <li className={styles.infoItem}>Your new plan is active immediately</li>
+            <li className={styles.infoItem}>Credits have been added to your account</li>
+            <li className={styles.infoItem}>Check your dashboard for updated limits</li>
+            <li className={styles.infoItem}>You'll receive a confirmation email shortly</li>
           </ul>
         </div>
 
-        <div className="space-y-3">
+        <div className={styles.buttonGroup}>
           <Link
             href="/dashboard"
-            className="block w-full py-3 px-4 bg-indigo-600 text-white rounded-md font-semibold hover:bg-indigo-700 transition-colors"
+            className={styles.buttonPrimary}
           >
             Go to Dashboard
           </Link>
           
           <Link
             href="/"
-            className="block w-full py-3 px-4 border border-gray-300 text-gray-700 rounded-md font-semibold hover:bg-gray-50 transition-colors"
+            className={styles.buttonSecondary}
           >
             Upload Voice Note
           </Link>
         </div>
 
-        <p className="text-xs text-gray-500 mt-6">
+        <p className={styles.redirectText}>
           Redirecting to dashboard in 5 seconds...
         </p>
       </div>

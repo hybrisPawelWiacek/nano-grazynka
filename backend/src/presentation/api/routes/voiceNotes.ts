@@ -3,24 +3,36 @@ import { MultipartFile } from '@fastify/multipart';
 import { Container } from '../container';
 import { Language } from '../../../domain/value-objects/Language';
 import { createAuthenticateMiddleware } from '../middleware/authenticate';
+import { createOptionalAuthMiddleware } from '../middleware/optionalAuth';
 import { createUsageLimitMiddleware } from '../middleware/usageLimit';
+import { createAnonymousUsageLimitMiddleware } from '../middleware/anonymousUsageLimit';
 import { createRateLimitMiddleware } from '../middleware/rateLimit';
 import { UserEntity } from '../../../domain/entities/User';
 import { JwtService } from '../../../infrastructure/auth/JwtService';
 
+declare module 'fastify' {
+  interface FastifyInstance {
+    container: Container;
+  }
+}
+
 export async function voiceNoteRoutes(fastify: FastifyInstance) {
-  const container = Container.getInstance();
+  console.log('voiceNoteRoutes: fastify.container =', !!fastify.container);
+  const container = fastify.container || Container.getInstance();
+  console.log('voiceNoteRoutes: container =', !!container);
   
   // Create middleware instances
   const jwtService = new JwtService();
   const authMiddleware = createAuthenticateMiddleware(jwtService, container.getUserRepository());
+  const optionalAuthMiddleware = createOptionalAuthMiddleware(jwtService, container.getUserRepository());
   const usageLimitMiddleware = createUsageLimitMiddleware(container.getUserRepository());
+  const anonymousUsageLimitMiddleware = createAnonymousUsageLimitMiddleware();
   const rateLimitMiddleware = createRateLimitMiddleware();
 
-  // Upload voice note (protected route with usage limits and rate limiting)
+  // Upload voice note (supports both authenticated and anonymous users)
   fastify.post('/api/voice-notes', 
     { 
-      preHandler: [authMiddleware, rateLimitMiddleware, usageLimitMiddleware] 
+      preHandler: [optionalAuthMiddleware, rateLimitMiddleware, usageLimitMiddleware] 
     }, 
     async (request: FastifyRequest & { user?: UserEntity }, reply: FastifyReply) => {
     try {
@@ -54,13 +66,72 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         });
       }
 
-      // Get authenticated user
+      // Get user or sessionId
       const user = request.user;
-      if (!user) {
-        return reply.status(401).send({
-          error: 'Unauthorized',
-          message: 'Authentication required'
+      const sessionId = fields.sessionId;
+      let anonymousSession = (request as any).anonymousSession;
+      
+      // Must have either user or sessionId
+      if (!user && !sessionId) {
+        return reply.status(400).send({
+          error: 'Bad Request',
+          message: 'Session ID required for anonymous uploads'
         });
+      }
+      
+      // Check anonymous session limits if no authenticated user
+      if (!user && sessionId) {
+        console.log('Checking anonymous session, sessionId:', sessionId);
+        console.log('Container exists:', !!container);
+        console.log('Container type:', typeof container);
+        console.log('Container.getPrisma exists:', typeof container?.getPrisma);
+        
+        let prisma;
+        try {
+          prisma = container.getPrisma();
+          console.log('Prisma instance retrieved:', !!prisma);
+          console.log('Prisma type:', typeof prisma);
+          console.log('Prisma has anonymousSession:', !!prisma?.anonymousSession);
+          console.log('Prisma constructor name:', prisma?.constructor?.name);
+        } catch (err) {
+          console.error('Error calling getPrisma:', err);
+          throw err;
+        }
+        
+        const ANONYMOUS_USAGE_LIMIT = 5;
+        
+        try {
+          // Check if session exists
+          anonymousSession = await prisma.anonymousSession.findUnique({
+            where: { sessionId }
+          });
+
+          if (!anonymousSession) {
+            // Create new session
+            anonymousSession = await prisma.anonymousSession.create({
+              data: {
+                sessionId,
+                usageCount: 0
+              }
+            });
+          }
+
+          // Check usage limit
+          if (anonymousSession.usageCount >= ANONYMOUS_USAGE_LIMIT) {
+            return reply.status(403).send({ 
+              error: 'Usage Limit Exceeded',
+              message: 'Anonymous usage limit reached. Please sign up to continue.',
+              usageCount: anonymousSession.usageCount,
+              limit: ANONYMOUS_USAGE_LIMIT
+            });
+          }
+        } catch (error) {
+          console.error('Error checking anonymous usage:', error);
+          return reply.status(500).send({ 
+            error: 'Internal Server Error',
+            message: 'Failed to check usage limits' 
+          });
+        }
       }
 
       // Validate file type
@@ -93,17 +164,31 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         },
         userPrompt: fields.customPrompt || fields.userPrompt,  // Support both field names for compatibility
         tags: fields.tags ? fields.tags.split(',') : undefined,
-        userId: user.id!, // Use authenticated user's ID
-        language: fields.language as 'EN' | 'PL' | undefined
+        userId: user?.id,  // Optional for authenticated users
+        sessionId: !user ? sessionId : undefined,  // Only for anonymous users
+        language: fields.language === 'AUTO' ? undefined : fields.language as 'EN' | 'PL' | undefined
       });
 
       if (!result.success) {
         throw result.error;
       }
       
-      // Increment user's credits after successful upload
-      const userRepository = container.getUserRepository();
-      await userRepository.incrementCredits(user.id!);
+      // Increment usage count after successful upload
+      if (user) {
+        // Increment authenticated user's credits
+        const userRepository = container.getUserRepository();
+        await userRepository.incrementCredits(user.id!);
+      } else if (anonymousSession) {
+        // Increment anonymous session usage count
+        const prisma = container.getPrisma();
+        await prisma.anonymousSession.update({
+          where: { id: anonymousSession.id },
+          data: { 
+            usageCount: { increment: 1 },
+            lastUsedAt: new Date()
+          }
+        });
+      }
 
       // Fetch the created voice note to return full object
       const getUseCase = container.getGetVoiceNoteUseCase();

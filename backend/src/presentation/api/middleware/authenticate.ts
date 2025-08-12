@@ -43,7 +43,7 @@ export function createAuthenticateMiddleware(
   };
 }
 
-function extractToken(request: FastifyRequest): string | null {
+export function extractToken(request: FastifyRequest): string | null {
   // Try cookie first
   const cookieToken = request.cookies?.token;
   if (cookieToken) {

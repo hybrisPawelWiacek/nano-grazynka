@@ -223,6 +223,102 @@ When making choices, ask:
 
 **For detailed patterns and examples → See [MCP Playbook](./docs/playbook/MCP_PLAYBOOK.md)**
 
+## Memory Management System
+
+### Entity Namespace Organization
+
+#### Feature Implementation Entities
+For features with dedicated planning documents, use the plan name as entity:
+- **Pattern**: `{PLAN_NAME}_IMPLEMENTATION`
+- **Examples**:
+  - `UX_REARCHITECTURE_IMPLEMENTATION` (from UX_REARCHITECTURE_PLAN.md)
+  - `USER_SYSTEM_IMPLEMENTATION` (from prd_add_1.md)
+  - `MONETIZATION_IMPLEMENTATION` (if implementing monetization features)
+
+#### Core Project Entities (Predefined Namespaces)
+For work outside specific feature plans, use these standardized entities:
+
+| Entity Name | Purpose | When to Use |
+|-------------|---------|-------------|
+| `ARCHITECTURE_DECISIONS` | System design choices | DDD patterns, API design, database schema changes |
+| `BUG_FIXES` | Bug solutions & patterns | Root causes, fixes, prevention strategies |
+| `TECHNICAL_DEBT` | Refactoring & improvements | Code cleanup, performance optimizations |
+| `INTEGRATION_PATTERNS` | External service integrations | Whisper, OpenAI, authentication flows |
+| `TESTING_STRATEGIES` | Test patterns & results | E2E tests, unit tests, test data |
+| `DEPLOYMENT_CONFIG` | Infrastructure & deployment | Docker, environment variables, CI/CD |
+| `API_CONTRACT` | API specifications | Endpoint changes, response formats |
+| `UI_PATTERNS` | Frontend patterns | Component patterns, styling solutions |
+| `ERROR_HANDLING` | Error patterns & solutions | Common errors, handling strategies |
+| `PERFORMANCE_OPTIMIZATIONS` | Performance improvements | Caching, query optimization, bundling |
+
+### Memory Save Rules
+
+1. **During Feature Implementation**:
+   ```
+   Entity: {FEATURE_PLAN}_IMPLEMENTATION
+   Observations: 
+   - Current phase/step completed
+   - Technical decisions made
+   - Blockers encountered
+   - Solutions applied
+   ```
+
+2. **For General Development**:
+   ```
+   Entity: Choose from Core Project Entities
+   Observations:
+   - What was done
+   - Why it was done
+   - Impact on system
+   - Future considerations
+   ```
+
+3. **Auto-Save Pattern at 94% Context**:
+   ```
+   Entities to save:
+   - CONTEXT_CHECKPOINT (automatic)
+   - Current feature entity (if applicable)
+   - Any modified core entities
+   ```
+
+### Memory Reading Protocol (MANDATORY)
+
+**ALWAYS read relevant memory entities when starting ANY new task:**
+
+1. **On Task Start - Immediate Actions**:
+   ```
+   a) Identify task type from user prompt
+   b) Load relevant memory entities BEFORE any other action:
+      - If feature work → Load {FEATURE}_IMPLEMENTATION
+      - If bug fix → Load BUG_FIXES
+      - If UI work → Load UI_PATTERNS
+      - If API work → Load API_CONTRACT
+   c) Check for recent CONTEXT_CHECKPOINT if applicable
+   ```
+
+2. **Memory Reading Examples**:
+   - User: "Continue implementing the UX rearchitecture"
+     → Read: UX_REARCHITECTURE_IMPLEMENTATION
+   - User: "Fix the upload error we had yesterday"
+     → Read: BUG_FIXES, ERROR_HANDLING
+   - User: "Update the API endpoints"
+     → Read: API_CONTRACT, ARCHITECTURE_DECISIONS
+   - User: "Style the dashboard component"
+     → Read: UI_PATTERNS
+
+3. **What to Extract from Memory**:
+   - Previous decisions and their rationale
+   - Known issues and solutions
+   - Patterns to follow
+   - Work completed so far
+   - Next steps identified
+
+### Memory Query Pattern
+When starting work:
+1. Check if working on a planned feature → Load `{PLAN}_IMPLEMENTATION`
+2. Load relevant core entities based on task type
+3. Check for recent `CONTEXT_CHECKPOINT` if resuming
+
 ## Context Management & Auto-Save
 
 ### When to Save Context
@@ -282,6 +378,8 @@ When encountering issues:
 - **Backend**: Node.js + Fastify + TypeScript
 - **Frontend**: Next.js 15 + TypeScript  
 - **Database**: SQLite via Prisma
+  - **Location in Docker**: `/app/prisma/data/nano-grazynka.db`
+  - **Query via Prisma**: `docker exec nano-grazynka_cc-backend-1 sh -c 'echo "SELECT * FROM TableName;" | npx prisma db execute --url "file:/app/prisma/data/nano-grazynka.db" --stdin'`
 - **Container**: Docker Compose
 - **AI Services**: OpenAI/OpenRouter
 - **Environment**: Single root .env file (NO backend/.env - use only root .env)

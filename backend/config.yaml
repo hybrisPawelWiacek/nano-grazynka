@@ -1,0 +1,46 @@
+server:
+  port: 3101
+  host: 0.0.0.0
+
+database:
+  url: file:./database.db
+
+transcription:
+  provider: openai
+  apiKey: ""
+  model: whisper-1
+  maxFileSizeMB: 25
+  supportedFormats:
+    - mp3
+    - mp4
+    - mpeg
+    - mpga
+    - m4a
+    - wav
+    - webm
+
+summarization:
+  provider: openai
+  apiKey: ""
+  model: gpt-4
+  maxTokens: 150
+  temperature: 0.7
+
+storage:
+  type: local
+  localPath: ./uploads
+  
+security:
+  jwtSecret: ""
+  jwtExpiresIn: "7d"
+  rateLimitWindow: 60000
+  rateLimitMax: 100
+
+system:
+  maxCreditsPerMonth: 60
+  resetDay: 1
+  
+features:
+  enableTranscription: true
+  enableSummarization: true
+  enableExport: true

@@ -56,7 +56,8 @@ model UsageLog {
 
 model VoiceNote {
   id               String   @id @default(cuid())
-  userId           String
+  userId           String?  // Made optional for anonymous users
+  sessionId        String?  // For anonymous users
   title            String
   originalFilePath String
   fileSize         Int
@@ -69,7 +70,7 @@ model VoiceNote {
   updatedAt        DateTime @updatedAt
   version          Int      @default(1)
 
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   transcriptions   Transcription[]
   summaries        Summary[]
   events           Event[]
@@ -77,6 +78,7 @@ model VoiceNote {
   @@index([userId, status])
   @@index([userId, createdAt])
   @@index([userId, updatedAt])
+  @@index([sessionId])
 }
 
 model Transcription {
@@ -124,4 +126,16 @@ model Event {
 
   @@index([aggregateId])
   @@index([occurredAt])
+}
+
+// Anonymous session tracking
+model AnonymousSession {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  lastUsedAt  DateTime @default(now())
+  
+  @@index([sessionId])
+  @@index([createdAt])
 }

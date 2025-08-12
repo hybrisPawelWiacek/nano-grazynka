@@ -9,7 +9,8 @@ import { Config } from '../../config/schema';
 import * as path from 'path';
 
 export interface UploadVoiceNoteInput {
-  userId: string;
+  userId?: string;  // Made optional for anonymous users
+  sessionId?: string;  // For anonymous users
   file: {
     buffer: Buffer;
     originalName: string;
@@ -75,7 +76,7 @@ export class UploadVoiceNoteUseCase extends UseCase<
       const storagePath = await this.storageService.save(
         input.file.buffer,
         input.file.originalName,
-        input.userId
+        input.userId || input.sessionId || 'anonymous'
       );
 
       // Extract title from filename
@@ -84,6 +85,7 @@ export class UploadVoiceNoteUseCase extends UseCase<
       // Create voice note entity
       const voiceNote = VoiceNote.create({
         userId: input.userId,
+        sessionId: input.sessionId,
         title,
         originalFilePath: storagePath,
         fileSize: input.file.size,

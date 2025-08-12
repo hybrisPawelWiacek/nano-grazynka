@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import styles from './page.module.css';
 
 interface PricingPlan {
   id: string;
@@ -182,57 +183,55 @@ export default function PricingPage() {
   const currentPlan = getCurrentPlan();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={styles.container}>
+      <div className={styles.wrapper}>
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900">Choose Your Plan</h1>
-          <p className="mt-4 text-xl text-gray-600">
+        <div className={styles.header}>
+          <h1 className={styles.title}>Choose Your Plan</h1>
+          <p className={styles.subtitle}>
             Select the perfect plan for your voice transcription needs
           </p>
         </div>
 
         {error && (
-          <div className="mt-4 p-4 bg-red-100 text-red-700 rounded-lg text-center">
+          <div className={styles.errorMessage}>
             {error}
           </div>
         )}
 
         {/* Pricing Cards */}
-        <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+        <div className={styles.pricingGrid}>
           {pricingPlans.map((plan) => (
             <div
               key={plan.id}
-              className={`relative bg-white rounded-lg shadow-lg p-8 ${
-                plan.recommended ? 'ring-2 ring-indigo-600' : ''
+              className={`${styles.card} ${
+                plan.recommended ? styles.cardRecommended : ''
               }`}
             >
               {plan.recommended && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-indigo-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                    Recommended
-                  </span>
+                <div className={styles.recommendedBadge}>
+                  Recommended
                 </div>
               )}
 
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900">{plan.name}</h3>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold text-gray-900">
+              <div className={styles.cardHeader}>
+                <h3 className={styles.planName}>{plan.name}</h3>
+                <div className={styles.priceWrapper}>
+                  <span className={styles.price}>
                     ${plan.price}
                   </span>
-                  <span className="text-gray-500">/{plan.interval}</span>
+                  <span className={styles.interval}>/{plan.interval}</span>
                 </div>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className={styles.credits}>
                   {plan.creditsPerMonth} transcriptions per month
                 </p>
               </div>
 
-              <ul className="mt-8 space-y-4">
+              <ul className={styles.featuresList}>
                 {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start">
+                  <li key={index} className={styles.featureItem}>
                     <svg
-                      className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0"
+                      className={styles.featureIcon}
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -242,16 +241,16 @@ export default function PricingPage() {
                         clipRule="evenodd"
                       />
                     </svg>
-                    <span className="text-gray-700">{feature}</span>
+                    <span className={styles.featureText}>{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-8">
+              <div>
                 {currentPlan === plan.id ? (
                   <button
                     disabled
-                    className="w-full py-3 px-4 bg-gray-300 text-gray-500 rounded-md font-semibold cursor-not-allowed"
+                    className={`${styles.selectButton} ${styles.selectButtonDisabled}`}
                   >
                     Current Plan
                   </button>
@@ -259,12 +258,12 @@ export default function PricingPage() {
                   <button
                     onClick={() => handleSelectPlan(plan.id)}
                     disabled={loading !== null}
-                    className={`w-full py-3 px-4 rounded-md font-semibold transition-colors ${
+                    className={`${styles.selectButton} ${
                       loading === plan.id
-                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        ? styles.selectButtonLoading
                         : plan.recommended
-                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                        : 'bg-gray-800 text-white hover:bg-gray-900'
+                        ? styles.selectButtonPrimary
+                        : styles.selectButtonSecondary
                     }`}
                   >
                     {loading === plan.id ? 'Processing...' : 
@@ -277,40 +276,40 @@ export default function PricingPage() {
         </div>
 
         {/* FAQ Section */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-8">
+        <div className={styles.faqSection}>
+          <h2 className={styles.faqTitle}>
             Frequently Asked Questions
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className={styles.faqGrid}>
+            <div className={styles.faqItem}>
+              <h3 className={styles.faqQuestion}>
                 Can I change plans at any time?
               </h3>
-              <p className="mt-2 text-gray-600">
+              <p className={styles.faqAnswer}>
                 Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.
               </p>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className={styles.faqItem}>
+              <h3 className={styles.faqQuestion}>
                 What happens if I exceed my monthly limit?
               </h3>
-              <p className="mt-2 text-gray-600">
+              <p className={styles.faqAnswer}>
                 You won't be able to upload new voice notes until the next month or until you upgrade your plan.
               </p>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className={styles.faqItem}>
+              <h3 className={styles.faqQuestion}>
                 Do unused credits roll over?
               </h3>
-              <p className="mt-2 text-gray-600">
+              <p className={styles.faqAnswer}>
                 No, unused credits do not roll over to the next month. Your credit balance resets monthly.
               </p>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className={styles.faqItem}>
+              <h3 className={styles.faqQuestion}>
                 Is there a free trial for paid plans?
               </h3>
-              <p className="mt-2 text-gray-600">
+              <p className={styles.faqAnswer}>
                 We offer a generous free tier with 5 transcriptions per month. You can upgrade anytime.
               </p>
             </div>
@@ -318,10 +317,10 @@ export default function PricingPage() {
         </div>
 
         {/* Back to Dashboard */}
-        <div className="mt-12 text-center">
+        <div className={styles.backLinkWrapper}>
           <Link
             href="/dashboard"
-            className="text-indigo-600 hover:text-indigo-500 font-medium"
+            className={styles.backLink}
           >
             ← Back to Dashboard
           </Link>
