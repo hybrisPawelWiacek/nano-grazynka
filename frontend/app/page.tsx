@@ -17,7 +17,7 @@ interface ProcessingStatus {
 }
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -237,6 +237,15 @@ export default function HomePage() {
                   >
                     Settings
                   </Link>
+                  <button
+                    onClick={async () => {
+                      await logout();
+                      router.push('/login');
+                    }}
+                    className="text-red-600 hover:text-red-500 font-medium"
+                  >
+                    Logout
+                  </button>
                 </>
               ) : (
                 <>

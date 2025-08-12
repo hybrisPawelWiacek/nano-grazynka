@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/src/contexts/AuthContext';
+import styles from '../auth.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,93 +31,87 @@ export default function LoginPage() {
   };
 
   return (
-    <>
-      <div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <div className={styles.authCard}>
+      <div className={styles.authHeader}>
+        <h2 className={styles.authTitle}>
           Sign in to your account
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+        <p className={styles.authSubtitle}>
           Or{' '}
-          <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+          <Link href="/register">
             create a new account
           </Link>
         </p>
       </div>
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        <input type="hidden" name="remember" value={rememberMe ? 'true' : 'false'} />
-        <div className="rounded-md shadow-sm -space-y-px">
-          <div>
-            <label htmlFor="email-address" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="email-address"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="sr-only">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-        </div>
-
+      <form className={styles.authForm} onSubmit={handleSubmit}>
         {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="text-sm text-red-800">{error}</div>
+          <div className={styles.errorMessage}>
+            {error}
           </div>
         )}
+        
+        <div className={styles.formGroup}>
+          <label htmlFor="email-address" className={styles.formLabel}>
+            Email address
+          </label>
+          <input
+            id="email-address"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            className={styles.formInput}
+            placeholder="Email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        
+        <div className={styles.formGroup}>
+          <label htmlFor="password" className={styles.formLabel}>
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            className={styles.formInput}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
+        <div className={styles.formRow}>
+          <div className={styles.checkboxGroup}>
             <input
               id="remember-me"
               name="remember-me"
               type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className={styles.checkbox}
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
             />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+            <label htmlFor="remember-me" className={styles.checkboxLabel}>
               Remember me
             </label>
           </div>
 
-          <div className="text-sm">
-            <Link href="/reset-password" className="font-medium text-blue-600 hover:text-blue-500">
-              Forgot your password?
-            </Link>
-          </div>
+          <Link href="/reset-password" className={styles.forgotLink}>
+            Forgot your password?
+          </Link>
         </div>
 
-        <div>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={styles.submitButton}
+        >
+          {isLoading ? 'Signing in...' : 'Sign in'}
+        </button>
       </form>
-    </>
+    </div>
   );
 }

@@ -1,8 +1,8 @@
 # Project Status - nano-Grazynka
 
-**Last Updated**: August 12, 2025 (00:47)  
+**Last Updated**: August 12, 2025 (15:20)  
 **Current Phase**: User System Implementation (prd_add_1)  
-**Status**: 🚧 Phase 2 - Usage Tracking & Monetization
+**Status**: ✅ Phase 2.1 Complete - Considering UX Rearchitecture
 
 ## 🎯 Current State
 
@@ -53,6 +53,14 @@ The nano-Grazynka MVP is **fully functional** with all critical bugs resolved. T
 - [x] Smooth animations and transitions
 - [x] Consistent visual hierarchy
 
+### Authentication UI Fixes (August 12, 2025) ✅
+- [x] Fixed Module not found error for AuthContext imports
+- [x] Migrated auth pages from src/app to app directory
+- [x] Converted auth pages from Tailwind to CSS modules
+- [x] Added logout functionality to main dashboard
+- [x] Synchronized database schema with User tables
+- [x] All authentication flows working correctly
+
 ### API Integration
 - **Gemini 2.0 Flash** via OpenRouter (primary)
 - **GPT-4o-mini** via OpenAI (fallback)
@@ -98,13 +106,32 @@ The nano-Grazynka MVP is **fully functional** with all critical bugs resolved. T
 | Error Recovery | Basic error handling | Low | Pending | Frontend components |
 | Caching | No caching layer | Low | Pending | Backend services |
 
+## 🔄 Proposed UX Rearchitecture
+
+### Current Issue
+- Users are greeted with login page first
+- Cannot see app capabilities without account
+- Poor conversion flow (barrier before value)
+
+### Proposed Solution
+- **Public Homepage**: Show full app with upload capability
+- **Anonymous Usage**: Allow 5 free transcriptions without account
+- **Graceful Upgrade**: Prompt for account after seeing value
+- **Classic SaaS Pattern**: Try → Love → Sign up
+
+### Implementation Scope
+1. Remove homepage from protected routes in middleware
+2. Support anonymous uploads with session tracking
+3. Convert to account after transcription limit
+4. Show benefits of creating account inline
+
 ## 📋 Next Steps (Post-MVP)
 
 ### High Priority
-1. **User Authentication**
-   - Replace hardcoded userId
-   - Add login/signup flow
-   - Implement JWT tokens
+1. **UX Rearchitecture**
+   - Public homepage with anonymous usage
+   - Session-based tracking for non-logged users
+   - Conversion flow after usage limit
 
 2. **Production Deployment**
    - PostgreSQL instead of SQLite

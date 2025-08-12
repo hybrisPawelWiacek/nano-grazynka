@@ -45,7 +45,12 @@ As the main agent, I will:
 |----------|---------|-------------|
 | [System Architecture](./docs/architecture/ARCHITECTURE.md) | System design & patterns | Understanding system structure |
 | [Database Schema](./docs/architecture/DATABASE.md) | Schema & data models | Database work, queries |
-| [Product Requirements](./docs/architecture/PRD.md) | Product requirements document | Feature planning, scope |
+
+#### Requirements (Human-Managed)
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [Product Requirements](./docs/requirements/PRD.md) | Original MVP requirements | Feature planning, scope |
+| [PRD Add-on 1](./docs/requirements/prd_add_1.md) | User system & monetization | Authentication, tiers, usage tracking |
 
 #### Development & Operations
 | Document | Purpose | When to Use |
@@ -61,11 +66,17 @@ As the main agent, I will:
 | [Test Plan](./docs/testing/TEST_PLAN.md) | Test planning & strategy | Test execution planning |
 | [Test Results](./docs/testing/TEST_RESULTS.md) | Latest test results | Review test outcomes |
 
-#### Project Management
+#### Project Management (Canonical)
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
 | [README.md](./README.md) | Quick start & overview | First time setup, basic usage |
-| [PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) | Progress tracker | Current status, next steps |
+| [PROJECT_STATUS.md](./PROJECT_STATUS.md) | Progress tracker | Current status, next steps |
+| [Documentation Guide](./docs/DOCUMENTATION_STRUCTURE.md) | Doc organization guide | Understanding where docs live |
+
+#### Planning Documents (Ephemeral)
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [UX Rearchitecture](./docs/planning/UX_REARCHITECTURE_PLAN.md) | Public homepage plan | Anonymous usage implementation |
 
 ## Project Overview
 
