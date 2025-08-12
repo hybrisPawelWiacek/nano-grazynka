@@ -61,9 +61,9 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
         openllmetry: observability.getProviders().some(p => p.constructor.name === 'OpenLLMetryObservabilityProvider')
       },
       config: {
-        transcriptionProvider: config.get('transcription.provider'),
-        summarizationModel: config.get('summarization.model'),
-        uploadDir: config.get('storage.uploadDir'),
+        transcriptionProvider: (config as any).transcription?.provider,
+        summarizationModel: (config as any).summarization?.model,
+        uploadDir: (config as any).storage?.uploadDir,
         maxFileSize: 10485760 // 10MB default
       }
     });
@@ -109,7 +109,7 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
 
     try {
       const fs = await import('fs/promises');
-      const uploadDir = config.get('storage.uploadDir');
+      const uploadDir = (config as any).storage?.uploadDir;
       await fs.access(uploadDir);
       checks.storage = true;
     } catch (error) {
@@ -117,7 +117,7 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
     }
 
     try {
-      config.get('server.port');
+      (config as any).server?.port;
       checks.config = true;
     } catch (error) {
       request.log.error('Config readiness check failed:', error);

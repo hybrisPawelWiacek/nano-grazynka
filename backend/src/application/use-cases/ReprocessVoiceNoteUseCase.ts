@@ -6,15 +6,8 @@ import { ProcessingOrchestrator } from '../services/ProcessingOrchestrator';
 
 export interface ReprocessVoiceNoteInput {
   voiceNoteId: string;
-  newUserPrompt: string;
-  systemPromptVariables?: {
-    projects?: string[];
-    teams?: string[];
-    preferredFormat?: string;
-    summaryHeading?: string;
-    keyPointsHeading?: string;
-    actionItemsHeading?: string;
-  };
+  userPrompt?: string;  // Changed from newUserPrompt to match what's sent from API
+  systemPromptVariables?: Record<string, string>;
 }
 
 export interface ReprocessVoiceNoteOutput {
@@ -37,13 +30,8 @@ export class ReprocessVoiceNoteUseCase extends UseCase<
 
   async execute(input: ReprocessVoiceNoteInput): Promise<Result<ReprocessVoiceNoteOutput>> {
     try {
-      // Validate input
-      if (!input.newUserPrompt || input.newUserPrompt.trim().length === 0) {
-        return {
-          success: false,
-          error: new ValidationError('New user prompt is required for reprocessing')
-        };
-      }
+      // userPrompt is now optional - allow regeneration with default prompts
+      // No validation needed for userPrompt
 
       // Find voice note
       const voiceNoteId = VoiceNoteId.fromString(input.voiceNoteId);
@@ -74,17 +62,21 @@ export class ReprocessVoiceNoteUseCase extends UseCase<
         };
       }
 
-      // Reprocess the voice note
+      // Reprocess the voice note with optional user prompt
       const result = await this.processingOrchestrator.reprocessVoiceNote(
         voiceNote,
-        input.newUserPrompt,
-        input.systemPromptVariables
+        undefined,  // systemPrompt
+        input.userPrompt,  // userPrompt (optional)
+        undefined,  // model
+        undefined   // language
       );
 
-      if (!result.success) {
+      // The reprocessVoiceNote returns a VoiceNote, not a result object
+      // Check if the voice note was successfully reprocessed by checking its status
+      if (result.getStatus().getValue() === 'failed') {
         return {
           success: false,
-          error: result.error || new Error('Reprocessing failed')
+          error: new Error('Reprocessing failed')
         };
       }
 
@@ -92,9 +84,9 @@ export class ReprocessVoiceNoteUseCase extends UseCase<
         success: true,
         data: {
           voiceNoteId: voiceNote.getId().getValue(),
-          status: voiceNote.getStatus().getValue(),
-          summaryId: result.summary!.getId(),
-          version: voiceNote.getVersion()
+          status: result.getStatus().getValue(),
+          summaryId: result.getSummary()?.getId() || '',
+          version: result.getVersion()
         }
       };
     } catch (error) {

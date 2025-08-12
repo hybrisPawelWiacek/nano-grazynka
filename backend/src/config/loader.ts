@@ -62,11 +62,15 @@ export class ConfigLoader {
       },
       transcription: {
         ...config.transcription,
-        apiKey: process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY || config.transcription?.apiKey,
+        apiKey: config.transcription?.provider === 'openrouter'
+          ? (process.env.OPENROUTER_API_KEY || config.transcription?.apiKey)
+          : (process.env.OPENAI_API_KEY || config.transcription?.apiKey),
       },
       summarization: {
         ...config.summarization,
-        apiKey: process.env.OPENAI_API_KEY || process.env.OPENROUTER_API_KEY || config.summarization?.apiKey,
+        apiKey: config.summarization?.provider === 'openrouter' 
+          ? (process.env.OPENROUTER_API_KEY || config.summarization?.apiKey)
+          : (process.env.OPENAI_API_KEY || config.summarization?.apiKey),
       },
       observability: {
         langsmith: {

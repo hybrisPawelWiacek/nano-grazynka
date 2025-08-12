@@ -7,7 +7,7 @@ database:
 
 transcription:
   provider: openai  # Using OpenAI for gpt-4o-transcribe model
-  model: gpt-4o-audio-preview  # GPT-4o-Transcribe: 30% better accuracy than whisper-1 at same cost
+  model: gpt-4o-transcribe  # GPT-4o-Transcribe: 30% better accuracy than whisper-1 at same cost
   maxFileSizeMB: 25
   supportedFormats:
     - mp3
@@ -43,3 +43,5 @@ processing:
   maxConcurrentJobs: 3
   jobTimeoutMinutes: 30
   retryAttempts: 3
+  queueType: memory
+  statusUpdateIntervalMs: 5000

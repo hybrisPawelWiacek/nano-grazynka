@@ -151,7 +151,7 @@ export class UploadVoiceNoteUseCase extends UseCase<
     }
 
     // Check file size
-    const maxSizeMB = this.config.get('transcription.maxFileSizeMB');
+    const maxSizeMB = this.config.transcription?.maxFileSizeMB || 25;
     const maxSize = maxSizeMB * 1024 * 1024;
     if (file.size > maxSize) {
       return {

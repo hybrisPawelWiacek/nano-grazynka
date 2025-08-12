@@ -11,14 +11,20 @@ export class LocalStorageAdapter implements StorageService {
     this.ensureDirectoryExists();
   }
 
-  async save(filePath: string, buffer: Buffer): Promise<string> {
-    const fullPath = this.getFullPath(filePath);
+  async save(buffer: Buffer, originalName: string, userId?: string): Promise<string> {
+    // Generate unique filename
+    const timestamp = Date.now();
+    const sanitizedName = originalName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fileName = `${timestamp}-${sanitizedName}`;
+    
+    const fullPath = this.getFullPath(fileName);
     const directory = path.dirname(fullPath);
     
     await fs.mkdir(directory, { recursive: true });
     await fs.writeFile(fullPath, buffer);
     
-    return filePath;
+    // Return the full path so WhisperAdapter can find the file
+    return fullPath;
   }
 
   async read(filePath: string): Promise<Buffer> {

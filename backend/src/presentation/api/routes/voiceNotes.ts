@@ -66,9 +66,9 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         });
       }
 
-      // Get user or sessionId
+      // Get user or sessionId (from fields or header)
       const user = request.user;
-      const sessionId = fields.sessionId;
+      const sessionId = fields.sessionId || (request.headers['x-session-id'] as string);
       let anonymousSession = (request as any).anonymousSession;
       
       // Must have either user or sessionId
@@ -315,26 +315,18 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
           }
         }
 
-        // Reprocess the voice note to regenerate transcription and summary
+        // Reprocess the voice note to regenerate summary with optional custom prompt
         const reprocessUseCase = container.getReprocessVoiceNoteUseCase();
         const reprocessResult = await reprocessUseCase.execute({
           voiceNoteId: params.id,
-          userPrompt: body.userPrompt
+          userPrompt: body.userPrompt  // Pass the custom prompt if provided
         });
 
         if (!reprocessResult.success) {
           throw reprocessResult.error;
         }
 
-        // Process the voice note
-        const processUseCase = container.getProcessVoiceNoteUseCase();
-        const processResult = await processUseCase.execute({
-          voiceNoteId: params.id
-        });
-
-        if (!processResult.success) {
-          throw processResult.error;
-        }
+        // Don't need to call ProcessVoiceNoteUseCase - reprocess already handles summarization
 
         // Get the updated voice note with new transcription and summary
         const updatedResult = await getUseCase.execute({

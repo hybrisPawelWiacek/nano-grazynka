@@ -79,9 +79,13 @@ export class LLMAdapter implements SummarizationService {
       temperature?: number;
     }
   ): Promise<SummarizationResult> {
-    const apiKey = ConfigLoader.get('summarization.apiKey');
+    const apiKey = ConfigLoader.get('summarization.apiKey') || process.env.OPENROUTER_API_KEY;
     const model = ConfigLoader.get('summarization.model');
     const baseUrl = ConfigLoader.get('summarization.apiUrl') || 'https://openrouter.ai/api/v1';
+    
+    if (!apiKey) {
+      throw new Error('OpenRouter API key not configured');
+    }
     
     const systemPrompt = this.getSystemPrompt(language, options?.prompt);
     const maxTokens = options?.maxTokens || ConfigLoader.get('summarization.maxTokens');
@@ -124,9 +128,17 @@ export class LLMAdapter implements SummarizationService {
     }
 
     const prompts = ConfigLoader.get('summarization.prompts');
-    const langCode = language.getValue();
+    const basePrompt = prompts.summary || 'Summarize the following transcript concisely, capturing key points and main ideas.';
     
-    return prompts[langCode] || prompts.en;
+    // Add JSON format instruction for Gemini compatibility
+    return `${basePrompt}
+    
+    IMPORTANT: You must respond with valid JSON in the following format:
+    {
+      "summary": "A concise summary of the transcript",
+      "key_points": ["Key point 1", "Key point 2", "Key point 3"],
+      "action_items": ["Action item 1", "Action item 2"]
+    }`;
   }
 
   private parseResult(content: any): SummarizationResult {

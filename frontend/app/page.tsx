@@ -5,6 +5,8 @@ import { useAuth } from '@/src/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConversionModal from '@/components/ConversionModal';
+import PostTranscriptionDialog from '@/components/PostTranscriptionDialog';
+import AdvancedOptions from '@/components/AdvancedOptions';
 import styles from './page.module.css';
 
 interface ProcessingStatus {
@@ -24,9 +26,12 @@ export default function HomePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [file, setFile] = useState<File | null>(null);
-  const [customPrompt, setCustomPrompt] = useState('');
+  const [whisperPrompt, setWhisperPrompt] = useState('');
   const [language, setLanguage] = useState<'AUTO' | 'EN' | 'PL'>('AUTO');
   const [showConversionModal, setShowConversionModal] = useState(false);
+  const [showPostTranscriptionDialog, setShowPostTranscriptionDialog] = useState(false);
+  const [transcriptionResult, setTranscriptionResult] = useState<{ id: string; text: string } | null>(null);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [status, setStatus] = useState<ProcessingStatus>({
     stage: 'idle',
     progress: 0,
@@ -102,8 +107,8 @@ export default function HomePage() {
     if (language !== 'AUTO') {
       formData.append('language', language);
     }
-    if (customPrompt) {
-      formData.append('customPrompt', customPrompt);
+    if (whisperPrompt) {
+      formData.append('whisperPrompt', whisperPrompt);
     }
     // Add sessionId for anonymous users
     if (isAnonymous && anonymousSessionId) {
@@ -166,8 +171,27 @@ export default function HomePage() {
 
         const data = await statusResponse.json();
         
-        if (data.status === 'completed' && data.transcription && data.summary) {
-          // Success!
+        // Check if transcription is complete but summary not yet generated
+        if (data.transcription && !data.summary) {
+          // Transcription complete - show PostTranscriptionDialog
+          setTranscriptionResult({ id: voiceNoteId, text: data.transcription.text });
+          setShowPostTranscriptionDialog(true);
+          setStatus({ stage: 'idle', progress: 0, message: '' });
+          
+          // Clear form
+          setFile(null);
+          setWhisperPrompt('');
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+          
+          // Update anonymous usage count
+          if (isAnonymous) {
+            refreshAnonymousUsage();
+          }
+          return; // Stop polling
+        } else if (data.status === 'completed' && data.transcription && data.summary) {
+          // Both transcription and summary complete
           setStatus({
             stage: 'complete',
             progress: 100,
@@ -181,7 +205,7 @@ export default function HomePage() {
           
           // Clear form
           setFile(null);
-          setCustomPrompt('');
+          setWhisperPrompt('');
           if (fileInputRef.current) {
             fileInputRef.current.value = '';
           }
@@ -220,9 +244,11 @@ export default function HomePage() {
 
   const resetUpload = () => {
     setFile(null);
-    setCustomPrompt('');
+    setWhisperPrompt('');
     setLanguage('AUTO');
     setStatus({ stage: 'idle', progress: 0, message: '' });
+    setTranscriptionResult(null);
+    setShowPostTranscriptionDialog(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -414,20 +440,13 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Custom Prompt */}
-              <div className={styles.formGroup}>
-                <label htmlFor="customPrompt" className={styles.label}>
-                  Custom Instructions (Optional)
-                </label>
-                <textarea
-                  id="customPrompt"
-                  rows={3}
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder="Add any specific instructions for the AI summary..."
-                  className={styles.textarea}
-                />
-              </div>
+              {/* Advanced Options with Whisper Prompt */}
+              <AdvancedOptions
+                whisperPrompt={whisperPrompt}
+                onWhisperPromptChange={setWhisperPrompt}
+                isExpanded={showAdvancedOptions}
+                onToggle={() => setShowAdvancedOptions(!showAdvancedOptions)}
+              />
 
               {/* Submit Button */}
               <button
@@ -522,6 +541,28 @@ export default function HomePage() {
         onClose={() => setShowConversionModal(false)}
         usageCount={5}
       />
+      
+      {/* Post-Transcription Dialog */}
+      {transcriptionResult && (
+        <PostTranscriptionDialog
+          isOpen={showPostTranscriptionDialog}
+          onClose={() => {
+            setShowPostTranscriptionDialog(false);
+            setTranscriptionResult(null);
+            resetUpload();
+          }}
+          transcriptionText={transcriptionResult.text}
+          noteId={transcriptionResult.id}
+          onSummaryGenerated={(summaryPrompt) => {
+            // Summary will be generated on the backend
+            // Just close the dialog and let the user view results
+            setShowPostTranscriptionDialog(false);
+            setTranscriptionResult(null);
+            // Navigate to the note details page
+            router.push(`/note/${transcriptionResult.id}`);
+          }}
+        />
+      )}
     </div>
   );
 }

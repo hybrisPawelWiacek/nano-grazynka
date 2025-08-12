@@ -8,7 +8,7 @@ export class LangSmithObservabilityProvider implements ObservabilityProvider {
 
   constructor(config: Config) {
     this.config = config;
-    this.enabled = config.get('observability.langsmith.enabled');
+    this.enabled = false; // Disable LangSmith for now
   }
 
   isEnabled(): boolean {

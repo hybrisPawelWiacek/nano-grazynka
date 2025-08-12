@@ -65,7 +65,9 @@ export class ProcessingOrchestrator {
       );
       await this.eventStore.append(transcribedEvent);
 
-      // Summarization with user prompt if provided
+      // Skip summarization on initial upload - will be done via PostTranscriptionDialog
+      // Comment out the auto-summarization to enable two-step flow
+      /*
       const summaryResult = await this.performSummarization(
         voiceNote,
         transcriptionResult.transcription!,
@@ -80,9 +82,12 @@ export class ProcessingOrchestrator {
       }
 
       voiceNote.addSummary(summaryResult.summary!);
+      */
       voiceNote.markAsCompleted();
       await this.voiceNoteRepository.save(voiceNote);
       
+      // Skip summarization event since we're not auto-summarizing
+      /*
       const summarizedEvent = new VoiceNoteSummarizedEvent(
         voiceNote.getId().toString(),
         {
@@ -93,6 +98,7 @@ export class ProcessingOrchestrator {
         }
       );
       await this.eventStore.append(summarizedEvent);
+      */
       
       const completedEvent = new VoiceNoteProcessingCompletedEvent(
         voiceNote.getId().toString(),
@@ -196,16 +202,21 @@ export class ProcessingOrchestrator {
   ): Promise<{ success: boolean; summary?: Summary; error?: Error }> {
     try {
       const language = transcription.getLanguage();
-      // Get the summary prompt directly, not language-specific
-      const summaryPrompt = this.config.summarization.prompts.summary;
-      const finalSystemPrompt = systemPrompt || summaryPrompt;
-      const finalUserPrompt = userPrompt || transcription.getText();
+      
+      // For two-pass transcription: use custom prompts if provided
+      // The systemPrompt parameter allows customization of the system instruction
+      // The userPrompt is additional context/instruction from the user
+      const customSystemPrompt = systemPrompt || userPrompt;
 
-      // This is a simplified version - the actual LLMAdapter returns SummarizationResult
+      // Call LLMAdapter with correct signature: (text, language, options)
       const result = await (this.summarizationService as any).summarize(
         transcription.getText(),
-        finalSystemPrompt,
-        finalUserPrompt
+        language,
+        {
+          prompt: customSystemPrompt || undefined,
+          maxTokens: 2000,
+          temperature: 0.7
+        }
       );
 
       const summary = Summary.create(

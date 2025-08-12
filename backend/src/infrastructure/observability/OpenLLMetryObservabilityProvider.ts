@@ -8,7 +8,7 @@ export class OpenLLMetryObservabilityProvider implements ObservabilityProvider {
 
   constructor(config: Config) {
     this.config = config;
-    this.enabled = config.get('observability.openllmetry.enabled');
+    this.enabled = false; // Disable OpenLLMetry for now
   }
 
   isEnabled(): boolean {

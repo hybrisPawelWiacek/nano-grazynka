@@ -1,0 +1,276 @@
+.container {
+  width: 100%;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.toggleButton {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.toggleButton:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.toggleButton:focus-visible {
+  outline: 2px solid #007AFF;
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+.toggleLabel {
+  font-weight: 600;
+  color: #555;
+  letter-spacing: -0.01em;
+}
+
+.toggleIcon {
+  width: 20px;
+  height: 20px;
+  color: #999;
+  transition: transform 0.3s ease;
+}
+
+.toggleIcon.expanded {
+  transform: rotate(180deg);
+}
+
+.content {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.contentExpanded {
+  max-height: 600px;
+  opacity: 1;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.section {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.labelContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: -0.01em;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.infoIcon {
+  width: 16px;
+  height: 16px;
+  color: #999;
+  cursor: help;
+}
+
+.tooltipContent {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 0.75rem;
+  background: #333;
+  color: white;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  border-radius: 8px;
+  width: 280px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.tooltip:hover .tooltipContent {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tooltipContent::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #333;
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  resize: vertical;
+  transition: all 0.2s ease;
+  background: white;
+  color: #333;
+  line-height: 1.5;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.textarea::placeholder {
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.textareaError {
+  border-color: #FF3B30;
+}
+
+.textareaError:focus {
+  border-color: #FF3B30;
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
+}
+
+.helperText {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.charCount {
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.charCountWarning {
+  color: #FF9500;
+  font-weight: 500;
+}
+
+.charCountError {
+  color: #FF3B30;
+  font-weight: 500;
+}
+
+.errorText {
+  color: #FF3B30;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.examples {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(0, 122, 255, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid #007AFF;
+}
+
+.examplesTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.examplesList {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+.examplesList li {
+  margin-bottom: 0.25rem;
+}
+
+.examplesList li:last-child {
+  margin-bottom: 0;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .container {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .toggleButton {
+    color: #f0f0f0;
+  }
+  
+  .toggleButton:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  
+  .toggleLabel {
+    color: #ccc;
+  }
+  
+  .label {
+    color: #f0f0f0;
+  }
+  
+  .textarea {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #f0f0f0;
+  }
+  
+  .examples {
+    background: rgba(0, 122, 255, 0.1);
+  }
+  
+  .examplesTitle {
+    color: #f0f0f0;
+  }
+  
+  .examplesList {
+    color: #ccc;
+  }
+}

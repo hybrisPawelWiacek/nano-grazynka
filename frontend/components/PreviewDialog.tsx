@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { X, Upload, FileAudio, Clock } from 'lucide-react';
+import AdvancedOptions from './AdvancedOptions';
 import styles from './PreviewDialog.module.css';
 
 interface PreviewDialogProps {
   file: File;
-  onConfirm: (customPrompt?: string) => void;
+  onConfirm: (whisperPrompt?: string) => void;
   onCancel: () => void;
   isUploading: boolean;
 }
@@ -17,17 +18,8 @@ export default function PreviewDialog({
   onCancel, 
   isUploading 
 }: PreviewDialogProps) {
-  // Simple template prompt for summarization
-  const TEMPLATE_PROMPT = `Please create a comprehensive summary of this voice note transcription. Focus on:
-- Main topics discussed
-- Key decisions or conclusions
-- Action items (if any)
-- Important details or context
-
-Format the summary in a clear, structured way.`;
-
-  const [customPrompt, setCustomPrompt] = useState(TEMPLATE_PROMPT);
-  const [showPrompt, setShowPrompt] = useState(true); // Show by default to see the template
+  const [whisperPrompt, setWhisperPrompt] = useState('');
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
@@ -70,31 +62,13 @@ Format the summary in a clear, structured way.`;
           </div>
         </div>
 
-        {/* Custom Prompt Toggle */}
-        <div className={styles.promptSection}>
-          <label className={styles.promptToggle}>
-            <input
-              type="checkbox"
-              checked={showPrompt}
-              onChange={(e) => setShowPrompt(e.target.checked)}
-              disabled={isUploading}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkboxLabel}>Customize summary instructions</span>
-          </label>
-
-          {/* Custom Prompt Input */}
-          {showPrompt && (
-            <textarea
-              value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
-              disabled={isUploading}
-              rows={4}
-              className={styles.promptTextarea}
-              placeholder="e.g., Focus on action items, Extract budget information, Summarize in Polish..."
-            />
-          )}
-        </div>
+        {/* Advanced Options (Whisper Prompt) */}
+        <AdvancedOptions
+          whisperPrompt={whisperPrompt}
+          onWhisperPromptChange={setWhisperPrompt}
+          isExpanded={showAdvancedOptions}
+          onToggle={() => setShowAdvancedOptions(!showAdvancedOptions)}
+        />
 
         {/* Actions */}
         <div className={styles.actions}>
@@ -106,7 +80,7 @@ Format the summary in a clear, structured way.`;
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(customPrompt)} // Always send the prompt (template or modified)
+            onClick={() => onConfirm(whisperPrompt || undefined)}
             disabled={isUploading}
             className={`${styles.button} ${styles.buttonPrimary}`}
           >

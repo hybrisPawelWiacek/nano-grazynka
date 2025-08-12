@@ -1,5 +1,5 @@
 export interface StorageService {
-  save(filePath: string, buffer: Buffer): Promise<string>;
+  save(buffer: Buffer, originalName: string, userId?: string): Promise<string>;
   read(filePath: string): Promise<Buffer>;
   delete(filePath: string): Promise<void>;
   exists(filePath: string): Promise<boolean>;
