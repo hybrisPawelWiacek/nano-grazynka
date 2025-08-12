@@ -1,8 +1,8 @@
 # Two-Pass Transcription System - Progressive Implementation Plan
 
-**Status**: 🚀 In Progress (Phase 1)  
+**Status**: ✅ Phase 1 Complete | 🎯 Ready for Phase 2  
 **Created**: August 12, 2025  
-**Updated**: August 12, 2025  
+**Updated**: August 12, 2025 - Phase 1 Completed  
 **Priority**: High  
 **Approach**: Progressive Enhancement with Testing at Each Phase  
 **Estimated Effort**: 3-4 days (phased delivery)
@@ -15,16 +15,18 @@ This document outlines the implementation plan for enhancing nano-Grazynka's tra
 
 ## Current Implementation Status
 
-✅ **Completed Prerequisites**:
-- VoiceNote entity has `userPrompt` field for custom instructions
-- Backend processes custom prompts during summarization
-- PreviewDialog component exists with template prompt functionality
+✅ **Phase 1 Complete (August 12, 2025)**:
+- Added `whisperPrompt` field to database and VoiceNote entity
+- Updated WhisperAdapter to accept and use Whisper prompts
+- Created `/api/voice-notes/:id/regenerate-summary` endpoint
+- ProcessingOrchestrator passes whisper prompts to transcription service
+- Test script created at `tests/scripts/test-whisper-prompt.js`
+- Configuration system consolidated during implementation
 
-⏳ **Phase 1 In Progress**:
-- Need to add `whisperPrompt` field to database and entity
-- Need to update WhisperAdapter to use prompts
-- Need to create summary regeneration endpoint
-- Need to integrate PreviewDialog into upload flow
+🎯 **Phase 2 Ready to Start**:
+- Add simple UX for advanced options
+- Create post-transcription dialog for corrections
+- Implement basic testing with real audio files
 
 ## Problem Statement
 
