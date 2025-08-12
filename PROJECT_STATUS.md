@@ -1,7 +1,8 @@
 # Project Status - nano-Grazynka
 
-## Current Phase: Two-Pass Transcription Implementation (Phase 2)
-**Progress: 100%** ✅ COMPLETED - Summarization working!
+## Current Phase: Unified Multi-Model Transcription Implementation
+**Progress: 0%** 🎯 READY TO START
+**Plan**: [UNIFIED_TRANSCRIPTION_PLAN.md](./docs/planning/UNIFIED_TRANSCRIPTION_PLAN.md)
 
 ### ✅ Completed (Phase 2)
 
@@ -61,11 +62,42 @@
 - ✅ Two-pass transcription Phase 2 complete
 - ✅ API key configuration fixed for multi-provider support
 
-### Next Steps
-1. ✅ ~~Fix summarization error in ProcessingOrchestrator~~ DONE
-2. Complete E2E testing of full two-pass flow
-3. Verify PostTranscriptionDialog appears after transcription
-4. Test summary regeneration with custom prompts
+### 🚀 Next Phase: Unified Multi-Model Transcription (4 Days)
+
+#### Phase 1: Backend Infrastructure (Day 1)
+- [ ] Add `transcriptionModel` field to database schema
+- [ ] Implement `transcribeWithGemini()` method in WhisperAdapter
+- [ ] Add base64 audio encoding logic for Gemini
+- [ ] Update ProcessingOrchestrator for model routing
+- [ ] Configure model-specific settings in config.yaml
+
+#### Phase 2: Frontend UI/UX (Day 2)
+- [ ] Create ModelSelection component with comparison cards
+- [ ] Build adaptive prompt interface (changes by model)
+- [ ] Implement template selector for Gemini
+- [ ] Add token counter with visual feedback
+- [ ] Update AdvancedOptions to include model selection
+
+#### Phase 3: Integration & API Updates (Day 3)
+- [ ] Update upload endpoint to accept model selection
+- [ ] Implement template parsing and detection
+- [ ] Add prompt size validation per model
+- [ ] Configure cost calculation display
+- [ ] Test both API integration paths
+
+#### Phase 4: Testing & Refinement (Day 4)
+- [ ] Write unit tests for Gemini transcription
+- [ ] Create E2E tests for model selection flow
+- [ ] Test template system with real audio
+- [ ] Performance comparison tests
+- [ ] Optional: Implement LLM refinement for GPT-4o
+
+### Key Features to Deliver
+1. **Model Choice**: GPT-4o-transcribe vs Gemini 2.0 Flash
+2. **Extended Prompts**: Leverage Gemini's 1M token window
+3. **Template System**: Pre-built prompts for meetings, technical, podcasts
+4. **Cost Savings**: 75% reduction with Gemini option
+5. **Adaptive UI**: Interface changes based on selected model
 
 ### Phase 1 Status (Complete)
 - ✅ Basic upload and transcription
@@ -101,5 +133,5 @@
 - Summarization Model: google/gemini-2.5-flash (OpenRouter)
 
 ---
-*Last Updated: 2025-08-12 20:35 UTC*
-*Context: Two-Pass Transcription Phase 2 COMPLETE - OpenRouter API fix applied*
+*Last Updated: 2025-08-12 21:15 UTC*
+*Context: Unified Multi-Model Transcription Plan Created - Ready for Implementation*

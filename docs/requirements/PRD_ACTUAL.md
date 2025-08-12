@@ -20,60 +20,68 @@ nano-Grazynka has been implemented as a **feature-complete voice transcription a
 | Languages | English/Polish | English/Polish with auto-detection | ✅ Complete |
 | Custom Prompts | Not specified | Full custom prompt support | ✅ Added |
 
-### Custom Prompt Enhancement - Two-Pass Transcription System (NEW)
+### Custom Prompt Enhancement - Unified Multi-Model Transcription System (NEW)
 
-**Status**: 🔄 Planned for implementation
+**Status**: 🎯 Ready for Implementation  
+**Plan Document**: [UNIFIED_TRANSCRIPTION_PLAN.md](../planning/UNIFIED_TRANSCRIPTION_PLAN.md)
 
-The custom prompt feature will be enhanced to provide a two-section meta-prompt template that enables both transcription refinement and guided summarization.
+The custom prompt feature will be enhanced with a unified multi-model approach that offers users choice between fast/simple (GPT-4o-transcribe) and powerful/context-aware (Gemini 2.0 Flash) transcription, with optional LLM refinement for error correction.
 
-#### Two-Pass Transcription Architecture
+#### Multi-Model Transcription Architecture
 
-1. **Pass 1: Raw Transcription (Whisper)**
-   - Whisper API creates initial transcription
-   - May contain errors in proper nouns, technical terms, acronyms
-   - Example: "Zubu" instead of "Zabu", "MCP" heard as "NCP"
+**Model Selection Options:**
 
-2. **Pass 2: Context-Aware Refinement (LLM/Gemini)**
-   - Takes raw transcription + context from Section 1 of custom prompt
-   - Corrects entity names, technical terms, project-specific vocabulary
-   - Only runs if user provides context (cost-effective)
-   - Stores both raw and refined versions for traceability
+1. **GPT-4o-transcribe (Fast & Simple)**
+   - Direct transcription via OpenAI API
+   - 224 token prompt limit for hints (proper nouns, technical terms)
+   - 5-10 second processing time
+   - $0.006/minute cost
+   - Best for: Quick, straightforward transcriptions
+   - Optional LLM refinement if context provided
 
-3. **Pass 3: Summarization (LLM/Gemini)**
-   - Takes refined transcription + instructions from Section 2
-   - Creates structured summary with key points and action items
-   - Uses default prompts if user doesn't customize
+2. **Gemini 2.0 Flash (Extended Context)**
+   - Transcription via OpenRouter chat completions
+   - 1,000,000 token prompt capacity
+   - 10-20 second processing time
+   - $0.0015/minute cost (75% cheaper)
+   - Best for: Complex audio with rich context needs
+   - Built-in context awareness, no refinement needed
 
-#### Meta-Prompt Template Structure
+3. **Processing Flow**
+   - User selects transcription model
+   - GPT-4o: Transcribe → (Optional Refinement) → Summarize
+   - Gemini: Context-aware Transcribe → Summarize
+   - Both use Gemini 2.5 Flash for final summarization
 
-```
-=== TRANSCRIPTION CONTEXT (for accuracy) ===
-Company/Project: [e.g., Zabu, nano-Grazynka]
-Technical terms: [e.g., MCP servers, PRD, DDD]
-People speaking: [names and roles]
-Common corrections: [e.g., "Zabu not Zubu", "nano-Grazynka not Nano Grazinka"]
+#### Template System for Gemini
 
-=== SUMMARY INSTRUCTIONS ===
-Focus on:
-- Key decisions and conclusions
-- Action items with owners
-- Technical details discussed
-- Next steps and deadlines
+Pre-built prompt templates for common scenarios:
 
-Language: [if different from audio]
-Additional requirements: [any specific needs]
-```
+**Meeting Template**:
+- Attendee identification
+- Action item extraction
+- Decision tracking
+- Company glossary integration
 
-#### Implementation Details
+**Technical Discussion Template**:
+- Code snippet preservation
+- Architecture decision capture
+- Technical terminology accuracy
+- Framework/library recognition
 
-- **Template Behavior**: Shows as placeholder text in custom prompt field
-- **Change Detection**: System detects if user modified the template
-- **Smart Processing**: 
-  - Unchanged template = use system defaults (no extra cost)
-  - Modified template = apply user customizations
-  - Empty field = use system defaults
-- **Section Parsing**: Backend parses the two sections separately
-- **Database Storage**: Stores raw text, refined text, and prompts used
+**Podcast/Interview Template**:
+- Speaker labeling
+- Topic transitions
+- Conversational tone preservation
+- Non-verbal cue notation
+
+#### Implementation Features
+
+- **Adaptive UI**: Interface changes based on selected model
+- **Token Counter**: Visual feedback for prompt limits
+- **Progressive Disclosure**: Complexity hidden behind advanced options
+- **Template Detection**: Smart parsing of user customizations
+- **Cost Display**: Real-time cost estimation per model
 
 #### User Benefits
 
