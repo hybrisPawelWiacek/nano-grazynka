@@ -4,11 +4,10 @@ import { StorageService } from '../../domain/services/StorageService';
 import { ConfigLoader } from '../../config/loader';
 
 export class LocalStorageAdapter implements StorageService {
-  private readonly config = ConfigLoader.getInstance();
   private readonly basePath: string;
 
   constructor() {
-    this.basePath = this.config.get('storage.localPath');
+    this.basePath = ConfigLoader.get('storage.uploadDir');
     this.ensureDirectoryExists();
   }
 

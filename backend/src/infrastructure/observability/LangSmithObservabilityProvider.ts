@@ -1,12 +1,12 @@
 import { ObservabilityProvider } from './index';
-import { ConfigLoader } from '../../config/ConfigLoader';
+import { Config } from '../../config/schema';
 
 export class LangSmithObservabilityProvider implements ObservabilityProvider {
-  private config: ConfigLoader;
+  private config: Config;
   private enabled: boolean;
   private traces: Map<string, any> = new Map();
 
-  constructor(config: ConfigLoader) {
+  constructor(config: Config) {
     this.config = config;
     this.enabled = config.get('observability.langsmith.enabled');
   }

@@ -1,5 +1,5 @@
 import { ObservabilityProvider } from './index';
-import { ConfigLoader } from '../../config/ConfigLoader';
+// Config import removed - not needed here
 
 export class CompositeObservabilityProvider implements ObservabilityProvider {
   private providers: ObservabilityProvider[];

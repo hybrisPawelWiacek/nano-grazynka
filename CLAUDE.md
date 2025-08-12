@@ -1,4 +1,6 @@
-## Date - We are in mid August 2025; 
+## Date - We are in mid August 2025;
+## Use native todo tool, not the claude-code version; for test of the tools, use MCP
+## use memory (not serena memory) tool and serena tool a lot; memory - when planning dev of todo item and after you are done with todo item
 
 # AI Collaboration Guide - nano-Grazynka Project
 

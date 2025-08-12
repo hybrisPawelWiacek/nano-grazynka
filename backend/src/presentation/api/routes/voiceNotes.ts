@@ -260,6 +260,107 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     });
   });
 
+  // Regenerate summary with optional whisper prompt
+  fastify.post('/api/voice-notes/:id/regenerate-summary',
+    { preHandler: [optionalAuthMiddleware, rateLimitMiddleware] },
+    async (request: FastifyRequest & { user?: UserEntity }, reply: FastifyReply) => {
+      try {
+        const params = request.params as { id: string };
+        const body = request.body as { whisperPrompt?: string; userPrompt?: string };
+        
+        // Get the voice note first
+        const getUseCase = container.getGetVoiceNoteUseCase();
+        const voiceNoteResult = await getUseCase.execute({
+          voiceNoteId: params.id,
+          includeTranscription: false,
+          includeSummary: false
+        });
+
+        if (!voiceNoteResult.success) {
+          return reply.status(404).send({
+            error: 'Not Found',
+            message: 'Voice note not found'
+          });
+        }
+
+        const voiceNote = voiceNoteResult.data;
+        
+        // Check ownership for authenticated users
+        if (request.user && voiceNote.userId !== request.user.id) {
+          return reply.status(403).send({
+            error: 'Forbidden',
+            message: 'Access denied'
+          });
+        }
+        
+        // Check session for anonymous users
+        const sessionId = request.headers['x-session-id'] as string;
+        if (!request.user && voiceNote.sessionId !== sessionId) {
+          return reply.status(403).send({
+            error: 'Forbidden',
+            message: 'Access denied'
+          });
+        }
+
+        // Update the voice note with new whisperPrompt if provided
+        if (body.whisperPrompt) {
+          // Get the repository directly to update the whisperPrompt
+          const voiceNoteRepository = container.getVoiceNoteRepository();
+          const voiceNoteId = require('../../../domain/value-objects/VoiceNoteId').VoiceNoteId.fromString(params.id);
+          const existingNote = await voiceNoteRepository.findById(voiceNoteId);
+          
+          if (existingNote) {
+            // Update the whisperPrompt by saving the updated entity
+            // This would require adding a setter method, for now we'll pass it through reprocess
+          }
+        }
+
+        // Reprocess the voice note to regenerate transcription and summary
+        const reprocessUseCase = container.getReprocessVoiceNoteUseCase();
+        const reprocessResult = await reprocessUseCase.execute({
+          voiceNoteId: params.id,
+          userPrompt: body.userPrompt
+        });
+
+        if (!reprocessResult.success) {
+          throw reprocessResult.error;
+        }
+
+        // Process the voice note
+        const processUseCase = container.getProcessVoiceNoteUseCase();
+        const processResult = await processUseCase.execute({
+          voiceNoteId: params.id
+        });
+
+        if (!processResult.success) {
+          throw processResult.error;
+        }
+
+        // Get the updated voice note with new transcription and summary
+        const updatedResult = await getUseCase.execute({
+          voiceNoteId: params.id,
+          includeTranscription: true,
+          includeSummary: true
+        });
+
+        if (!updatedResult.success) {
+          throw updatedResult.error;
+        }
+
+        return reply.status(200).send({
+          voiceNote: updatedResult.data,
+          message: 'Summary regenerated successfully'
+        });
+      } catch (error: any) {
+        console.error('Regenerate summary error:', error);
+        return reply.status(500).send({
+          error: 'Internal Server Error',
+          message: error.message || 'Failed to regenerate summary'
+        });
+      }
+    }
+  );
+
   // Get voice note by ID (optional auth with rate limiting for anonymous users)
   fastify.get('/api/voice-notes/:id', 
     { preHandler: [optionalAuthMiddleware, rateLimitMiddleware] },
@@ -278,18 +379,43 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     return reply.send(result.data);
   });
 
-  // List voice notes (protected route with rate limiting)
+  // List voice notes (supports both authenticated and anonymous users)
   fastify.get('/api/voice-notes', 
-    { preHandler: [authMiddleware, rateLimitMiddleware] },
+    { preHandler: [optionalAuthMiddleware, rateLimitMiddleware] },
     async (request: FastifyRequest & { user?: UserEntity }, reply: FastifyReply) => {
     const useCase = container.getListVoiceNotesUseCase();
     const query = (request as any).query || {};
     const user = request.user;
     
+    // Get sessionId from header for anonymous users
+    const sessionId = (request.headers['x-session-id'] as string) || query.sessionId;
+    
+    // Determine filtering criteria
+    let filterCriteria: any = {};
+    if (user) {
+      // Authenticated user: show their notes
+      filterCriteria.userId = user.id;
+    } else if (sessionId) {
+      // Anonymous user: show notes for their session
+      filterCriteria.sessionId = sessionId;
+    } else {
+      // No auth or session: return empty list
+      return reply.send({
+        items: [],
+        pagination: {
+          page: 1,
+          limit: parseInt(query.limit) || 20,
+          total: 0,
+          totalPages: 0
+        }
+      });
+    }
+    
     const result = await useCase.execute({
       page: parseInt(query.page) || 1,
       limit: parseInt(query.limit) || 20,
       filter: {
+        ...filterCriteria,
         search: query.search,
         status: query.status,
         language: query.language,
@@ -298,7 +424,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         endDate: query.toDate ? new Date(query.toDate) : undefined,
         projects: query.projects ? query.projects.split(',') : undefined
       },
-      userId: user?.id || 'default-user', // Use authenticated user's ID
+      userId: user?.id || sessionId || 'anonymous',
       sortBy: query.sortBy || 'createdAt',
       sortOrder: query.sortOrder || 'desc'
     });

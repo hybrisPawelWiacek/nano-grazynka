@@ -7,6 +7,7 @@ import VoiceNoteCard from '@/components/VoiceNoteCard';
 import SearchBar from '@/components/SearchBar';
 import { voiceNotesApi } from '@/lib/api/voiceNotes';
 import { VoiceNote, ProcessingStatus, Language } from '@/lib/types';
+import { getOrCreateSessionId } from '@/lib/anonymousSession';
 import styles from './page.module.css';
 
 interface SearchFilters {

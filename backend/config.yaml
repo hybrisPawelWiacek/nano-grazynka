@@ -6,9 +6,9 @@ database:
   url: file:./database.db
 
 transcription:
-  provider: openai
-  apiKey: ""
-  model: whisper-1
+  provider: openrouter  # Can be 'openai' or 'openrouter'
+  apiKey: ""  # Uses OPENAI_API_KEY or OPENROUTER_API_KEY from env
+  model: whisper-1  # For OpenAI: 'whisper-1', for OpenRouter: 'openai/whisper-1'
   maxFileSizeMB: 25
   supportedFormats:
     - mp3
@@ -20,10 +20,13 @@ transcription:
     - webm
 
 summarization:
-  provider: openai
-  apiKey: ""
-  model: gpt-4
-  maxTokens: 150
+  provider: openrouter  # Primary provider (fallback to openai)
+  apiKey: ""  # Uses OPENROUTER_API_KEY or OPENAI_API_KEY from env
+  model: google/gemini-2.0-flash-001  # Cost-effective model via OpenRouter
+  # Alternative models:
+  # - google/gemini-2.5-pro-exp-03-25 (higher reasoning)
+  # - gpt-4o-mini (OpenAI fallback)
+  maxTokens: 2000  # Increased from 150 for better summaries
   temperature: 0.7
 
 storage:

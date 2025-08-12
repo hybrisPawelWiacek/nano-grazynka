@@ -65,6 +65,8 @@ model VoiceNote {
   language         String
   status           String
   tags             String   @default("[]") // JSON array
+  userPrompt       String?  // Custom user instructions for summarization
+  whisperPrompt    String?  // Custom prompt for Whisper transcription
   errorMessage     String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

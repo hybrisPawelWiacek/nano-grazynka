@@ -5,7 +5,6 @@ import { Language } from '../../domain/value-objects/Language';
 import { ConfigLoader } from '../../config/loader';
 
 export class WhisperAdapter implements TranscriptionService {
-  private readonly config = ConfigLoader.getInstance();
 
   async transcribe(
     audioFilePath: string,
@@ -15,7 +14,7 @@ export class WhisperAdapter implements TranscriptionService {
       temperature?: number;
     }
   ): Promise<TranscriptionResult> {
-    const provider = this.config.get('transcription.provider');
+    const provider = ConfigLoader.get('transcription.provider');
     
     if (provider === 'openai') {
       return this.transcribeWithOpenAI(audioFilePath, language, options);
@@ -34,9 +33,9 @@ export class WhisperAdapter implements TranscriptionService {
       temperature?: number;
     }
   ): Promise<TranscriptionResult> {
-    const apiKey = this.config.get('transcription.apiKey');
-    const model = this.config.get('transcription.whisperModel');
-    const baseUrl = this.config.get('transcription.apiUrl') || 'https://api.openai.com/v1';
+    const apiKey = ConfigLoader.get('transcription.apiKey');
+    const model = ConfigLoader.get('transcription.whisperModel');
+    const baseUrl = ConfigLoader.get('transcription.apiUrl') || 'https://api.openai.com/v1';
 
     const formData = new FormData();
     formData.append('file', fs.createReadStream(audioFilePath));
@@ -83,9 +82,9 @@ export class WhisperAdapter implements TranscriptionService {
       temperature?: number;
     }
   ): Promise<TranscriptionResult> {
-    const apiKey = this.config.get('transcription.apiKey');
-    const model = this.config.get('transcription.whisperModel');
-    const baseUrl = this.config.get('transcription.apiUrl') || 'https://openrouter.ai/api/v1';
+    const apiKey = ConfigLoader.get('transcription.apiKey');
+    const model = ConfigLoader.get('transcription.whisperModel');
+    const baseUrl = ConfigLoader.get('transcription.apiUrl') || 'https://openrouter.ai/api/v1';
 
     const formData = new FormData();
     formData.append('file', fs.createReadStream(audioFilePath));

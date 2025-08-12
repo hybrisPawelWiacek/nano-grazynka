@@ -11,7 +11,9 @@ export const configSchema = z.object({
   transcription: z.object({
     provider: z.enum(['openai', 'openrouter']).default('openai'),
     model: z.string().default('whisper-1'),
+    whisperModel: z.string().default('whisper-1'),  // Alias for model
     apiKey: z.string().optional(),
+    apiUrl: z.string().optional(),
     maxFileSizeMB: z.number().default(25),
     supportedFormats: z.array(z.string()).default(['mp3', 'mp4', 'mpeg', 'mpga', 'm4a', 'wav', 'webm']),
   }),
@@ -19,6 +21,7 @@ export const configSchema = z.object({
     provider: z.enum(['openai', 'openrouter']).default('openai'),
     model: z.string().default('gpt-4-turbo-preview'),
     apiKey: z.string().optional(),
+    apiUrl: z.string().optional(),
     maxTokens: z.number().default(2000),
     temperature: z.number().min(0).max(2).default(0.7),
     prompts: z.object({

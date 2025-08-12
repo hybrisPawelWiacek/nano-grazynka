@@ -1,13 +1,30 @@
-# Two-Pass Transcription System - Implementation Plan
+# Two-Pass Transcription System - Progressive Implementation Plan
 
-**Status**: 🔄 Ready for Implementation  
+**Status**: 🚀 In Progress (Phase 1)  
 **Created**: August 12, 2025  
+**Updated**: August 12, 2025  
 **Priority**: High  
-**Estimated Effort**: 3-4 days
+**Approach**: Progressive Enhancement with Testing at Each Phase  
+**Estimated Effort**: 3-4 days (phased delivery)
 
 ## Executive Summary
 
 This document outlines the implementation plan for enhancing nano-Grazynka's transcription accuracy through a two-pass system. The enhancement addresses a critical issue: Whisper's tendency to misinterpret proper nouns, technical terms, and project-specific vocabulary. By introducing an LLM refinement pass between transcription and summarization, we can significantly improve accuracy while maintaining cost-effectiveness.
+
+**Key Change**: We're implementing this progressively in three phases, allowing for testing and validation at each stage before proceeding to the next. This reduces risk and allows us to gather user feedback early.
+
+## Current Implementation Status
+
+✅ **Completed Prerequisites**:
+- VoiceNote entity has `userPrompt` field for custom instructions
+- Backend processes custom prompts during summarization
+- PreviewDialog component exists with template prompt functionality
+
+⏳ **Phase 1 In Progress**:
+- Need to add `whisperPrompt` field to database and entity
+- Need to update WhisperAdapter to use prompts
+- Need to create summary regeneration endpoint
+- Need to integrate PreviewDialog into upload flow
 
 ## Problem Statement
 
@@ -59,6 +76,77 @@ graph LR
 - **Provider**: Gemini 2.0 Flash via OpenRouter
 - **Input**: Refined transcription (or raw if no refinement)
 - **Output**: Summary with key points and action items
+
+## Progressive Implementation Approach
+
+We're implementing this feature progressively to allow testing and validation at each stage:
+
+### Prompt Types and Purposes
+
+1. **Whisper Prompt** (`whisperPrompt`)
+   - **Purpose**: Style-based steering for Whisper transcription
+   - **Limit**: 224 tokens
+   - **Use Cases**: Proper nouns, technical terms, acronyms, spelling guidance
+   - **Example**: "Zabu corporation, MCP servers, nano-Grazynka, PRD"
+   - **NOT for**: Instructions or commands (Whisper ignores these)
+
+2. **Transcription Context** (Phase 3 - Optional)
+   - **Purpose**: Context for LLM refinement pass
+   - **Use Cases**: Fixing Whisper errors, entity corrections
+   - **Example**: "Company: Zabu (not Zubu), Project: MCP (not NCP)"
+   - **Applied**: Between Whisper and summarization
+
+3. **Summary Prompt** (`summaryPrompt`)
+   - **Purpose**: Instructions for summarization
+   - **Use Cases**: Focus areas, output format, language preferences
+   - **Example**: "Focus on action items and technical decisions"
+   - **Applied**: During final summarization
+
+### Phase 1: Basic Infrastructure (Current Phase)
+**Goal**: Add Whisper prompt support and separate summary endpoint
+
+**Implementation**:
+1. Add `whisperPrompt` field to VoiceNote entity
+2. Pass prompt to Whisper API during transcription
+3. Create separate `/api/voiceNotes/:id/regenerate-summary` endpoint
+4. Allow custom summary prompts on regeneration
+
+**Testing with Playwright**:
+- Test Whisper prompt affects transcription style
+- Test summary regeneration with custom prompts
+- Verify prompts are stored and retrieved correctly
+
+### Phase 2: Simple UX Integration
+**Goal**: Add Advanced Options UI and post-transcription summary dialog
+
+**Implementation**:
+1. Add collapsible "Advanced Options" section on homepage
+2. Include Whisper prompt field (for technical terms, proper nouns)
+3. After transcription completes, show summary dialog
+4. Pre-fill with template, allow customization
+5. Generate summary with custom prompt
+
+**Testing with Playwright**:
+- Test Advanced Options expand/collapse
+- Test prompt persistence through upload flow
+- Test summary dialog appears post-transcription
+- Test template modifications are detected
+
+### Phase 3: Full Two-Pass System (Optional/Future)
+**Goal**: Add LLM refinement pass for transcription correction
+
+**Implementation**:
+1. Add `refinedText` field to Transcription entity
+2. Implement `refineTranscription()` in LLMAdapter
+3. Parse prompts to extract context section
+4. Apply refinement when context provided
+5. Show both raw and refined transcriptions in UI
+
+**Testing with Playwright**:
+- Test context-based corrections (Zubu → Zabu)
+- Test refinement toggle in UI
+- Test performance impact
+- Test fallback on refinement failure
 
 ## Implementation Details
 
@@ -373,35 +461,38 @@ describe('ProcessingOrchestrator', () => {
    - Verify no refinement applied
    - Check performance unchanged
 
-## Rollout Plan
+## Rollout Plan (Progressive)
 
-### Phase 1: Backend Implementation (Day 1-2)
-1. ✅ Update database schema
-2. ✅ Implement LLMAdapter.refineTranscription
-3. ✅ Update ProcessingOrchestrator
-4. ✅ Add error handling and logging
-5. ✅ Write unit tests
+### Current Status: Phase 1 - Basic Infrastructure
+**Timeline**: Day 1 (Today)
+1. ⏳ Add `whisperPrompt` field to VoiceNote entity and database
+2. ⏳ Update WhisperAdapter to accept and use prompts
+3. ⏳ Create `/api/voiceNotes/:id/regenerate-summary` endpoint
+4. ⏳ Write Playwright tests for prompt functionality
+5. ⏳ Test with real audio files (zabka.m4a)
 
-### Phase 2: Frontend Implementation (Day 2-3)
-1. ✅ Update PreviewDialog with template
-2. ✅ Add change detection logic
-3. ✅ Update note detail page
-4. ✅ Add refinement indicator
-5. ✅ Test upload flow
+### Phase 2: Simple UX Integration
+**Timeline**: Day 2-3
+1. ⬜ Create Advanced Options component
+2. ⬜ Add Whisper prompt field to homepage
+3. ⬜ Implement post-transcription summary dialog
+4. ⬜ Add template prompt with change detection
+5. ⬜ Write Playwright tests for UI flow
+6. ⬜ Test end-to-end with various prompts
 
-### Phase 3: Testing & Refinement (Day 3-4)
-1. ✅ Integration testing
-2. ✅ E2E testing with real audio
-3. ✅ Performance testing
-4. ✅ Cost monitoring
-5. ✅ Documentation update
+### Phase 3: Full Two-Pass System (Optional)
+**Timeline**: Day 4+ (If needed based on Phase 2 results)
+1. ⬜ Update database schema for refinement
+2. ⬜ Implement LLMAdapter.refineTranscription
+3. ⬜ Update ProcessingOrchestrator for two-pass flow
+4. ⬜ Add UI for viewing raw vs refined
+5. ⬜ Write comprehensive tests
+6. ⬜ Monitor costs and performance
 
-### Phase 4: Deployment
-1. ✅ Database migration
-2. ✅ Deploy backend changes
-3. ✅ Deploy frontend changes
-4. ✅ Monitor for issues
-5. ✅ Gather user feedback
+### Deployment Strategy
+- **Phase 1**: Deploy backend changes, test via API
+- **Phase 2**: Deploy frontend changes, soft launch to test users
+- **Phase 3**: Full deployment after validation
 
 ## Success Metrics
 

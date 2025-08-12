@@ -7,6 +7,12 @@ import path from 'path';
 export class ConfigLoader {
   private static instance: Config | null = null;
 
+  // Helper method to get nested config values using dot notation
+  static get(path: string): any {
+    const config = this.getInstance();
+    return path.split('.').reduce((obj, key) => obj?.[key], config as any);
+  }
+
   static load(configPath?: string): Config {
     if (this.instance) {
       return this.instance;
@@ -78,7 +84,17 @@ export class ConfigLoader {
     };
   }
 
+  static getInstance(): Config {
+    if (!this.instance) {
+      this.instance = this.load();
+    }
+    return this.instance;
+  }
+
   static reset(): void {
     this.instance = null;
   }
 }
+
+// Export Config type and ConfigLoader
+export { Config } from './schema';

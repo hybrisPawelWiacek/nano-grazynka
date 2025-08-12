@@ -57,11 +57,24 @@ export class ApiClient {
     const { controller, timeoutId } = this.createAbortController();
 
     try {
+      // Get session ID for anonymous users
+      let sessionId: string | undefined;
+      if (typeof window !== 'undefined') {
+        sessionId = localStorage.getItem('anonymousSessionId') || undefined;
+      }
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add session ID header if available
+      if (sessionId) {
+        headers['x-session-id'] = sessionId;
+      }
+      
       const response = await fetch(url.toString(), {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include', // Send cookies for authentication
         signal: controller.signal,
       });
@@ -85,11 +98,24 @@ export class ApiClient {
     const { controller, timeoutId } = this.createAbortController();
 
     try {
+      // Get session ID for anonymous users
+      let sessionId: string | undefined;
+      if (typeof window !== 'undefined') {
+        sessionId = localStorage.getItem('anonymousSessionId') || undefined;
+      }
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add session ID header if available
+      if (sessionId) {
+        headers['x-session-id'] = sessionId;
+      }
+      
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: body ? JSON.stringify(body) : undefined,
         credentials: 'include', // Send cookies for authentication
         signal: controller.signal,

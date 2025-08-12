@@ -1,8 +1,8 @@
 # Project Status - nano-Grazynka
 
-**Last Updated**: August 12, 2025 (Critical Auth Fix Applied)  
-**Current Phase**: MVP Complete - Ready for Deployment  
-**Status**: ✅ MVP Fully Functional - All Critical Issues Resolved
+**Last Updated**: August 12, 2025 (Two-Pass Transcription Phase 1 COMPLETE)  
+**Current Phase**: MVP Complete + Two-Pass Transcription Phase 2 Ready  
+**Status**: ✅ MVP Functional | ✅ Phase 1 Complete | 🎯 Ready for Phase 2 UX Integration
 
 ## 🎯 Current State
 
@@ -15,10 +15,11 @@ The nano-Grazynka MVP is **fully functional** with all critical issues resolved:
 
 ## 🧪 Testing Status (August 12, 2025)
 
-### Test Execution Results (After Fix)
+### Test Execution Results (After Library Fix)
 - **Total Tests Run**: 16 (including retest)
-- **Pass Rate**: 94% (15 passed, 1 failed)
+- **Pass Rate**: 100% (all tests passing)
 - **Critical Issues**: RESOLVED ✅
+- **Library Page**: Fixed and working for both authenticated and anonymous users
 
 ### Test Suite Reorganization ✅
 - Migrated from scattered Python scripts to organized structure
@@ -55,6 +56,13 @@ The nano-Grazynka MVP is **fully functional** with all critical issues resolved:
 - [x] Fixed frontend route 404 errors (/voice-notes → /note)
 
 ## 🚀 Recent Improvements
+
+### Library Page Fix (August 12, 2025) ✅
+- [x] Fixed library page 401 error for anonymous users
+- [x] Changed /api/voice-notes endpoint to use optionalAuthMiddleware
+- [x] Updated API client to automatically send x-session-id headers
+- [x] Library now works for both authenticated and anonymous users
+- [x] Anonymous users see their session-specific notes
 
 ### Custom Prompt Feature (August 11, 2025) ✅
 - [x] Added preview dialog before upload
@@ -158,7 +166,7 @@ The nano-Grazynka MVP is **fully functional** with all critical issues resolved:
 
 | Issue | Description | Priority | Status | Location |
 |-------|-------------|----------|--------|----------|
-| Library Page | Failing to load notes properly | HIGH | Pending | `frontend/app/library/page.tsx` |
+| None | All critical issues resolved | - | - | - |
 
 ## 🏗️ Technical Debt / MVP Simplifications
 
@@ -205,15 +213,37 @@ The nano-Grazynka MVP is **fully functional** with all critical issues resolved:
 | Processing Priority | PRD_ACTUAL.md | Low | Fast lane for pro users |
 | Concurrent Upload Limits | PRD_ACTUAL.md | Low | 1 for free, 3 for pro |
 
+## 🚧 Active Development
+
+### Two-Pass Transcription System (Phase 1 - COMPLETE ✅)
+**Status**: ✅ Phase 1 Basic Infrastructure Complete  
+**Completed**: August 12, 2025  
+**Timeline**: Completed in 1 day  
+
+#### Phase 1 Accomplishments:
+- [x] Added `whisperPrompt` field to VoiceNote entity and database
+- [x] Updated WhisperAdapter to accept and use prompts  
+- [x] Created `/api/voice-notes/:id/regenerate-summary` endpoint
+- [x] Created test script for whisper prompt functionality (tests/scripts/test-whisper-prompt.js)
+- [x] Verified implementation with test audio files (zabka.m4a)
+
+#### Technical Implementation:
+- **Database**: Added whisperPrompt column via Prisma migration
+- **Domain Layer**: Extended VoiceNote entity with whisperPrompt field and getter
+- **Infrastructure**: Updated VoiceNoteRepositoryImpl for whisperPrompt persistence
+- **Application Layer**: Modified ProcessingOrchestrator to pass prompts to WhisperAdapter
+- **API Layer**: New endpoint with authentication/session validation
+- **Testing**: Comprehensive test script in tests/scripts/
+
+#### Upcoming Phases:
+- **Phase 2**: Simple UX Integration (Advanced options, post-transcription dialog)
+- **Phase 3**: Full Two-Pass System (Optional LLM refinement)
+
+**Documentation**: [Progressive Implementation Plan](./docs/planning/TWO_PASS_TRANSCRIPTION_PLAN.md)
+
 ## 📋 Next Steps (Post-MVP)
 
 ### High Priority
-1. **Two-Pass Transcription System (Planned)**
-   - Enhanced custom prompt with meta-prompt template
-   - Transcription refinement using LLM (Gemini) for proper nouns
-   - Separated context sections for refinement and summarization
-   - Cost-effective approach (only applies when user modifies prompt)
-   - [Planning Document](./docs/planning/TWO_PASS_TRANSCRIPTION_PLAN.md)
 
 2. **Missing Core Features**
    - Reprocessing history/versioning system

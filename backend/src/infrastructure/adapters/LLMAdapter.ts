@@ -3,7 +3,6 @@ import { Language } from '../../domain/value-objects/Language';
 import { ConfigLoader } from '../../config/loader';
 
 export class LLMAdapter implements SummarizationService {
-  private readonly config = ConfigLoader.getInstance();
 
   async summarize(
     text: string,
@@ -14,7 +13,7 @@ export class LLMAdapter implements SummarizationService {
       temperature?: number;
     }
   ): Promise<SummarizationResult> {
-    const provider = this.config.get('summarization.provider');
+    const provider = ConfigLoader.get('summarization.provider');
     
     if (provider === 'openai') {
       return this.summarizeWithOpenAI(text, language, options);
@@ -34,13 +33,13 @@ export class LLMAdapter implements SummarizationService {
       temperature?: number;
     }
   ): Promise<SummarizationResult> {
-    const apiKey = this.config.get('summarization.apiKey');
-    const model = this.config.get('summarization.model');
-    const baseUrl = this.config.get('summarization.apiUrl') || 'https://api.openai.com/v1';
+    const apiKey = ConfigLoader.get('summarization.apiKey');
+    const model = ConfigLoader.get('summarization.model');
+    const baseUrl = ConfigLoader.get('summarization.apiUrl') || 'https://api.openai.com/v1';
     
     const systemPrompt = this.getSystemPrompt(language, options?.prompt);
-    const maxTokens = options?.maxTokens || this.config.get('summarization.maxTokens');
-    const temperature = options?.temperature ?? this.config.get('summarization.temperature');
+    const maxTokens = options?.maxTokens || ConfigLoader.get('summarization.maxTokens');
+    const temperature = options?.temperature ?? ConfigLoader.get('summarization.temperature');
 
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
@@ -80,13 +79,13 @@ export class LLMAdapter implements SummarizationService {
       temperature?: number;
     }
   ): Promise<SummarizationResult> {
-    const apiKey = this.config.get('summarization.apiKey');
-    const model = this.config.get('summarization.model');
-    const baseUrl = this.config.get('summarization.apiUrl') || 'https://openrouter.ai/api/v1';
+    const apiKey = ConfigLoader.get('summarization.apiKey');
+    const model = ConfigLoader.get('summarization.model');
+    const baseUrl = ConfigLoader.get('summarization.apiUrl') || 'https://openrouter.ai/api/v1';
     
     const systemPrompt = this.getSystemPrompt(language, options?.prompt);
-    const maxTokens = options?.maxTokens || this.config.get('summarization.maxTokens');
-    const temperature = options?.temperature ?? this.config.get('summarization.temperature');
+    const maxTokens = options?.maxTokens || ConfigLoader.get('summarization.maxTokens');
+    const temperature = options?.temperature ?? ConfigLoader.get('summarization.temperature');
 
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
@@ -124,7 +123,7 @@ export class LLMAdapter implements SummarizationService {
       return customPrompt;
     }
 
-    const prompts = this.config.get('summarization.prompts');
+    const prompts = ConfigLoader.get('summarization.prompts');
     const langCode = language.getValue();
     
     return prompts[langCode] || prompts.en;

@@ -30,6 +30,8 @@ export class VoiceNote {
   private version: number;
   private transcription?: Transcription;
   private summary?: Summary;
+  private userPrompt?: string;  // Custom user prompt for summarization
+  private whisperPrompt?: string;  // Custom prompt for Whisper transcription
   private domainEvents: any[] = [];
 
   private constructor(
@@ -44,6 +46,8 @@ export class VoiceNote {
     userId?: string,  // Optional for anonymous
     sessionId?: string,  // For anonymous users
     errorMessage?: string,
+    userPrompt?: string,  // Custom user prompt
+    whisperPrompt?: string,  // Custom Whisper prompt
     createdAt?: Date,
     updatedAt?: Date,
     version?: number
@@ -59,6 +63,8 @@ export class VoiceNote {
     this.userId = userId;
     this.sessionId = sessionId;
     this.errorMessage = errorMessage;
+    this.userPrompt = userPrompt;
+    this.whisperPrompt = whisperPrompt;
     this.createdAt = createdAt || new Date();
     this.updatedAt = updatedAt || new Date();
     this.version = version || 1;
@@ -74,6 +80,7 @@ export class VoiceNote {
     language: Language;
     tags?: string[];
     userPrompt?: string;
+    whisperPrompt?: string;
   }): VoiceNote {
     const voiceNote = new VoiceNote(
       VoiceNoteId.generate(),
@@ -85,7 +92,10 @@ export class VoiceNote {
       new ProcessingStatus(ProcessingStatusValue.PENDING),
       params.tags || [],
       params.userId,
-      params.sessionId
+      params.sessionId,
+      undefined,  // errorMessage
+      params.userPrompt,
+      params.whisperPrompt
     );
 
     voiceNote.addDomainEvent(new VoiceNoteUploadedEvent(voiceNote.id.getValue(), {
@@ -112,6 +122,8 @@ export class VoiceNote {
     userId?: string,  // Made optional
     sessionId?: string,  // Added for anonymous users
     errorMessage?: string,
+    userPrompt?: string,  // Added for custom prompts
+    whisperPrompt?: string,  // Added for Whisper prompts
     createdAt?: Date,
     updatedAt?: Date,
     version?: number
@@ -128,6 +140,8 @@ export class VoiceNote {
       userId,
       sessionId,
       errorMessage,
+      userPrompt,
+      whisperPrompt,
       createdAt,
       updatedAt,
       version
@@ -145,6 +159,14 @@ export class VoiceNote {
 
   getSessionId(): string | undefined {
     return this.sessionId;
+  }
+
+  getUserPrompt(): string | undefined {
+    return this.userPrompt;
+  }
+
+  getWhisperPrompt(): string | undefined {
+    return this.whisperPrompt;
   }
 
   getTitle(): string {

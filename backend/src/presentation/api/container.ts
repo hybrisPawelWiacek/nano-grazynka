@@ -1,14 +1,14 @@
 import { PrismaClient } from '@prisma/client';
-import { ConfigLoader } from '../../config/ConfigLoader';
+import { ConfigLoader, Config } from '../../config/loader';
 import { CompositeObservabilityProvider } from '../../infrastructure/observability/CompositeObservabilityProvider';
 import { LangSmithObservabilityProvider } from '../../infrastructure/observability/LangSmithObservabilityProvider';
 import { OpenLLMetryObservabilityProvider } from '../../infrastructure/observability/OpenLLMetryObservabilityProvider';
 import { VoiceNoteRepositoryImpl } from '../../infrastructure/persistence/VoiceNoteRepositoryImpl';
 import { UserRepositoryImpl } from '../../infrastructure/persistence/UserRepositoryImpl';
 import { EventStoreImpl } from '../../infrastructure/persistence/EventStoreImpl';
-import { WhisperAdapter } from '../../infrastructure/external/WhisperAdapter';
-import { LLMAdapter } from '../../infrastructure/external/LLMAdapter';
-import { LocalStorageAdapter } from '../../infrastructure/external/LocalStorageAdapter';
+import { WhisperAdapter } from '../../infrastructure/adapters/WhisperAdapter';
+import { LLMAdapter } from '../../infrastructure/adapters/LLMAdapter';
+import { LocalStorageAdapter } from '../../infrastructure/adapters/LocalStorageAdapter';
 import { DatabaseClient } from '../../infrastructure/database/DatabaseClient';
 import { ProcessingOrchestrator } from '../../application/services/ProcessingOrchestrator';
 import {
@@ -23,7 +23,7 @@ import {
 
 export class Container {
   private static instance: Container;
-  private config: ConfigLoader;
+  private config: Config;
   private prisma: PrismaClient;
   private observability: CompositeObservabilityProvider;
   
@@ -36,8 +36,7 @@ export class Container {
   private processingOrchestrator: ProcessingOrchestrator;
   
   private constructor() {
-    this.config = new ConfigLoader();
-    this.config.load();
+    this.config = ConfigLoader.load();
     
     console.log('Container: Initializing DatabaseClient...');
     this.prisma = DatabaseClient.getInstance();
@@ -52,9 +51,9 @@ export class Container {
     this.userRepository = new UserRepositoryImpl(this.prisma);
     this.eventStore = new EventStoreImpl(this.prisma);
     
-    this.transcriptionService = new WhisperAdapter(this.config, this.observability);
-    this.summarizationService = new LLMAdapter(this.config, this.observability);
-    this.storageService = new LocalStorageAdapter(this.config.get('storage.uploadDir'));
+    this.transcriptionService = new WhisperAdapter();
+    this.summarizationService = new LLMAdapter();
+    this.storageService = new LocalStorageAdapter();
     
     this.processingOrchestrator = new ProcessingOrchestrator(
       this.transcriptionService,
@@ -72,7 +71,7 @@ export class Container {
     return Container.instance;
   }
   
-  getConfig(): ConfigLoader {
+  getConfig(): Config {
     return this.config;
   }
   

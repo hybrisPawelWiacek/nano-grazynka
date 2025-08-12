@@ -6,7 +6,7 @@ import { VoiceNoteRepository } from '../../domain/repositories/VoiceNoteReposito
 import { EventStore } from '../../domain/repositories/EventStore';
 import { TranscriptionService } from '../../domain/services/TranscriptionService';
 import { SummarizationService } from '../../domain/services/SummarizationService';
-import { ConfigLoader } from '../../config/ConfigLoader';
+import { Config } from '../../config/schema';
 import {
   VoiceNoteProcessingStartedEvent,
   VoiceNoteTranscribedEvent,
@@ -25,7 +25,7 @@ export class ProcessingOrchestrator {
     private summarizationService: SummarizationService,
     private voiceNoteRepository: VoiceNoteRepository,
     private eventStore: EventStore,
-    private config: ConfigLoader
+    private config: Config
   ) {}
 
   async processVoiceNote(
@@ -65,10 +65,12 @@ export class ProcessingOrchestrator {
       );
       await this.eventStore.append(transcribedEvent);
 
-      // Summarization
+      // Summarization with user prompt if provided
       const summaryResult = await this.performSummarization(
         voiceNote,
-        transcriptionResult.transcription!
+        transcriptionResult.transcription!,
+        undefined,  // systemPrompt - use default
+        voiceNote.getUserPrompt()  // Pass user's custom prompt
       );
       if (!summaryResult.success) {
         return await this.handleProcessingFailure(
@@ -86,8 +88,8 @@ export class ProcessingOrchestrator {
         {
           summaryId: voiceNote.getId().toString(), // Use voice note ID as summary reference
           transcriptionId: voiceNote.getId().toString(), // Use voice note ID as transcription reference
-          model: this.config.get('summarization.model'),
-          provider: this.config.get('summarization.provider')
+          model: (this.config as any).summarization?.model || 'gpt-4-turbo-preview',
+          provider: (this.config as any).summarization?.provider || 'openai'
         }
       );
       await this.eventStore.append(summarizedEvent);
@@ -163,21 +165,21 @@ export class ProcessingOrchestrator {
     language?: Language
   ): Promise<{ success: boolean; transcription?: Transcription; error?: Error }> {
     try {
-      // Read the audio file
-      const fs = require('fs').promises;
-      const audioBuffer = await fs.readFile(voiceNote.getOriginalFilePath());
+      // Get the Whisper prompt if available
+      const whisperPrompt = voiceNote.getWhisperPrompt();
       
-      // Pass the buffer and language string to the transcription service
-      const transcriptionText = await this.transcriptionService.transcribe(
-        audioBuffer,
-        language ? language.getValue() : undefined
+      // Pass to WhisperAdapter with the prompt
+      const transcriptionResult = await this.transcriptionService.transcribe(
+        voiceNote.getOriginalFilePath(),
+        language || voiceNote.getLanguage(),
+        whisperPrompt ? { prompt: whisperPrompt } : undefined
       );
 
       const transcription = Transcription.create(
-        transcriptionText,
-        language || Language.EN,
-        1, // Duration not available from Whisper API, using 1 as default
-        1.0 // Confidence not available from Whisper API
+        transcriptionResult.text,
+        transcriptionResult.language || language || Language.EN,
+        transcriptionResult.duration || 1,
+        transcriptionResult.confidence || 1.0
       );
 
       return { success: true, transcription };
@@ -195,7 +197,7 @@ export class ProcessingOrchestrator {
     try {
       const language = transcription.getLanguage();
       // Get the summary prompt directly, not language-specific
-      const summaryPrompt = this.config.get('summarization.prompts.summary');
+      const summaryPrompt = this.config.summarization.prompts.summary;
       const finalSystemPrompt = systemPrompt || summaryPrompt;
       const finalUserPrompt = userPrompt || transcription.getText();
 

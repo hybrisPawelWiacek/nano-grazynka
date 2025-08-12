@@ -14,10 +14,24 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
     const data = this.toDatabase(voiceNote);
     
     await this.prisma.$transaction(async (tx) => {
+      // Separate userId from other fields for Prisma relations
+      const { userId, ...voiceNoteFields } = data;
+      
+      // Build the create/update data with proper relation handling
+      const createData = {
+        ...voiceNoteFields,
+        ...(userId ? { user: { connect: { id: userId } } } : {})
+      };
+      
+      const updateData = {
+        ...voiceNoteFields,
+        ...(userId ? { user: { connect: { id: userId } } } : {})
+      };
+      
       await tx.voiceNote.upsert({
         where: { id: data.id },
-        create: data,
-        update: data
+        create: createData,
+        update: updateData
       });
 
       if (voiceNote.getTranscription()) {
@@ -262,6 +276,8 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       language: voiceNote.getLanguage().toString(),
       status: voiceNote.getStatus().toString(),
       tags: JSON.stringify(voiceNote.getTags()),
+      userPrompt: voiceNote.getUserPrompt() || null,
+      whisperPrompt: voiceNote.getWhisperPrompt() || null,
       errorMessage: voiceNote.getErrorMessage() || null,
       createdAt: voiceNote.getCreatedAt(),
       updatedAt: voiceNote.getUpdatedAt(),
@@ -289,6 +305,8 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       data.userId,
       data.sessionId,  // Add sessionId parameter
       data.errorMessage || undefined,
+      data.userPrompt || undefined,  // Add userPrompt parameter
+      data.whisperPrompt || undefined,  // Add whisperPrompt parameter
       data.createdAt,
       data.updatedAt,
       data.version

@@ -17,8 +17,17 @@ export default function PreviewDialog({
   onCancel, 
   isUploading 
 }: PreviewDialogProps) {
-  const [customPrompt, setCustomPrompt] = useState('');
-  const [showPrompt, setShowPrompt] = useState(false);
+  // Simple template prompt for summarization
+  const TEMPLATE_PROMPT = `Please create a comprehensive summary of this voice note transcription. Focus on:
+- Main topics discussed
+- Key decisions or conclusions
+- Action items (if any)
+- Important details or context
+
+Format the summary in a clear, structured way.`;
+
+  const [customPrompt, setCustomPrompt] = useState(TEMPLATE_PROMPT);
+  const [showPrompt, setShowPrompt] = useState(true); // Show by default to see the template
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
@@ -71,7 +80,7 @@ export default function PreviewDialog({
               disabled={isUploading}
               className={styles.checkbox}
             />
-            <span className={styles.checkboxLabel}>Add custom instructions</span>
+            <span className={styles.checkboxLabel}>Customize summary instructions</span>
           </label>
 
           {/* Custom Prompt Input */}
@@ -97,7 +106,7 @@ export default function PreviewDialog({
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(showPrompt ? customPrompt : undefined)}
+            onClick={() => onConfirm(customPrompt)} // Always send the prompt (template or modified)
             disabled={isUploading}
             className={`${styles.button} ${styles.buttonPrimary}`}
           >
