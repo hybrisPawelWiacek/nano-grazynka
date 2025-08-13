@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/src/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConversionModal from '@/components/ConversionModal';
@@ -191,19 +191,10 @@ export default function HomePage() {
     // Add multi-model transcription fields
     formData.append('transcriptionModel', selectedModel);
     
-    // DEBUG: Log multi-model data being sent
-    console.log('🔍 DEBUG: Multi-model data being sent:', {
-      transcriptionModel: selectedModel,
-      whisperPrompt: whisperPrompt || null,
-      geminiSystemPrompt: null,
-      geminiUserPrompt: null,
-    });
-    
     if (selectedModel === 'gpt-4o-transcribe') {
       // For GPT-4o, use whisperPrompt
       if (whisperPrompt) {
         formData.append('whisperPrompt', whisperPrompt);
-        console.log('🔍 DEBUG: Adding whisperPrompt:', whisperPrompt);
       }
     } else if (selectedModel === 'google/gemini-2.0-flash-001') {
       // For Gemini, use extended prompts
@@ -213,19 +204,11 @@ export default function HomePage() {
         if (template) {
           formData.append('geminiSystemPrompt', template.systemPrompt);
           formData.append('geminiUserPrompt', geminiPrompt);
-          console.log('🔍 DEBUG: Adding Gemini prompts (template):', {
-            systemPrompt: template.systemPrompt.substring(0, 100) + '...',
-            userPrompt: geminiPrompt.substring(0, 100) + '...'
-          });
         } else {
           // Use default system prompt with user's custom prompt
           const defaultSystemPrompt = 'You are a professional transcriber. Transcribe the audio accurately.';
           formData.append('geminiSystemPrompt', defaultSystemPrompt);
           formData.append('geminiUserPrompt', geminiPrompt);
-          console.log('🔍 DEBUG: Adding Gemini prompts (default):', {
-            systemPrompt: defaultSystemPrompt,
-            userPrompt: geminiPrompt.substring(0, 100) + '...'
-          });
         }
       }
     }
@@ -475,11 +458,7 @@ export default function HomePage() {
                   </div>
                   <div className={styles.progressBar}>
                     <div
-                      className={`${styles.progressFill} ${
-                        status.stage === 'error' ? styles.progressError : 
-                        status.stage === 'complete' ? styles.progressSuccess : 
-                        styles.progressActive
-                      }`}
+                      className={`${styles.progressFill} ${styles.progressActive}`}
                       style={{ width: `${status.progress}%` }}
                     />
                   </div>

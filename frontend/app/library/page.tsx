@@ -47,8 +47,6 @@ export default function LibraryPage() {
         search: filters.query,
         status: filters.status,
         language: filters.language,
-        dateFrom: filters.startDate,
-        dateTo: filters.endDate,
       });
       
       setVoiceNotes(response.items || []);
@@ -233,7 +231,7 @@ export default function LibraryPage() {
               {voiceNotes.map(note => (
                 <VoiceNoteCard
                   key={note.id}
-                  voiceNote={note}
+                  note={note}
                   onDelete={handleDelete}
                 />
               ))}

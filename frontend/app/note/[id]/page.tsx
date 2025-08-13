@@ -46,7 +46,7 @@ export default function VoiceNoteDetailPage() {
     setError(null);
     
     try {
-      await voiceNotesApi.reprocess(voiceNote.id, customPrompt || undefined);
+      await voiceNotesApi.reprocess(voiceNote.id, customPrompt ? { userPrompt: customPrompt } : undefined);
       await fetchVoiceNote();
       setShowReprocessForm(false);
       setCustomPrompt('');
@@ -324,7 +324,6 @@ export default function VoiceNoteDetailPage() {
                 </div>
                 <div className={styles.transcriptionMeta}>
                   <span>Model: {latestTranscription.model}</span>
-                  <span>Confidence: {(latestTranscription.confidence * 100).toFixed(1)}%</span>
                   <span>Created: {formatDate(latestTranscription.createdAt)}</span>
                 </div>
               </div>

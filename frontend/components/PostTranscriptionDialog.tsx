@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Sparkles, X, AlertCircle } from 'lucide-react';
 import { regenerateSummary } from '@/lib/api';
-import { useAuth } from '@/src/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import styles from './PostTranscriptionDialog.module.css';
 
 interface PostTranscriptionDialogProps {

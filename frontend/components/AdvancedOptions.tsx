@@ -120,7 +120,7 @@ export default function AdvancedOptions({
               {onTemplateSelect && (
                 <TemplateSelector
                   selectedTemplate={selectedTemplate}
-                  onSelect={onTemplateSelect}
+                  onTemplateSelect={onTemplateSelect}
                 />
               )}
               

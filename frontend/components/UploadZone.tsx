@@ -5,6 +5,8 @@ import { voiceNotesApi } from '@/lib/api/voiceNotes';
 import PreviewDialog from './PreviewDialog';
 import styles from './UploadZone.module.css';
 
+import { TranscriptionModel } from './ModelSelection';
+
 interface UploadZoneProps {
   onUploadComplete?: (id: string) => void;
   onError?: (error: string) => void;
@@ -66,7 +68,12 @@ export default function UploadZone({ onUploadComplete, onError }: UploadZoneProp
     setShowPreview(true);
   };
 
-  const handleUploadConfirm = async (customPrompt?: string) => {
+  const handleUploadConfirm = async (data: {
+    whisperPrompt?: string;
+    transcriptionModel: TranscriptionModel;
+    geminiSystemPrompt?: string;
+    geminiUserPrompt?: string;
+  }) => {
     if (!selectedFile) return;
 
     setIsUploading(true);
@@ -74,8 +81,8 @@ export default function UploadZone({ onUploadComplete, onError }: UploadZoneProp
     setShowPreview(false);
 
     try {
-      // Upload file with optional custom prompt
-      const uploadResponse = await voiceNotesApi.upload(selectedFile, customPrompt);
+      // Upload file with optional custom prompt (using whisperPrompt for backward compatibility)
+      const uploadResponse = await voiceNotesApi.upload(selectedFile, data.whisperPrompt);
       setUploadProgress(50);
 
       // Start processing

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/src/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -47,8 +47,8 @@ export default function SettingsPage() {
       tier: user.tier || 'free',
       creditsUsed: user.creditsUsed || 0,
       creditLimit: user.creditLimit || 5,
-      createdAt: user.createdAt || new Date().toISOString(),
-      lastLoginAt: user.lastLoginAt || new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
       notificationPreferences: {
         emailOnComplete: true,
         emailOnFail: true,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/src/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -25,23 +25,36 @@ interface VoiceNote {
 }
 
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!user) {
       router.push('/login');
     }
-  }, [user, authLoading, router]);
+  }, [user, router]);
 
   useEffect(() => {
     if (user) {
       fetchDashboardStats();
     }
   }, [user]);
+
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'processing':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   const fetchDashboardStats = async () => {
     try {
@@ -58,14 +71,14 @@ export default function DashboardPage() {
       
       const voiceNotesData = await voiceNotesRes.json();
       
-      // Calculate stats
+      // Calculate stats (mock data for premium features)
       const dashboardStats: DashboardStats = {
-        creditsUsed: user.creditsUsed || 0,
-        creditLimit: user.creditLimit || 5,
-        tier: user.tier || 'free',
+        creditsUsed: 0,
+        creditLimit: 5,
+        tier: 'free',
         totalVoiceNotes: voiceNotesData.pagination?.total || 0,
         recentVoiceNotes: voiceNotesData.data || [],
-        monthlyReset: new Date(user.creditsResetDate || Date.now()).toLocaleDateString()
+        monthlyReset: new Date().toLocaleDateString()
       };
       
       setStats(dashboardStats);
@@ -105,7 +118,7 @@ export default function DashboardPage() {
     }
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.loadingContent}>

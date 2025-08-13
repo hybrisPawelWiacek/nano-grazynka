@@ -1,0 +1,34 @@
+.container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.label {
+  color: var(--text-secondary);
+}
+
+.count {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.nearLimit {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.overLimit {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.percentage {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
