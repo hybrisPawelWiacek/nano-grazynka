@@ -49,30 +49,55 @@ npm run test:integration
 
 ```
 tests/
-├── test-data/          # Audio files for testing
-│   ├── zabka.m4a      # Polish audio sample
-│   └── test-audio.mp3  # English audio sample
-│
-├── e2e/               # End-to-end UI tests
-│   ├── anonymous-flow.spec.js
-│   ├── playwright.config.js
-│   └── frontend_e2e_test.js (legacy)
-│
-├── integration/       # API integration tests
-│   └── api-integration.test.js
-│
-├── scripts/          # Test utilities
+├── e2e/                    # End-to-end tests
+├── integration/            # Integration tests  
+├── performance/            # Performance tests
+├── python/                 # Python test scripts
+│   ├── backend-api-test.py
+│   ├── edge-cases-test.py
+│   ├── integration-test.py
+│   └── performance-test.py
+├── scripts/                # Active test scripts
 │   ├── run-all-tests.sh
 │   ├── test-endpoints.sh
+│   ├── test-anonymous-upload.js
+│   ├── test-anonymous-limit.js
 │   └── test-reprocess.js
-│
-├── archive/          # Old tests (reference only)
-│
-└── Legacy Python Tests (to be migrated)
-    ├── backend_api_test.py
-    ├── integration_test.py
-    ├── performance_test.py
-    └── edge_cases_test.py
+├── test-data/              # Test audio files
+│   ├── zabka.m4a
+│   ├── test-audio.mp3
+│   └── test-file.txt
+├── debug-archive/          # Archived debug scripts (reference only)
+└── unit/                   # Unit tests
+    ├── backend/
+    └── frontend/
+```
+
+## Maintenance
+
+### Automated Cleanup
+Run the cleanup script to remove old test data:
+```bash
+./scripts/cleanup-test-data.sh
+```
+
+This script will:
+- Remove uploads older than 7 days
+- Clean old database WAL files
+- Remove test results older than 30 days
+
+### Python Tests
+Python test scripts are located in `tests/python/`:
+- `backend-api-test.py` - Backend API testing
+- `integration-test.py` - Integration testing
+- `performance-test.py` - Performance testing
+- `edge-cases-test.py` - Edge case testing
+
+Run Python tests:
+```bash
+cd tests/python
+python3 backend-api-test.py
+python3 integration-test.py
 ```
 
 ## Test Categories

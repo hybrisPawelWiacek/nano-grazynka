@@ -7,8 +7,8 @@ async function uploadFileAnonymous() {
   return new Promise((resolve, reject) => {
     const form = new FormData();
     
-    // Read zabka.m4a from tests directory
-    const fileStream = fs.createReadStream('./tests/zabka.m4a');
+    // Read zabka.m4a from test-data directory
+    const fileStream = fs.createReadStream('../test-data/zabka.m4a');
     form.append('file', fileStream, {
       filename: 'zabka.m4a',
       contentType: 'audio/m4a'
