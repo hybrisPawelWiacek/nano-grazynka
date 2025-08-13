@@ -106,14 +106,7 @@ export class GetVoiceNoteUseCase extends UseCase<
         version: voiceNote.getVersion()
       };
       
-      console.log('GetVoiceNoteUseCase - Final output:', {
-        id: output.id,
-        transcriptionModel: output.transcriptionModel,
-        whisperPrompt: output.whisperPrompt,
-        geminiSystemPrompt: output.geminiSystemPrompt,
-        geminiUserPrompt: output.geminiUserPrompt,
-        version: output.version
-      });
+
 
       // Include transcription if requested
       if (input.includeTranscription) {

@@ -25,9 +25,11 @@ frontend/next-env.d.ts
 # Production
 dist/
 build/
+backend/dist/
 
 # Testing
 coverage/
+backend/coverage/
 .nyc_output/
 
 # IDE

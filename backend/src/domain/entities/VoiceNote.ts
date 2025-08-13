@@ -62,16 +62,7 @@ export class VoiceNote {
     updatedAt?: Date,
     version?: number
   ) {
-    // DEBUG: Log constructor parameters
-    console.log('🔍 DEBUG: VoiceNote constructor called with:', {
-      transcriptionModel,
-      whisperPrompt,
-      geminiSystemPrompt,
-      geminiUserPrompt,
-      createdAt,
-      updatedAt,
-      version
-    });
+
     
     this.id = id;
     this.title = title;

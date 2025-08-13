@@ -38,9 +38,7 @@ export class Container {
   private constructor() {
     this.config = ConfigLoader.load();
     
-    console.log('Container: Initializing DatabaseClient...');
     this.prisma = DatabaseClient.getInstance();
-    console.log('Container: DatabaseClient initialized, prisma:', !!this.prisma);
     
     this.observability = new CompositeObservabilityProvider([
       new LangSmithObservabilityProvider(this.config),

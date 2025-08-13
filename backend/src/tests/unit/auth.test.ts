@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { UserEntity } from '../../domain/entities/User';
-import { AuthService } from '../../application/services/AuthService';
+import { AuthService } from '../../domain/services/AuthService';
 import { JwtService } from '../../infrastructure/auth/JwtService';
 import bcrypt from 'bcrypt';
 

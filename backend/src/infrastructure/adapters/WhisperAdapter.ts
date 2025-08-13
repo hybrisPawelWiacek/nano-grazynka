@@ -48,16 +48,14 @@ export class WhisperAdapter implements TranscriptionService {
     const fullPath = audioFilePath;
     
     // Debug logging
-    console.log('WhisperAdapter.transcribeWithOpenAI - audioFilePath:', audioFilePath);
-    console.log('Full path:', fullPath);
-    console.log('File exists?', fs.existsSync(fullPath));
+
     
     if (!fs.existsSync(fullPath)) {
       throw new Error(`Audio file not found: ${fullPath}`);
     }
     
     const stats = fs.statSync(fullPath);
-    console.log('File size:', stats.size, 'bytes');
+
     
     // Read file as buffer
     const fileBuffer = fs.readFileSync(fullPath);
@@ -91,7 +89,7 @@ export class WhisperAdapter implements TranscriptionService {
       formData.append('temperature', options.temperature.toString());
     }
 
-    console.log('Sending request to OpenAI with model:', model);
+
     
     const response = await fetch(`${baseUrl}/audio/transcriptions`, {
       method: 'POST',
@@ -108,7 +106,7 @@ export class WhisperAdapter implements TranscriptionService {
       
       // If model not found, try with just 'whisper'
       if (error.includes('model') && model === 'whisper-1') {
-        console.log('Retrying with model: whisper');
+
         model = 'whisper';
         
         // Recreate FormData with new model
@@ -299,9 +297,7 @@ export class WhisperAdapter implements TranscriptionService {
       }
     ];
     
-    console.log('Sending request to Gemini 2.0 Flash via OpenRouter');
-    console.log('Audio file size:', fileBuffer.length, 'bytes');
-    console.log('Base64 length:', base64Audio.length, 'characters');
+
     
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',

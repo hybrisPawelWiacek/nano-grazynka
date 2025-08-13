@@ -114,6 +114,110 @@ When making choices, ask:
 4. Will it scale to MVP needs (not beyond)?
 5. Is it maintainable and clear?
 
+## Project Structure Verification (MANDATORY)
+
+### ALWAYS verify project structure before making changes
+
+#### 1. Check for Duplicate Files
+**Before creating ANY new file:**
+- Use Serena's `find_symbol` to check if classes/functions exist in multiple locations
+- Verify imports in container.ts to understand which implementations are actually used
+- Common duplicate locations to check:
+  - `/infrastructure/repositories/` vs `/infrastructure/persistence/`
+  - `/domain/services/` vs `/application/services/`
+  - `frontend/src/` vs `frontend/app/` (App Router doesn't use src/)
+  - `next.config.js` vs `next.config.ts` (only one should exist)
+
+#### 2. Verify Configuration Sources
+**Database Configuration:**
+- Check `.env` for `DATABASE_URL` (currently: `file:/data/nano-grazynka.db`)
+- NEVER create new databases - always use the configured location
+- Docker mounts `/data` volume - this is where SQLite database lives
+
+**Configuration Files:**
+- Root `config.yaml` is the source of truth (NOT backend/config.yaml)
+- `.env` in root directory (NOT backend/.env or frontend/.env)
+- `next.config.js` for frontend (NOT next.config.ts)
+
+#### 3. Before Creating New Files
+- Check if similar functionality already exists
+- Verify the correct directory structure from existing patterns
+- Use container.ts as source of truth for dependency injection
+- Check if the file might be a debug/temporary script that should be cleaned
+
+#### 4. Common Pitfalls to Avoid
+**Backend Issues:**
+- Creating duplicate repository implementations
+- Using wrong database locations
+- Not checking which files are actually imported and used
+- Leaving debug console.log statements in code
+- Creating files in `/src/shared/` (empty directory, don't use)
+
+**Frontend Issues:**
+- Creating files in `frontend/src/` (old Pages Router structure)
+- Duplicating API functions in `lib/api.ts` vs `lib/api/`
+- Adding debug console.log/console.error statements
+- Creating duplicate Next.js config files
+
+**Test Issues:**
+- Accumulating test upload files in `data/uploads/`
+- Creating debug scripts in `tests/scripts/` instead of archiving
+- Not updating test imports after reorganization
+- Leaving WAL files from database operations
+
+#### 5. Cleanup Checklist
+**Regular Maintenance Tasks:**
+```bash
+# Run cleanup script weekly
+./scripts/cleanup-test-data.sh
+
+# Check for duplicate files
+find . -name "*.ts" -o -name "*.js" | xargs basename | sort | uniq -d
+
+# Check for debug logs
+grep -r "console.log" backend/src/ frontend/app/
+
+# Clean old uploads (keep last 10)
+cd data/uploads/ && ls -1t | tail -n +11 | xargs rm -f
+```
+
+#### 6. Directory Structure Reference
+```
+backend/
+├── src/
+│   ├── application/     # Use cases and orchestration
+│   ├── domain/          # Business logic and entities
+│   ├── infrastructure/  # External integrations
+│   │   ├── adapters/    # Service adapters
+│   │   ├── auth/        # Authentication
+│   │   ├── database/    # Database client (DatabaseClient.ts)
+│   │   ├── external/    # External services
+│   │   ├── observability/ # Monitoring
+│   │   ├── persistence/ # Repository implementations (ACTIVE)
+│   │   └── repositories/ # DO NOT USE (old location)
+│   └── presentation/    # API layer
+│       └── api/
+│           ├── middleware/
+│           ├── routes/
+│           └── container.ts # Dependency injection
+
+frontend/
+├── app/                 # App Router (ACTIVE)
+├── components/          # React components
+├── lib/                 # Utilities
+│   └── api/            # API client modules
+├── public/             # Static assets
+└── src/                # DO NOT USE (old Pages Router)
+
+tests/
+├── e2e/                # End-to-end tests
+├── integration/        # Integration tests
+├── python/             # Python test scripts
+├── scripts/            # Active test scripts
+├── test-data/          # Test audio files
+└── debug-archive/      # Archived debug scripts
+```
+
 ## MCP Server Configuration
 
 ### Project-Specific Setup

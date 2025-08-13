@@ -4,7 +4,6 @@ import { Container } from '../container';
 import { Language } from '../../../domain/value-objects/Language';
 import { createAuthenticateMiddleware } from '../middleware/authenticate';
 import { createOptionalAuthMiddleware } from '../middleware/optionalAuth';
-import { createUsageLimitMiddleware } from '../middleware/usageLimit';
 import { createAnonymousUsageLimitMiddleware } from '../middleware/anonymousUsageLimit';
 import { createRateLimitMiddleware } from '../middleware/rateLimit';
 import { UserEntity } from '../../../domain/entities/User';
@@ -17,22 +16,19 @@ declare module 'fastify' {
 }
 
 export async function voiceNoteRoutes(fastify: FastifyInstance) {
-  console.log('voiceNoteRoutes: fastify.container =', !!fastify.container);
   const container = fastify.container || Container.getInstance();
-  console.log('voiceNoteRoutes: container =', !!container);
   
   // Create middleware instances
   const jwtService = new JwtService();
   const authMiddleware = createAuthenticateMiddleware(jwtService, container.getUserRepository());
   const optionalAuthMiddleware = createOptionalAuthMiddleware(jwtService, container.getUserRepository());
-  const usageLimitMiddleware = createUsageLimitMiddleware(container.getUserRepository());
   const anonymousUsageLimitMiddleware = createAnonymousUsageLimitMiddleware();
   const rateLimitMiddleware = createRateLimitMiddleware();
 
   // Upload voice note (supports both authenticated and anonymous users)
   fastify.post('/api/voice-notes', 
     { 
-      preHandler: [optionalAuthMiddleware, rateLimitMiddleware, usageLimitMiddleware] 
+      preHandler: [optionalAuthMiddleware, rateLimitMiddleware, anonymousUsageLimitMiddleware] 
     }, 
     async (request: FastifyRequest & { user?: UserEntity }, reply: FastifyReply) => {
     try {
@@ -69,12 +65,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
       // Get user or sessionId (from fields or header)
       const user = request.user;
       const sessionId = fields.sessionId || (request.headers['x-session-id'] as string);
-      console.log('[UPLOAD] Session info:', {
-        hasUser: !!user,
-        sessionIdFromFields: fields.sessionId,
-        sessionIdFromHeader: request.headers['x-session-id'],
-        finalSessionId: sessionId
-      });
+
       let anonymousSession = (request as any).anonymousSession;
       
       // Must have either user or sessionId
@@ -87,18 +78,12 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
       
       // Check anonymous session limits if no authenticated user
       if (!user && sessionId) {
-        console.log('Checking anonymous session, sessionId:', sessionId);
-        console.log('Container exists:', !!container);
-        console.log('Container type:', typeof container);
-        console.log('Container.getPrisma exists:', typeof container?.getPrisma);
+
         
         let prisma;
         try {
           prisma = container.getPrisma();
-          console.log('Prisma instance retrieved:', !!prisma);
-          console.log('Prisma type:', typeof prisma);
-          console.log('Prisma has anonymousSession:', !!prisma?.anonymousSession);
-          console.log('Prisma constructor name:', prisma?.constructor?.name);
+
         } catch (err) {
           console.error('Error calling getPrisma:', err);
           throw err;
@@ -160,13 +145,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         });
       }
 
-      // DEBUG: Log form fields
-      console.log('🔍 DEBUG: Route handler - Received form fields:', {
-        transcriptionModel: fields.transcriptionModel,
-        whisperPrompt: fields.whisperPrompt,
-        geminiSystemPrompt: fields.geminiSystemPrompt,
-        geminiUserPrompt: fields.geminiUserPrompt,
-      });
+
 
       const useCase = container.getUploadVoiceNoteUseCase();
       const result = await useCase.execute({

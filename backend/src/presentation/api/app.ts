@@ -7,7 +7,6 @@ import { Container } from './container';
 import { errorHandler } from './middleware/errorHandler';
 import { healthRoutes } from './routes/health';
 import { voiceNoteRoutes } from './routes/voiceNotes';
-import { testRoutes } from './routes/test';
 import authRoutes from './routes/auth';
 import paymentsRoutes from './routes/payments';
 import { anonymousRoutes } from './routes/anonymous';
@@ -96,7 +95,6 @@ export async function createApp(): Promise<FastifyInstance> {
   await fastify.register(voiceNoteRoutes);
   await fastify.register(paymentsRoutes);
   await fastify.register(anonymousRoutes);
-  await fastify.register(testRoutes);
 
   fastify.get('/', async (request, reply) => {
     return {
