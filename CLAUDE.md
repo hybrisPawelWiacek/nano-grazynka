@@ -42,32 +42,52 @@ As the main agent, I will:
 
 ### 📚 Documentation Map
 
-#### Architecture & Design
+#### Project Documentation (`docs/`)
+Technical documentation for the codebase and system design.
+
+##### Architecture & Design
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
 | [System Architecture](./docs/architecture/ARCHITECTURE.md) | System design & patterns | Understanding system structure |
 | [Database Schema](./docs/architecture/DATABASE.md) | Schema & data models | Database work, queries |
 
-#### Requirements (Human-Managed)
-| Document | Purpose | When to Use |
-|----------|---------|-------------|
-| [Product Requirements](./docs/requirements/PRD_ACTUAL.md) | Complete requirements & implementation | All features, status, roadmap |
-
-#### Development & Operations
-| Document | Purpose | When to Use |
-|----------|---------|-------------|
-| [Development Guide](./docs/development/DEVELOPMENT.md) | Dev guide & debugging | Setup, testing, troubleshooting |
-| [MCP Playbook](./docs/playbook/MCP_PLAYBOOK.md) | MCP server playbook | Detailed MCP usage examples |
-
-#### API & Testing
+##### API Documentation
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
 | [API Contract](./docs/api/api-contract.md) | API specifications | Frontend-backend integration |
 | [Frontend Routes](./docs/api/FRONTEND_ROUTES.md) | Frontend routing patterns | UI navigation & API mapping |
-| [Integration Testing](./docs/testing/integration-testing.md) | Testing guide | E2E testing, Docker testing |
-| [Test Plan](./docs/testing/TEST_PLAN.md) | Test planning & strategy | Test execution planning |
-| [Test Results](./docs/testing/TEST_RESULTS.md) | Latest test results (33% pass) | Review test outcomes |
+
+##### Development
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [Development Guide](./docs/development/DEVELOPMENT.md) | Dev guide & debugging | Setup, testing, troubleshooting |
+| [AI Models Setup](./docs/development/AI_MODELS_SETUP.md) | AI configuration | OpenRouter/OpenAI setup |
+
+#### AI Process Documentation (`imp_docs/`)
+Documentation for AI agents, requirements, and development process.
+
+##### Requirements (Human-Managed)
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [Product Requirements](./imp_docs/requirements/PRD_ACTUAL.md) | Complete requirements & implementation | All features, status, roadmap |
+| [Premium Features](./imp_docs/requirements/PREMIUM_FEATURES.md) | Premium feature specifications | Monetization features |
+
+##### Testing
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [Test Plan](./imp_docs/testing/TEST_PLAN.md) | Test planning & strategy | Test execution planning |
+| [Test Results](./imp_docs/testing/TEST_RESULTS_2025_08_13.md) | Latest test results | Review test outcomes |
 | [Test Suite](./tests/README.md) | Test organization & usage | Running tests |
+
+##### MCP & AI Playbooks
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [MCP Playbook](./imp_docs/playbook/MCP_PLAYBOOK.md) | MCP server playbook | Detailed MCP usage examples |
+
+##### Planning Documents (Ephemeral)
+| Document | Purpose | When to Use |
+|----------|---------|-------------|
+| [Fix Plan](./imp_docs/planning/FIX_PLAN_2025_08_13.md) | Current bug fixes | Active development fixes |
 
 #### Project Management (Canonical)
 | Document | Purpose | When to Use |
@@ -75,11 +95,6 @@ As the main agent, I will:
 | [README.md](./README.md) | Quick start & overview | First time setup, basic usage |
 | [PROJECT_STATUS.md](./PROJECT_STATUS.md) | Progress tracker | Current status, next steps |
 | [Documentation Guide](./docs/DOCUMENTATION_STRUCTURE.md) | Doc organization guide | Understanding where docs live |
-
-#### Planning Documents (Ephemeral)
-| Document | Purpose | When to Use |
-|----------|---------|-------------|
-| [UX Rearchitecture](./docs/planning/UX_REARCHITECTURE_PLAN.md) | Public homepage plan | Anonymous usage implementation |
 
 ## Project Overview
 
@@ -328,7 +343,7 @@ tests/
 3. Memory: Store test scenarios that failed/passed
 ```
 
-**For detailed patterns and examples → See [MCP Playbook](./docs/playbook/MCP_PLAYBOOK.md)**
+**For detailed patterns and examples → See [MCP Playbook](./imp_docs/playbook/MCP_PLAYBOOK.md)**
 
 ## Memory Management System
 
@@ -540,12 +555,11 @@ docker compose logs -f
 |----------------|----------|
 | System design | [docs/architecture/ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md) |
 | Database schema | [docs/architecture/DATABASE.md](./docs/architecture/DATABASE.md) |
-| Product requirements | [docs/requirements/PRD_ACTUAL.md](./docs/requirements/PRD_ACTUAL.md) |
+| Product requirements | [imp_docs/requirements/PRD_ACTUAL.md](./imp_docs/requirements/PRD_ACTUAL.md) |
 | Development setup | [docs/development/DEVELOPMENT.md](./docs/development/DEVELOPMENT.md) |
-| MCP playbook | [docs/playbook/MCP_PLAYBOOK.md](./docs/playbook/MCP_PLAYBOOK.md) |
+| MCP playbook | [imp_docs/playbook/MCP_PLAYBOOK.md](./imp_docs/playbook/MCP_PLAYBOOK.md) |
 | API endpoints | [docs/api/api-contract.md](./docs/api/api-contract.md) |
-| Testing approach | [docs/testing/integration-testing.md](./docs/testing/integration-testing.md) |
-| Test plan & results | [docs/testing/](./docs/testing/) |
+| Test plan & results | [imp_docs/testing/](./imp_docs/testing/) |
 | Test runner | [tests/scripts/run-all-tests.sh](./tests/scripts/run-all-tests.sh) |
 | Project progress | [PROJECT_STATUS.md](./PROJECT_STATUS.md) |
 | Quick start | [README.md](./README.md) |

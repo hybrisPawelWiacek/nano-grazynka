@@ -96,6 +96,34 @@ function getTemplatePrompts(templateName: string) {
   };
 }
 
+// Retry utility for network requests with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  delay = 1000
+): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      
+      // Only retry on network or server errors
+      const isRetryable = 
+        error instanceof TypeError ||
+        (error instanceof Error && error.message.includes('fetch')) ||
+        (error instanceof Response && error.status >= 500);
+      
+      if (!isRetryable) throw error;
+      
+      const waitTime = delay * Math.pow(2, i);
+      console.log(`Request failed, retrying in ${waitTime}ms... (attempt ${i + 1}/${maxRetries})`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+
 export default function HomePage() {
   const { user, logout, isAnonymous, anonymousUsageCount, anonymousSessionId, refreshAnonymousUsage } = useAuth();
   const router = useRouter();
@@ -109,8 +137,17 @@ export default function HomePage() {
   const [transcriptionResult, setTranscriptionResult] = useState<{ id: string; text: string } | null>(null);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   
-  // Multi-model transcription state
-  const [selectedModel, setSelectedModel] = useState<TranscriptionModel>('gpt-4o-transcribe');
+  // Multi-model transcription state with localStorage persistence
+  const [selectedModel, setSelectedModel] = useState<TranscriptionModel>(() => {
+    // Initialize from localStorage if available
+    if (typeof window !== 'undefined') {
+      const savedModel = localStorage.getItem('selectedTranscriptionModel');
+      if (savedModel === 'gpt-4o-transcribe' || savedModel === 'google/gemini-2.0-flash-001') {
+        return savedModel as TranscriptionModel;
+      }
+    }
+    return 'gpt-4o-transcribe';
+  });
   const [geminiPrompt, setGeminiPrompt] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>();
   const [status, setStatus] = useState<ProcessingStatus>({
@@ -118,6 +155,13 @@ export default function HomePage() {
     progress: 0,
     message: ''
   });
+
+  // Save selected model to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedTranscriptionModel', selectedModel);
+    }
+  }, [selectedModel]);
 
   // Check usage limits
   useEffect(() => {
@@ -259,16 +303,25 @@ export default function HomePage() {
         processHeaders['x-session-id'] = sessionId;
       }
       
-      const processResponse = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}/process`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: processHeaders,
-        body: JSON.stringify(
-          language === 'AUTO' 
-            ? {} 
-            : { language }
-        )
-      });
+      // Process with retry logic
+      const processResponse = await retryWithBackoff(async () => {
+        const response = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}/process`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: processHeaders,
+          body: JSON.stringify(
+            language === 'AUTO' 
+              ? {} 
+              : { language }
+          )
+        });
+        
+        if (!response.ok && response.status >= 500) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        
+        return response;
+      }, 3, 1000);
 
       if (!processResponse.ok) {
         throw new Error('Processing failed');
@@ -290,10 +343,19 @@ export default function HomePage() {
           statusHeaders['x-session-id'] = sessionId;
         }
         
-        const statusResponse = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}?includeTranscription=true&includeSummary=true`, {
-          credentials: 'include',
-          headers: statusHeaders
-        });
+        // Check status with retry logic for network failures
+        const statusResponse = await retryWithBackoff(async () => {
+          const response = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}?includeTranscription=true&includeSummary=true`, {
+            credentials: 'include',
+            headers: statusHeaders
+          });
+          
+          if (!response.ok && response.status >= 500) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+          
+          return response;
+        }, 2, 500); // Less retries and shorter delay for status checks
 
         if (!statusResponse.ok) {
           throw new Error('Failed to check status');
@@ -317,7 +379,8 @@ export default function HomePage() {
           
           // Update anonymous usage count
           if (isAnonymous) {
-            refreshAnonymousUsage();
+            incrementUsageCount();  // Increment local storage count
+            refreshAnonymousUsage();  // Refresh from backend
           }
           return; // Stop polling
         } else if (data.status === 'completed' && data.transcription && data.summary) {
@@ -342,7 +405,8 @@ export default function HomePage() {
           
           // Update anonymous usage count
           if (isAnonymous) {
-            refreshAnonymousUsage();
+            incrementUsageCount();  // Increment local storage count
+            refreshAnonymousUsage();  // Refresh from backend
           }
         } else if (data.status === 'failed') {
           throw new Error('Processing failed');

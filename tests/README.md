@@ -240,9 +240,8 @@ jobs:
 
 ## Test Results & Documentation
 
-- [Test Results](../docs/testing/TEST_RESULTS.md) - Latest execution report
-- [Test Plan](../docs/testing/TEST_PLAN.md) - Comprehensive test strategy
-- [Reorganization Plan](../docs/planning/TEST_REORGANIZATION_PLAN.md) - Test suite restructuring plan
+- [Test Results](../imp_docs/testing/TEST_RESULTS_2025_08_13.md) - Latest execution report
+- [Test Plan](../imp_docs/testing/TEST_PLAN.md) - Comprehensive test strategy
 
 ## Contributing
 

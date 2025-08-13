@@ -19,15 +19,29 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       return;
     }
 
     // Validate password length
     if (password.length < 8) {
       setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    // Validate password strength (at least 1 number and 1 special character)
+    const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*])/;
+    if (!passwordRegex.test(password)) {
+      setError('Password must contain at least 1 number and 1 special character');
+      return;
+    }
+
+    // Validate passwords match
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
 

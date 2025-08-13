@@ -22,12 +22,16 @@ async function uploadFileAnonymous() {
     form.append('language', 'AUTO');  // Test AUTO language handling
     form.append('tags', 'test,anonymous,zabka');
     
+    // Add x-session-id header for anonymous authentication
+    const headers = form.getHeaders();
+    headers['x-session-id'] = sessionId;
+    
     const options = {
       hostname: 'localhost',
       port: 3101,
       path: '/api/voice-notes',
       method: 'POST',
-      headers: form.getHeaders()
+      headers: headers
     };
     
     console.log('Uploading zabka.m4a as anonymous user...');
@@ -51,8 +55,8 @@ async function uploadFileAnonymous() {
           console.log('Status:', result.voiceNote.status);
           console.log('Message:', result.message);
           
-          // Now trigger processing
-          processVoiceNote(result.voiceNote.id);
+          // Now trigger processing with sessionId
+          processVoiceNote(result.voiceNote.id, sessionId);
         } else {
           console.log('\n❌ Upload failed');
           try {
@@ -75,7 +79,7 @@ async function uploadFileAnonymous() {
   });
 }
 
-function processVoiceNote(voiceNoteId) {
+function processVoiceNote(voiceNoteId, sessionId) {
   const postData = JSON.stringify({ language: 'PL' });
   
   const options = {
@@ -85,7 +89,8 @@ function processVoiceNote(voiceNoteId) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Content-Length': Buffer.byteLength(postData)
+      'Content-Length': Buffer.byteLength(postData),
+      'x-session-id': sessionId  // Add session ID header for anonymous auth
     }
   };
   

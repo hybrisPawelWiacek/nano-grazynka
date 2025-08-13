@@ -132,6 +132,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       // Clear any client-side token if exists
       Cookies.remove('token');
+      
+      // Clear all localStorage items and reset anonymous session
+      clearAnonymousSession();
+      localStorage.clear();
+      
+      // Create new anonymous session
+      const newSessionId = getOrCreateSessionId();
+      setAnonymousSessionId(newSessionId);
+      setAnonymousUsageCount(0);
     }
   };
 
