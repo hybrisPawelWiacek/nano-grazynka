@@ -147,7 +147,7 @@ Tracks usage for non-authenticated users.
 
 ### VoiceNote
 
-Primary entity representing an uploaded audio file.
+Primary entity representing an uploaded audio file with multi-model transcription support.
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
@@ -162,6 +162,10 @@ Primary entity representing an uploaded audio file.
 | status | String | NOT NULL | Processing status enum |
 | tags | String | JSON Array | Categorization tags |
 | errorMessage | String? | NULL | Error message if processing failed |
+| transcriptionModel | String? | NULL | Model used: 'gpt-4o-transcribe' or 'google/gemini-2.0-flash-001' |
+| whisperPrompt | String? | NULL | Hints for GPT-4o transcription (224 tokens max) |
+| geminiSystemPrompt | String? | NULL | System instructions for Gemini transcription |
+| geminiUserPrompt | String? | NULL | Context/template for Gemini (1M tokens max) |
 | createdAt | DateTime | NOT NULL | Creation timestamp |
 | updatedAt | DateTime | NOT NULL | Last update timestamp |
 | version | Int | DEFAULT 1 | Version number for tracking |
@@ -323,6 +327,13 @@ npx prisma studio
 
 ### Migration Files
 Located in `/backend/prisma/migrations/`
+
+Recent migrations:
+- `20250813065752_add_multi_model_transcription` - Added multi-model transcription fields:
+  - `transcriptionModel`: Support for GPT-4o vs Gemini 2.0 Flash
+  - `whisperPrompt`: Hints for GPT-4o transcription (224 token limit)
+  - `geminiSystemPrompt`: System instructions for Gemini
+  - `geminiUserPrompt`: Context/templates for Gemini (1M token capacity)
 
 ### Schema Location
 `/backend/prisma/schema.prisma`

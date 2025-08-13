@@ -2,13 +2,47 @@
 
 ## Overview
 nano-Grazynka supports multiple AI models for transcription and summarization:
+
+### Transcription Models (User-Selectable)
+- **GPT-4o Transcribe** (default): Fast, 224 token prompt limit, $0.006/minute
+- **Gemini 2.0 Flash**: Context-aware, 1M token prompts, $0.0015/minute (75% cheaper)
+
+### Summarization Models
 - **Primary**: Google Gemini models via OpenRouter (cost-effective)
 - **Alternative**: OpenAI GPT models (direct API)
 - **Fallback**: Mock responses for development
 
+## Multi-Model Transcription Setup
+
+### Transcription Model Selection
+Users can choose between two transcription models in the UI:
+
+#### GPT-4o Transcribe (Default)
+- **Provider**: OpenAI API
+- **Best for**: Quick transcriptions with minimal context
+- **Prompt limit**: 224 tokens
+- **Cost**: $0.006/minute
+- **Features**: Whisper prompts for proper nouns and terminology
+
+#### Gemini 2.0 Flash Transcription
+- **Provider**: OpenRouter API
+- **Best for**: Context-aware transcriptions with extensive prompts
+- **Prompt limit**: 1,000,000 tokens
+- **Cost**: $0.0015/minute (75% cheaper than GPT-4o)
+- **Features**: 
+  - Template system (Meeting, Technical, Podcast)
+  - Custom system and user prompts
+  - Full conversation context support
+
+### Template System for Gemini
+Pre-built templates available:
+1. **Meeting Transcription**: Speaker identification, action items
+2. **Technical Discussion**: Code mentions, technical terms
+3. **Podcast/Interview**: Q&A format, topic segmentation
+
 ## Configuration Options
 
-### Option A: OpenRouter (Recommended - Gemini Models)
+### Option A: OpenRouter (Required for Gemini Transcription)
 
 #### 1. Get an OpenRouter API Key
 1. Visit [OpenRouter](https://openrouter.ai)
@@ -70,8 +104,9 @@ The LLMAdapter in `backend/src/infrastructure/external/LLMAdapter.ts` automatica
 
 ## Cost Comparison
 
-### Transcription (Whisper)
-- **OpenAI Whisper**: $0.006/minute
+### Transcription Models
+- **GPT-4o Transcribe** (OpenAI): $0.006/minute
+- **Gemini 2.0 Flash** (OpenRouter): $0.0015/minute ⭐ 75% cheaper
 
 ### Summarization
 - **Gemini 2.0 Flash** (via OpenRouter): ~$0.0002/1K tokens ⭐ Most cost-effective

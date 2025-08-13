@@ -17,11 +17,12 @@ export function createAnonymousUsageLimitMiddleware() {
       return; // Authenticated user, skip this middleware
     }
 
-    // Get sessionId from request body or multipart fields
+    // Get sessionId from headers, request body or multipart fields
     const body = request.body as any;
-    // For multipart/form-data, fastify-multipart stores parsed fields differently
-    // We need to handle this in the route handler, not middleware
-    const sessionId = body?.sessionId || (request as any).sessionId;
+    // Check header first (most common for frontend), then body/fields
+    const sessionId = (request.headers['x-session-id'] as string) || 
+                      body?.sessionId || 
+                      (request as any).sessionId;
 
     if (!sessionId) {
       return reply.code(400).send({ 

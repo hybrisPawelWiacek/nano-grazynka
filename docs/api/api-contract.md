@@ -179,7 +179,7 @@ Check if the backend service is running.
 ### 2. Voice Notes
 
 #### POST /api/voice-notes
-Upload a new voice note file.
+Upload a new voice note file with optional transcription model selection.
 
 **Request:** `multipart/form-data`
 - `file`: Audio file (required)
@@ -188,6 +188,21 @@ Upload a new voice note file.
 - `title`: string (optional) - Custom title for the note
 - `tags`: string (optional) - Comma-separated tags
 - `sessionId`: string (optional) - Session ID for anonymous users
+- `language`: string (optional) - Language code ("en" | "pl")
+- `transcriptionModel`: string (optional) - Model selection
+  - `"gpt-4o-transcribe"` (default) - Fast, 224 token prompt limit, $0.006/min
+  - `"google/gemini-2.0-flash-001"` - Context-aware, 1M token prompts, $0.0015/min (75% cheaper)
+- `whisperPrompt`: string (optional) - Hints for GPT-4o transcription
+  - Used only when `transcriptionModel` is "gpt-4o-transcribe"
+  - Maximum 224 tokens (~900 characters)
+  - Example: "Technical terms: API, JWT, OAuth. Names: John Smith, Żabka"
+- `geminiSystemPrompt`: string (optional) - System instructions for Gemini
+  - Used only when `transcriptionModel` is "google/gemini-2.0-flash-001"
+  - Defines the transcriber's role and behavior
+- `geminiUserPrompt`: string (optional) - Context and instructions for Gemini
+  - Used only when `transcriptionModel` is "google/gemini-2.0-flash-001"
+  - Can include extensive context, glossaries, templates (up to 1M tokens)
+  - Supports template placeholders for meetings, technical discussions, podcasts
 
 **Request Headers (for anonymous users):**
 ```
@@ -209,6 +224,7 @@ X-Session-Id: string // From localStorage
     tags: string[],
     language: "EN" | "PL" | null,
     userId: string,
+    transcriptionModel: string,  // "gpt-4o-transcribe" or "google/gemini-2.0-flash-001"
     transcriptions: [],
     summaries: []
   },
@@ -379,6 +395,10 @@ interface VoiceNote {
   language: Language | null;
   userId?: string;        // Optional for anonymous users
   sessionId?: string;      // For anonymous users
+  transcriptionModel?: string;  // "gpt-4o-transcribe" | "google/gemini-2.0-flash-001"
+  whisperPrompt?: string;        // Prompt for GPT-4o transcription (224 tokens max)
+  geminiSystemPrompt?: string;   // System prompt for Gemini transcription
+  geminiUserPrompt?: string;     // User prompt for Gemini (1M tokens max)
   transcriptions: Transcription[];
   summaries: Summary[];
 }

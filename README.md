@@ -6,11 +6,14 @@ A voice note transcription and summarization utility that processes audio files 
 
 - **Voice Note Upload** - Drag-and-drop or click to upload audio files
 - **Multi-language Support** - English and Polish transcription
+- **Multi-Model Transcription** - Choose between:
+  - GPT-4o-transcribe: Fast processing, 224 token prompts ($0.006/min)
+  - Gemini 2.0 Flash: Context-aware, 1M token prompts ($0.0015/min - 75% cheaper)
 - **AI Summarization** - Automatic summary generation with:
   - Brief overview (2-3 sentences)
   - Key points extraction
   - Action items identification
-- **Multiple AI Models** - Supports Gemini (via OpenRouter) and GPT-4o-mini (via OpenAI)
+- **Template System** - Pre-built prompts for meetings, technical docs, podcasts
 - **Export Options** - Download as Markdown or JSON
 - **Clean Architecture** - Domain-Driven Design with clear boundaries
 - **Docker Ready** - Single command deployment
@@ -64,14 +67,24 @@ nano-grazynka/
 
 ## 🤖 AI Models
 
-### Primary: Gemini 2.0 Flash (via OpenRouter)
+### Transcription Models
+#### GPT-4o-transcribe (OpenAI)
+- Fast, reliable transcription
+- 224 token prompt limit
+- $0.006/minute audio
+- Best for: Quick transcriptions with brief context
+
+#### Gemini 2.0 Flash (OpenRouter)
+- Context-aware transcription
+- 1M token prompt capacity
+- $0.0015/minute audio (75% cheaper)
+- Best for: Detailed prompts, templates, extensive context
+
+### Summarization Model
+#### Gemini 2.5 Flash (OpenRouter)
 - Cost-effective: ~$0.0002/1K tokens
 - Fast response times
 - Get API key: https://openrouter.ai/keys
-
-### Fallback: GPT-4o-mini (via OpenAI)
-- Alternative when OpenRouter unavailable
-- Get API key: https://platform.openai.com/api-keys
 
 ## 📖 Documentation
 
@@ -81,13 +94,13 @@ nano-grazynka/
 - [Development Guide](./docs/development/DEVELOPMENT.md) - Local setup
 - [AI Models Setup](./docs/development/AI_MODELS_SETUP.md) - AI configuration
 
-## 🐛 Recent Fixes (August 11, 2025)
+## 🚀 Recent Updates (August 13, 2025)
 
-- ✅ Fixed userId requirement error
-- ✅ Fixed route navigation after upload
-- ✅ Fixed transcription/summary display
-- ✅ Added Gemini model support
-- ✅ Improved error handling
+- ✅ Multi-model transcription: Choose GPT-4o or Gemini 2.0 Flash
+- ✅ Template system for meetings, technical docs, podcasts
+- ✅ Token counter with visual progress bar
+- ✅ Cost estimator showing 75% savings with Gemini
+- ✅ Extended prompts leveraging Gemini's 1M token window
 
 ## 🏷️ MVP Limitations
 
@@ -156,6 +169,6 @@ Private project - not for public distribution
 
 ---
 
-**Status**: ✅ MVP Complete and Functional  
-**Version**: 1.0.0  
-**Last Updated**: August 11, 2025
+**Status**: ✅ MVP Complete with Multi-Model Transcription  
+**Version**: 2.0.0  
+**Last Updated**: August 13, 2025

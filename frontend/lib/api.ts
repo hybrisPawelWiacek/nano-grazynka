@@ -65,7 +65,10 @@ export async function uploadVoiceNote(
   file: File,
   language?: string,
   whisperPrompt?: string,
-  sessionId?: string
+  sessionId?: string,
+  transcriptionModel?: string,
+  geminiSystemPrompt?: string,
+  geminiUserPrompt?: string
 ): Promise<{
   success: boolean;
   data?: { id: string };
@@ -85,6 +88,19 @@ export async function uploadVoiceNote(
     
     if (sessionId) {
       formData.append('sessionId', sessionId);
+    }
+    
+    // Add new multi-model fields
+    if (transcriptionModel) {
+      formData.append('transcriptionModel', transcriptionModel);
+    }
+    
+    if (geminiSystemPrompt) {
+      formData.append('geminiSystemPrompt', geminiSystemPrompt);
+    }
+    
+    if (geminiUserPrompt) {
+      formData.append('geminiUserPrompt', geminiUserPrompt);
     }
     
     const response = await fetch('http://localhost:3101/api/voice-notes', {

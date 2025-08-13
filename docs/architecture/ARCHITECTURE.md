@@ -73,7 +73,9 @@ nano-Grazynka is a voice note transcription and summarization system built with 
 - **Purpose**: Implements interfaces and handles external dependencies
 - **Components**:
   - **Prisma Repositories**: Database persistence implementation
-  - **WhisperAdapter**: OpenAI Whisper API integration
+  - **WhisperAdapter**: Multi-model transcription support
+    - `transcribe()`: GPT-4o-transcribe via OpenAI API
+    - `transcribeWithGemini()`: Gemini 2.0 Flash via OpenRouter with base64 encoding
   - **LLMAdapter**: Language model integration for summarization
   - **LocalStorageAdapter**: File system operations
 - **Key Principle**: Adapters and implementations of domain contracts
@@ -117,16 +119,23 @@ Request → CORS → OptionalAuth → UsageLimit → Route Handler
 ### Voice Note Processing Pipeline
 
 ```
-1. File Upload
-   └─> Presentation: Multipart form handling
+1. File Upload with Model Selection
+   └─> Presentation: Multipart form with transcriptionModel field
        └─> Application: UploadVoiceNoteUseCase
-           └─> Domain: VoiceNote.create()
-               └─> Infrastructure: Save file & entity
+           └─> Domain: VoiceNote.create() with model metadata
+               └─> Infrastructure: Save file & entity with prompts
 
-2. Processing Trigger
+2. Multi-Model Processing Trigger
    └─> Application: ProcessVoiceNoteUseCase
        └─> ProcessingOrchestrator.process()
-           ├─> Transcription: WhisperAdapter → OpenAI API
+           ├─> Model Router: Check transcriptionModel field
+           │   ├─> GPT-4o Path:
+           │   │   └─> WhisperAdapter.transcribe()
+           │   │       └─> OpenAI API with whisperPrompt (224 tokens)
+           │   └─> Gemini 2.0 Path:
+           │       └─> WhisperAdapter.transcribeWithGemini()
+           │           ├─> Base64 encode audio
+           │           └─> OpenRouter API with system/user prompts (1M tokens)
            ├─> Classification: LLMAdapter → Categorization
            └─> Summarization: LLMAdapter → Summary generation
 
@@ -193,10 +202,21 @@ Request → CORS → OptionalAuth → UsageLimit → Route Handler
 
 ## Processing Pipeline Details
 
-### 1. Transcription
-- **Service**: OpenAI Whisper API
+### 1. Multi-Model Transcription
+- **Primary Models**: 
+  - **GPT-4o-transcribe** (Default): Fast, 224 token prompt limit, $0.006/min
+  - **Gemini 2.0 Flash**: Context-aware, 1M token prompts, $0.0015/min (75% cheaper)
 - **Languages**: English, Polish (auto-detected)
-- **Output**: Plain text transcription with confidence score
+- **Model Selection Logic**:
+  ```typescript
+  if (transcriptionModel === 'google/gemini-2.0-flash-001') {
+    // Base64 encode audio
+    // Send to Gemini via OpenRouter with system/user prompts
+  } else {
+    // Use GPT-4o-transcribe via OpenAI API with whisper prompt
+  }
+  ```
+- **Output**: Plain text transcription with model metadata
 
 ### 2. Classification
 - **Service**: GPT-4/Claude for categorization

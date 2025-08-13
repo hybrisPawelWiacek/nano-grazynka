@@ -8,6 +8,7 @@ import ConversionModal from '@/components/ConversionModal';
 import PostTranscriptionDialog from '@/components/PostTranscriptionDialog';
 import AdvancedOptions from '@/components/AdvancedOptions';
 import { TranscriptionModel } from '@/components/ModelSelection';
+import { getOrCreateSessionId, getUsageCount, incrementUsageCount, getRemainingUsage } from '@/lib/anonymousSession';
 import styles from './page.module.css';
 
 interface ProcessingStatus {
@@ -177,6 +178,9 @@ export default function HomePage() {
       setShowConversionModal(true);
       return;
     }
+    
+    // Ensure we have a session ID for anonymous users
+    const sessionId = isAnonymous ? (anonymousSessionId || getOrCreateSessionId()) : null;
 
     // Start upload process
     setStatus({ stage: 'uploading', progress: 20, message: 'Uploading voice note...' });
@@ -214,8 +218,8 @@ export default function HomePage() {
     }
     
     // Add sessionId for anonymous users
-    if (isAnonymous && anonymousSessionId) {
-      formData.append('sessionId', anonymousSessionId);
+    if (isAnonymous && sessionId) {
+      formData.append('sessionId', sessionId);
     }
 
     try {
@@ -223,8 +227,8 @@ export default function HomePage() {
       const uploadHeaders: Record<string, string> = {};
       
       // Add x-session-id header for anonymous users
-      if (isAnonymous && anonymousSessionId) {
-        uploadHeaders['x-session-id'] = anonymousSessionId;
+      if (isAnonymous && sessionId) {
+        uploadHeaders['x-session-id'] = sessionId;
       }
       
       const uploadResponse = await fetch('http://localhost:3101/api/voice-notes', {
@@ -251,8 +255,8 @@ export default function HomePage() {
       };
       
       // Add x-session-id header for anonymous users
-      if (isAnonymous && anonymousSessionId) {
-        processHeaders['x-session-id'] = anonymousSessionId;
+      if (isAnonymous && sessionId) {
+        processHeaders['x-session-id'] = sessionId;
       }
       
       const processResponse = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}/process`, {
@@ -282,8 +286,8 @@ export default function HomePage() {
         const statusHeaders: Record<string, string> = {};
         
         // Add x-session-id header for anonymous users
-        if (isAnonymous && anonymousSessionId) {
-          statusHeaders['x-session-id'] = anonymousSessionId;
+        if (isAnonymous && sessionId) {
+          statusHeaders['x-session-id'] = sessionId;
         }
         
         const statusResponse = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}?includeTranscription=true&includeSummary=true`, {

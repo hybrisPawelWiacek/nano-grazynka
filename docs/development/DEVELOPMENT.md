@@ -139,6 +139,23 @@ npm test -- --testPathPattern=domain  # Test directory
 
 ### Test Structure
 
+**Updated Test Organization (2025-08-13)**:
+```
+tests/
+├── e2e/                        # Playwright E2E tests
+│   ├── multi-model-transcription.spec.js  # Model selection tests
+│   └── two-pass-transcription.spec.js     # Two-pass flow tests
+├── integration/                # API integration tests
+├── python/                     # Python test scripts
+├── scripts/                    # Active test utilities
+│   ├── test-multi-model.js    # Multi-model transcription test
+│   ├── test-multi-model-node.js
+│   └── run-all-tests.sh       # Master test runner
+├── debug-archive/              # Archived debug scripts (cleaned up)
+└── test-data/                  # Test audio files
+    └── zabka.m4a              # Primary test file
+```
+
 #### Unit Tests (Domain Layer)
 ```typescript
 describe('VoiceNote', () => {
@@ -495,6 +512,35 @@ curl http://localhost:3101/health
 
 # Monitor with watch
 watch -n 5 'curl -s http://localhost:3101/health | jq'
+```
+
+## Code Cleanup Guidelines (2025-08-13)
+
+### Recent Cleanup Completed
+- Removed 322 lines of duplicate/debug code from backend
+- Consolidated repository implementations (kept `/infrastructure/persistence/`)
+- Removed debug console.log statements
+- Archived old test scripts to `tests/debug-archive/`
+- Fixed duplicate file issues in infrastructure layer
+
+### Cleanup Checklist
+Before committing:
+1. Remove all `console.log` debug statements
+2. Check for duplicate implementations
+3. Verify imports use correct paths
+4. Clean test upload files: `rm data/uploads/*.m4a`
+5. Archive temporary test scripts
+
+### Common Cleanup Locations
+```bash
+# Find debug logs
+grep -r "console.log" backend/src/ frontend/app/
+
+# Find duplicate files
+find . -name "*.ts" -o -name "*.js" | xargs basename | sort | uniq -d
+
+# Clean test artifacts
+./scripts/cleanup-test-data.sh
 ```
 
 ## Troubleshooting Checklist

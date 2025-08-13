@@ -370,6 +370,19 @@ paths:
                 customPrompt:
                   type: string
                   description: Custom instructions for summarization
+                transcriptionModel:
+                  type: string
+                  enum: ['gpt-4o-transcribe', 'google/gemini-2.0-flash-001']
+                  description: Model selection for transcription (default gpt-4o-transcribe)
+                whisperPrompt:
+                  type: string
+                  description: Hints for GPT-4o transcription (224 tokens max)
+                geminiSystemPrompt:
+                  type: string
+                  description: System instructions for Gemini transcription
+                geminiUserPrompt:
+                  type: string
+                  description: Context/template for Gemini (1M tokens max)
       responses:
         '201':
           description: Voice note created successfully
@@ -689,6 +702,22 @@ components:
             errorMessage:
               type: string
               nullable: true
+            transcriptionModel:
+              type: string
+              nullable: true
+              description: Model used for transcription
+            whisperPrompt:
+              type: string
+              nullable: true
+              description: Prompt used for GPT-4o transcription
+            geminiSystemPrompt:
+              type: string
+              nullable: true
+              description: System prompt used for Gemini transcription
+            geminiUserPrompt:
+              type: string
+              nullable: true
+              description: User prompt used for Gemini transcription
 
     Transcription:
       type: object

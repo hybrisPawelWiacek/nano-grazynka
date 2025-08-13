@@ -1,7 +1,7 @@
 # nano-Grazynka Test Plan
-Version: 2.0
-Date: 2025-08-12
-Status: UPDATED - Playwright MCP Integration
+Version: 3.0
+Date: 2025-08-13
+Status: UPDATED - Multi-Model Transcription Tests Added
 
 ## 🚨 CRITICAL: Use Playwright MCP Server for ALL E2E Testing
 
@@ -117,7 +117,28 @@ All browser automation MUST use MCP tools directly.
 | P5.5 | Concurrent uploads | 5 simultaneous | All succeed |
 | P5.6 | Memory usage | After 10 uploads | < 500MB |
 
-### Suite 7: Edge Cases (10 min)
+### Suite 7: Multi-Model Transcription Tests (25 min)
+**Purpose**: Validate GPT-4o vs Gemini 2.0 Flash transcription paths
+
+| Test ID | Test Case | Model | Expected Result |
+|---------|-----------|-------|-----------------|
+| M7.1 | Select GPT-4o model | GPT-4o | Radio button selected, whisper prompt shown |
+| M7.2 | Select Gemini model | Gemini | Radio button selected, template selector shown |
+| M7.3 | GPT-4o with whisper prompt | GPT-4o | Transcription includes prompted terms |
+| M7.4 | Gemini with Meeting template | Gemini | Speaker identification in transcription |
+| M7.5 | Gemini with Technical template | Gemini | Technical terms highlighted |
+| M7.6 | Gemini with Podcast template | Gemini | Q&A format transcription |
+| M7.7 | Custom Gemini prompts | Gemini | Follows custom instructions |
+| M7.8 | Token limit validation (GPT-4o) | GPT-4o | Warning at 224 tokens |
+| M7.9 | Token limit validation (Gemini) | Gemini | Handles 1M tokens |
+| M7.10 | Cost estimator display | Both | Shows correct pricing |
+| M7.11 | Model persistence | Both | Selection persists on collapse/expand |
+| M7.12 | Concurrent model uploads | Both | Both process successfully |
+
+**Test Script**: `tests/scripts/test-multi-model.js`
+**E2E Tests**: `tests/e2e/multi-model-transcription.spec.js`
+
+### Suite 8: Edge Cases (10 min)
 **Purpose**: Test boundary conditions
 
 | Test ID | Test Case | Input | Expected |

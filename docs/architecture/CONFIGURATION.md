@@ -1,7 +1,7 @@
 # Configuration Architecture
 
-**Last Updated**: August 12, 2025  
-**Status**: ✅ Consolidated and Simplified
+**Last Updated**: August 13, 2025  
+**Status**: ✅ Multi-Model Transcription Enabled
 
 ## Overview
 
@@ -186,18 +186,74 @@ this.summarizationService = new LLMAdapter();
 
 ## Current Model Configuration
 
-As of August 12, 2025:
+As of August 13, 2025 - Multi-Model Transcription Support:
 
-- **Transcription**: `gpt-4o-audio-preview` via OpenAI (GPT-4o-Transcribe)
-  - 30% better accuracy than whisper-1 at same cost ($0.36/hour)
-  - 6-8% word error rate vs 10-12% for whisper-1
-  - Superior handling of proper nouns and technical terms
+### Transcription Models (User Selectable)
+
+1. **GPT-4o-transcribe** (Default) via OpenAI
+   - Fast processing, optimized for speed
+   - 224 token prompt limit for hints
+   - Cost: $0.006/minute ($0.36/hour)
+   - 6-8% word error rate
+   - Best for: Quick transcriptions with minimal context
+
+2. **Gemini 2.0 Flash** via OpenRouter
+   - Context-aware transcription with 1M token prompts
+   - Supports extensive glossaries, templates, formatting
+   - Cost: $0.0015/minute ($0.09/hour) - **75% cheaper**
+   - Better contextual understanding
+   - Best for: Technical content, meetings, specialized vocabulary
+
+### Summarization Model
+
 - **Summarization**: `google/gemini-2.5-flash` via OpenRouter
   - Cost-effective and high-quality summarization
-  - Excellent multilingual support
-- **Fallback**: `gpt-4o-mini` via OpenAI
+  - Excellent multilingual support (English/Polish)
+  - JSON-formatted output support
+
+### Configuration Example
+
+```yaml
+transcription:
+  # Default model selection
+  defaultModel: gpt-4o-transcribe
+  
+  # GPT-4o configuration
+  gpt4o:
+    provider: openai
+    model: gpt-4o-audio-preview
+    maxPromptTokens: 224
+    costPerMinute: 0.006
+  
+  # Gemini 2.0 Flash configuration  
+  gemini:
+    provider: openrouter
+    model: google/gemini-2.0-flash-001
+    maxPromptTokens: 1000000
+    costPerMinute: 0.0015
+    encoding: base64  # Audio encoding format
+```
 
 ## Migration History
+
+### August 13, 2025 - Multi-Model Transcription Support
+
+Added user-selectable transcription models:
+
+1. **Dual Model Support**:
+   - GPT-4o-transcribe (default): Fast, 224 token prompts
+   - Gemini 2.0 Flash: Context-aware, 1M token prompts, 75% cheaper
+   
+2. **Frontend Enhancements**:
+   - Model selection UI with cost comparison
+   - Adaptive prompt interfaces per model
+   - Template system for Gemini (Meeting, Technical, Podcast)
+   - Token counter with visual progress bar
+   
+3. **Backend Implementation**:
+   - `transcribeWithGemini()` method for base64 audio encoding
+   - ProcessingOrchestrator routing based on model selection
+   - Database schema updated with prompt fields
 
 ### August 12, 2025 - Model Upgrade to GPT-4o-Transcribe
 
