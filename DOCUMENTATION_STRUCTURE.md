@@ -65,10 +65,11 @@ These are the primary source of truth and should be kept up-to-date:
 - **CLAUDE.md** - AI collaboration guide and documentation map
 - **PROJECT_STATUS.md** - Current project status and progress tracker
 - **README.md** - Quick start guide and project overview
+- **DOCUMENTATION_STRUCTURE.md** - Documentation organization guide
 
 ## Document Management Rules
 
-1. **Canonical documents** (CLAUDE.md, PROJECT_STATUS.md) must always be in root
+1. **Canonical documents** (CLAUDE.md, PROJECT_STATUS.md, README.md, DOCUMENTATION_STRUCTURE.md) must always be in root
 2. **Project documentation** stays in `docs/` - technical, codebase-related
 3. **AI process documentation** goes in `imp_docs/` - requirements, testing, planning
 4. **Requirements** are human-managed and should rarely change
@@ -99,9 +100,9 @@ nano-grazynka/
 ├── CLAUDE.md                    # AI collaboration guide (canonical)
 ├── PROJECT_STATUS.md            # Project status tracker (canonical)
 ├── README.md                    # Quick start guide (canonical)
+├── DOCUMENTATION_STRUCTURE.md   # Documentation organization guide (canonical)
 │
 ├── docs/                        # Project Documentation
-│   ├── DOCUMENTATION_STRUCTURE.md  # This file
 │   ├── api/                    # API specifications
 │   │   ├── api-contract.md
 │   │   ├── api-spec.yaml

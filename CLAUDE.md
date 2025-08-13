@@ -94,7 +94,7 @@ Documentation for AI agents, requirements, and development process.
 |----------|---------|-------------|
 | [README.md](./README.md) | Quick start & overview | First time setup, basic usage |
 | [PROJECT_STATUS.md](./PROJECT_STATUS.md) | Progress tracker | Current status, next steps |
-| [Documentation Guide](./docs/DOCUMENTATION_STRUCTURE.md) | Doc organization guide | Understanding where docs live |
+| [Documentation Guide](./DOCUMENTATION_STRUCTURE.md) | Doc organization guide | Understanding where docs live |
 
 ## Project Overview
 
