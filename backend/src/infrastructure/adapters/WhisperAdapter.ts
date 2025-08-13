@@ -12,8 +12,15 @@ export class WhisperAdapter implements TranscriptionService {
     options?: {
       prompt?: string;
       temperature?: number;
+      model?: string;
+      systemPrompt?: string;
     }
   ): Promise<TranscriptionResult> {
+    // Check if specific model is requested
+    if (options?.model === 'google/gemini-2.0-flash-001') {
+      return this.transcribeWithGemini(audioFilePath, language, options);
+    }
+    
     const provider = ConfigLoader.get('transcription.provider');
     
     if (provider === 'openai') {
@@ -228,6 +235,110 @@ export class WhisperAdapter implements TranscriptionService {
       language,
       duration: result.duration || 0,
       confidence: this.calculateConfidence(result.segments),
+    };
+  }
+
+  private async transcribeWithGemini(
+    audioFilePath: string,
+    language: Language,
+    options?: {
+      prompt?: string;
+      systemPrompt?: string;
+      temperature?: number;
+      model?: string;
+    }
+  ): Promise<TranscriptionResult> {
+    const apiKey = ConfigLoader.get('openrouter.apiKey');
+    const baseUrl = 'https://openrouter.ai/api/v1';
+    
+    // Use the path as-is since LocalStorageAdapter now returns full path
+    const fullPath = audioFilePath;
+    
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Audio file not found: ${fullPath}`);
+    }
+    
+    // Read file as buffer and encode as base64
+    const fileBuffer = fs.readFileSync(fullPath);
+    const base64Audio = fileBuffer.toString('base64');
+    
+    // Determine MIME type
+    const fileName = audioFilePath.split('/').pop() || 'audio.m4a';
+    const mimeType = fileName.endsWith('.m4a') ? 'audio/m4a' : 
+                     fileName.endsWith('.mp3') ? 'audio/mpeg' :
+                     fileName.endsWith('.mp4') ? 'audio/mp4' :
+                     fileName.endsWith('.wav') ? 'audio/wav' : 
+                     fileName.endsWith('.webm') ? 'audio/webm' : 'audio/mpeg';
+    
+    // Construct default system prompt if not provided
+    const defaultSystemPrompt = `You are a professional audio transcriber. Transcribe the following audio accurately in ${language.getValue() || 'English'}. 
+    Preserve all spoken words exactly as heard. Include timestamps for long audio.
+    If you hear technical terms, proper nouns, or acronyms, transcribe them correctly.
+    Format the transcription clearly with proper punctuation.`;
+    
+    // Construct messages for Gemini
+    const messages = [
+      {
+        role: "system",
+        content: options?.systemPrompt || defaultSystemPrompt
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: options?.prompt || "Please transcribe this audio accurately."
+          },
+          {
+            type: "audio_url",
+            audio_url: {
+              url: `data:${mimeType};base64,${base64Audio}`
+            }
+          }
+        ]
+      }
+    ];
+    
+    console.log('Sending request to Gemini 2.0 Flash via OpenRouter');
+    console.log('Audio file size:', fileBuffer.length, 'bytes');
+    console.log('Base64 length:', base64Audio.length, 'characters');
+    
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://nano-grazynka.app',
+        'X-Title': 'nano-Grazynka'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.0-flash-001',
+        messages,
+        temperature: options?.temperature || 0.3,
+        max_tokens: 8192
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Gemini transcription error:', error);
+      throw new Error(`Gemini transcription failed: ${error}`);
+    }
+
+    const result = await response.json();
+    
+    // Extract transcription from response
+    const transcriptionText = result.choices?.[0]?.message?.content || '';
+    
+    if (!transcriptionText) {
+      throw new Error('Gemini returned empty transcription');
+    }
+    
+    return {
+      text: transcriptionText,
+      language,
+      duration: 0, // Gemini doesn't provide duration
+      confidence: 0.95, // Default high confidence for Gemini
     };
   }
 

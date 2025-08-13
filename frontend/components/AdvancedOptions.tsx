@@ -1,26 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronDown, Info } from 'lucide-react';
 import styles from './AdvancedOptions.module.css';
+import ModelSelection, { TranscriptionModel } from './ModelSelection';
+import TemplateSelector from './TemplateSelector';
+import TokenCounter from './TokenCounter';
 
 interface AdvancedOptionsProps {
   whisperPrompt: string;
   onWhisperPromptChange: (value: string) => void;
   isExpanded: boolean;
   onToggle: () => void;
+  selectedModel: TranscriptionModel;
+  onModelChange: (model: TranscriptionModel) => void;
+  geminiPrompt: string;
+  onGeminiPromptChange: (value: string) => void;
+  selectedTemplate?: string;
+  onTemplateSelect?: (templateKey: string) => void;
 }
 
 export default function AdvancedOptions({
   whisperPrompt,
   onWhisperPromptChange,
   isExpanded,
-  onToggle
+  onToggle,
+  selectedModel,
+  onModelChange,
+  geminiPrompt,
+  onGeminiPromptChange,
+  selectedTemplate,
+  onTemplateSelect
 }: AdvancedOptionsProps) {
-  const MAX_TOKENS = 224;
+  const MAX_TOKENS_GPT = 224;
+  const MAX_TOKENS_GEMINI = 1000000;
   
   // Rough token estimation (1 token ≈ 4 characters)
-  const estimatedTokens = Math.ceil(whisperPrompt.length / 4);
-  const isNearLimit = estimatedTokens > MAX_TOKENS * 0.8;
-  const isOverLimit = estimatedTokens > MAX_TOKENS;
+  const estimatedTokensGPT = Math.ceil(whisperPrompt.length / 4);
+  const estimatedTokensGemini = Math.ceil(geminiPrompt.length / 4);
+  
+  const isNearLimitGPT = estimatedTokensGPT > MAX_TOKENS_GPT * 0.8;
+  const isOverLimitGPT = estimatedTokensGPT > MAX_TOKENS_GPT;
 
   return (
     <div className={styles.container}>
@@ -42,51 +60,159 @@ export default function AdvancedOptions({
         className={`${styles.content} ${isExpanded ? styles.contentExpanded : ''}`}
         aria-hidden={!isExpanded}
       >
-        <div className={styles.section}>
-          <div className={styles.labelContainer}>
-            <label htmlFor="whisper-prompt" className={styles.label}>
-              Transcription Hints (Optional)
-            </label>
-            <div className={styles.tooltip}>
-              <Info className={styles.infoIcon} />
-              <div className={styles.tooltipContent}>
-                Help Whisper recognize proper nouns, technical terms, and acronyms correctly.
-                These hints improve transcription accuracy but don't affect the summary.
-              </div>
-            </div>
-          </div>
-          
-          <textarea
-            id="whisper-prompt"
-            value={whisperPrompt}
-            onChange={(e) => onWhisperPromptChange(e.target.value)}
-            className={`${styles.textarea} ${isOverLimit ? styles.textareaError : ''}`}
-            placeholder="Example: Company names: Zabu, nano-Grazynka | Technical terms: MCP, PRD, DDD | People: John Smith (CEO), Maria Garcia (CTO)"
-            rows={3}
-          />
-          
-          <div className={styles.helperText}>
-            <span className={`${styles.charCount} ${isNearLimit ? styles.charCountWarning : ''} ${isOverLimit ? styles.charCountError : ''}`}>
-              ~{estimatedTokens} / {MAX_TOKENS} tokens
-            </span>
-            {isOverLimit && (
-              <span className={styles.errorText}>
-                Exceeds token limit. Please shorten your hints.
-              </span>
-            )}
-          </div>
+        {/* Model Selection */}
+        <ModelSelection
+          selectedModel={selectedModel}
+          onModelChange={onModelChange}
+        />
 
-          <div className={styles.examples}>
-            <p className={styles.examplesTitle}>Examples of what to include:</p>
-            <ul className={styles.examplesList}>
-              <li>Company or product names that might be misheard</li>
-              <li>Technical acronyms and domain-specific terms</li>
-              <li>Names of people mentioned in the recording</li>
-              <li>Unusual spellings or pronunciations</li>
-            </ul>
-          </div>
+        {/* Adaptive Prompt Interface */}
+        <div className={styles.section}>
+          {selectedModel === 'gpt-4o-transcribe' ? (
+            // GPT-4o Simple Prompt Interface
+            <>
+              <div className={styles.labelContainer}>
+                <label htmlFor="whisper-prompt" className={styles.label}>
+                  Transcription Hints (Optional)
+                </label>
+                <div className={styles.tooltip}>
+                  <Info className={styles.infoIcon} />
+                  <div className={styles.tooltipContent}>
+                    Help GPT-4o recognize proper nouns, technical terms, and acronyms correctly.
+                    Limited to 224 tokens for fast processing.
+                  </div>
+                </div>
+              </div>
+              
+              <textarea
+                id="whisper-prompt"
+                value={whisperPrompt}
+                onChange={(e) => onWhisperPromptChange(e.target.value)}
+                className={`${styles.textarea} ${isOverLimitGPT ? styles.textareaError : ''}`}
+                placeholder="Example: Company names: Zabu, nano-Grazynka | Technical terms: MCP, PRD, DDD | People: John Smith (CEO)"
+                rows={3}
+              />
+              
+              <TokenCounter
+                current={estimatedTokensGPT}
+                max={MAX_TOKENS_GPT}
+                isNearLimit={isNearLimitGPT}
+                isOverLimit={isOverLimitGPT}
+              />
+            </>
+          ) : (
+            // Gemini Extended Context Interface
+            <>
+              <div className={styles.labelContainer}>
+                <label htmlFor="gemini-prompt" className={styles.label}>
+                  Context & Instructions (Extended)
+                </label>
+                <div className={styles.tooltip}>
+                  <Info className={styles.infoIcon} />
+                  <div className={styles.tooltipContent}>
+                    Provide extensive context, glossaries, meeting agendas, or specific instructions.
+                    Gemini can handle up to 1 million tokens for rich context understanding.
+                  </div>
+                </div>
+              </div>
+
+              {/* Template Selector */}
+              {onTemplateSelect && (
+                <TemplateSelector
+                  selectedTemplate={selectedTemplate}
+                  onSelect={onTemplateSelect}
+                />
+              )}
+              
+              <textarea
+                id="gemini-prompt"
+                value={geminiPrompt}
+                onChange={(e) => onGeminiPromptChange(e.target.value)}
+                className={styles.textareaLarge}
+                placeholder={getGeminiPlaceholder(selectedTemplate)}
+                rows={12}
+              />
+              
+              <TokenCounter
+                current={estimatedTokensGemini}
+                max={MAX_TOKENS_GEMINI}
+                showPercentage={true}
+              />
+
+              <div className={styles.geminiFeatures}>
+                <p className={styles.featuresTitle}>What you can include:</p>
+                <ul className={styles.featuresList}>
+                  <li>📋 Complete meeting agendas and attendee lists</li>
+                  <li>📚 Company glossaries and technical terminology</li>
+                  <li>🎯 Specific formatting instructions</li>
+                  <li>📝 Previous meeting notes for context</li>
+                  <li>🏢 Organization structure and project details</li>
+                </ul>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+function getGeminiPlaceholder(template?: string): string {
+  if (!template) {
+    return `Provide context for accurate transcription:
+
+=== CONTEXT ===
+Company/Project: 
+Speakers: 
+Technical terms: 
+
+=== INSTRUCTIONS ===
+1. Identify speakers clearly
+2. Mark important decisions
+3. Note action items
+4. Flag unclear audio`;
+  }
+
+  switch (template) {
+    case 'meeting':
+      return `=== MEETING CONTEXT ===
+Date: 
+Attendees: 
+Agenda: 
+
+=== COMPANY GLOSSARY ===
+Company: 
+Projects: 
+Technical terms: 
+
+=== SPECIAL INSTRUCTIONS ===
+(Add any specific requirements)`;
+
+    case 'technical':
+      return `=== TECHNICAL CONTEXT ===
+Domain: 
+Technologies: 
+Codebase: 
+
+=== TERMINOLOGY ===
+Frameworks: 
+Libraries: 
+Common variables: 
+
+=== INSTRUCTIONS ===
+Preserve code snippets exactly...`;
+
+    case 'podcast':
+      return `=== SHOW INFORMATION ===
+Show: 
+Host(s): 
+Guest(s): 
+Topic: 
+
+=== STYLE GUIDE ===
+Include timestamps, laughter, pauses...`;
+
+    default:
+      return '';
+  }
 }

@@ -16,4 +16,14 @@ export interface TranscriptionService {
       temperature?: number;
     }
   ): Promise<TranscriptionResult>;
+
+  transcribeWithGemini(
+    audioFilePath: string,
+    language: Language,
+    options?: {
+      prompt?: string;
+      systemPrompt?: string;
+      temperature?: number;
+    }
+  ): Promise<TranscriptionResult>;
 }

@@ -278,6 +278,11 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       tags: JSON.stringify(voiceNote.getTags()),
       userPrompt: voiceNote.getUserPrompt() || null,
       whisperPrompt: voiceNote.getWhisperPrompt() || null,
+      transcriptionModel: voiceNote.getTranscriptionModel() || null,
+      geminiSystemPrompt: voiceNote.getGeminiSystemPrompt() || null,
+      geminiUserPrompt: voiceNote.getGeminiUserPrompt() || null,
+      refinedText: voiceNote.getRefinedText() || null,
+      refinementPrompt: voiceNote.getRefinementPrompt() || null,
       errorMessage: voiceNote.getErrorMessage() || null,
       createdAt: voiceNote.getCreatedAt(),
       updatedAt: voiceNote.getUpdatedAt(),
@@ -303,6 +308,11 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       data.errorMessage || undefined,
       data.userPrompt || undefined,  // Add userPrompt parameter
       data.whisperPrompt || undefined,  // Add whisperPrompt parameter
+      data.transcriptionModel || undefined,  // Add transcriptionModel
+      data.geminiSystemPrompt || undefined,  // Add geminiSystemPrompt
+      data.geminiUserPrompt || undefined,  // Add geminiUserPrompt
+      data.refinedText || undefined,  // Add refinedText
+      data.refinementPrompt || undefined,  // Add refinementPrompt
       data.createdAt,
       data.updatedAt,
       data.version

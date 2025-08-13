@@ -18,6 +18,10 @@ export interface UploadVoiceNoteInput {
     size: number;
   };
   userPrompt?: string;
+  whisperPrompt?: string;  // GPT-4o transcription hints
+  transcriptionModel?: string;  // Model selection
+  geminiSystemPrompt?: string;  // Gemini system prompt
+  geminiUserPrompt?: string;  // Gemini user context
   tags?: string[];
   language?: 'EN' | 'PL';
 }
@@ -92,7 +96,11 @@ export class UploadVoiceNoteUseCase extends UseCase<
         mimeType: input.file.mimeType,
         language: input.language ? Language.fromString(input.language) : Language.EN,
         tags: input.tags || [],
-        userPrompt: input.userPrompt
+        userPrompt: input.userPrompt,
+        whisperPrompt: input.whisperPrompt,
+        transcriptionModel: input.transcriptionModel,
+        geminiSystemPrompt: input.geminiSystemPrompt,
+        geminiUserPrompt: input.geminiUserPrompt
       });
 
       // Save to repository

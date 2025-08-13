@@ -3,11 +3,17 @@
 import { useState } from 'react';
 import { X, Upload, FileAudio, Clock } from 'lucide-react';
 import AdvancedOptions from './AdvancedOptions';
+import { TranscriptionModel } from './ModelSelection';
 import styles from './PreviewDialog.module.css';
 
 interface PreviewDialogProps {
   file: File;
-  onConfirm: (whisperPrompt?: string) => void;
+  onConfirm: (data: {
+    whisperPrompt?: string;
+    transcriptionModel: TranscriptionModel;
+    geminiSystemPrompt?: string;
+    geminiUserPrompt?: string;
+  }) => void;
   onCancel: () => void;
   isUploading: boolean;
 }
@@ -20,6 +26,9 @@ export default function PreviewDialog({
 }: PreviewDialogProps) {
   const [whisperPrompt, setWhisperPrompt] = useState('');
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<TranscriptionModel>('gpt-4o-transcribe');
+  const [geminiPrompt, setGeminiPrompt] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>();
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
@@ -62,12 +71,18 @@ export default function PreviewDialog({
           </div>
         </div>
 
-        {/* Advanced Options (Whisper Prompt) */}
+        {/* Advanced Options (Multi-Model Transcription) */}
         <AdvancedOptions
           whisperPrompt={whisperPrompt}
           onWhisperPromptChange={setWhisperPrompt}
           isExpanded={showAdvancedOptions}
           onToggle={() => setShowAdvancedOptions(!showAdvancedOptions)}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+          geminiPrompt={geminiPrompt}
+          onGeminiPromptChange={setGeminiPrompt}
+          selectedTemplate={selectedTemplate}
+          onTemplateSelect={setSelectedTemplate}
         />
 
         {/* Actions */}
@@ -80,7 +95,25 @@ export default function PreviewDialog({
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(whisperPrompt || undefined)}
+            onClick={() => {
+              // Parse Gemini prompts if that model is selected
+              let geminiSystemPrompt: string | undefined;
+              let geminiUserPrompt: string | undefined;
+              
+              if (selectedModel === 'google/gemini-2.0-flash-001' && geminiPrompt) {
+                // For now, use the entire prompt as user prompt
+                // In production, we'd parse templates to extract system prompt
+                geminiUserPrompt = geminiPrompt;
+                geminiSystemPrompt = "You are a professional transcriber. Focus on accuracy and completeness.";
+              }
+              
+              onConfirm({
+                whisperPrompt: selectedModel === 'gpt-4o-transcribe' ? whisperPrompt || undefined : undefined,
+                transcriptionModel: selectedModel,
+                geminiSystemPrompt,
+                geminiUserPrompt
+              });
+            }}
             disabled={isUploading}
             className={`${styles.button} ${styles.buttonPrimary}`}
           >

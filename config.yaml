@@ -8,6 +8,7 @@ database:
 transcription:
   provider: openai  # Using OpenAI for gpt-4o-transcribe model
   model: gpt-4o-transcribe  # GPT-4o-Transcribe: 30% better accuracy than whisper-1 at same cost
+  defaultModel: gpt-4o-transcribe  # Default model selection
   maxFileSizeMB: 25
   supportedFormats:
     - mp3
@@ -17,6 +18,25 @@ transcription:
     - m4a
     - wav
     - webm
+  
+  # Multi-model configuration
+  models:
+    gpt-4o-transcribe:
+      provider: openai
+      endpoint: /v1/audio/transcriptions
+      maxPromptTokens: 224
+      responseFormat: json
+      costPerMinute: 0.006
+      processingTime: "5-10 seconds"
+      
+    google/gemini-2.0-flash-001:
+      provider: openrouter
+      endpoint: /v1/chat/completions
+      maxPromptTokens: 1000000
+      supportsTemplates: true
+      requiresBase64: true
+      costPerMinute: 0.0015
+      processingTime: "10-20 seconds"
 
 summarization:
   provider: openrouter  # Primary provider (fallback to openai)

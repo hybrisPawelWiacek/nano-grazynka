@@ -160,6 +160,14 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         });
       }
 
+      // DEBUG: Log form fields
+      console.log('🔍 DEBUG: Route handler - Received form fields:', {
+        transcriptionModel: fields.transcriptionModel,
+        whisperPrompt: fields.whisperPrompt,
+        geminiSystemPrompt: fields.geminiSystemPrompt,
+        geminiUserPrompt: fields.geminiUserPrompt,
+      });
+
       const useCase = container.getUploadVoiceNoteUseCase();
       const result = await useCase.execute({
         file: {
@@ -169,6 +177,10 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
           size: fileData.buffer.length
         },
         userPrompt: fields.customPrompt || fields.userPrompt,  // Support both field names for compatibility
+        whisperPrompt: fields.whisperPrompt,  // For GPT-4o hints
+        transcriptionModel: fields.transcriptionModel,  // Model selection
+        geminiSystemPrompt: fields.geminiSystemPrompt,  // Gemini system prompt
+        geminiUserPrompt: fields.geminiUserPrompt,  // Gemini user context
         tags: fields.tags ? fields.tags.split(',') : undefined,
         userId: user?.id,  // Optional for authenticated users
         sessionId: !user ? sessionId : undefined,  // Only for anonymous users

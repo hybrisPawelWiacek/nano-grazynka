@@ -32,6 +32,11 @@ export class VoiceNote {
   private summary?: Summary;
   private userPrompt?: string;  // Custom user prompt for summarization
   private whisperPrompt?: string;  // Custom prompt for Whisper transcription
+  private transcriptionModel?: string;  // Model selection for transcription
+  private geminiSystemPrompt?: string;  // System prompt for Gemini
+  private geminiUserPrompt?: string;  // User prompt for Gemini
+  private refinedText?: string;  // Refined transcription text
+  private refinementPrompt?: string;  // Prompt used for refinement
   private domainEvents: any[] = [];
 
   private constructor(
@@ -48,10 +53,26 @@ export class VoiceNote {
     errorMessage?: string,
     userPrompt?: string,  // Custom user prompt
     whisperPrompt?: string,  // Custom Whisper prompt
+    transcriptionModel?: string,  // Model selection
+    geminiSystemPrompt?: string,  // Gemini system prompt
+    geminiUserPrompt?: string,  // Gemini user prompt
+    refinedText?: string,  // Refined transcription
+    refinementPrompt?: string,  // Refinement prompt
     createdAt?: Date,
     updatedAt?: Date,
     version?: number
   ) {
+    // DEBUG: Log constructor parameters
+    console.log('🔍 DEBUG: VoiceNote constructor called with:', {
+      transcriptionModel,
+      whisperPrompt,
+      geminiSystemPrompt,
+      geminiUserPrompt,
+      createdAt,
+      updatedAt,
+      version
+    });
+    
     this.id = id;
     this.title = title;
     this.originalFilePath = originalFilePath;
@@ -65,6 +86,11 @@ export class VoiceNote {
     this.errorMessage = errorMessage;
     this.userPrompt = userPrompt;
     this.whisperPrompt = whisperPrompt;
+    this.transcriptionModel = transcriptionModel;
+    this.geminiSystemPrompt = geminiSystemPrompt;
+    this.geminiUserPrompt = geminiUserPrompt;
+    this.refinedText = refinedText;
+    this.refinementPrompt = refinementPrompt;
     this.createdAt = createdAt || new Date();
     this.updatedAt = updatedAt || new Date();
     this.version = version || 1;
@@ -81,6 +107,10 @@ export class VoiceNote {
     tags?: string[];
     userPrompt?: string;
     whisperPrompt?: string;
+    transcriptionModel?: string;
+    geminiSystemPrompt?: string;
+    geminiUserPrompt?: string;
+    refinementPrompt?: string;
   }): VoiceNote {
     const voiceNote = new VoiceNote(
       VoiceNoteId.generate(),
@@ -95,7 +125,15 @@ export class VoiceNote {
       params.sessionId,
       undefined,  // errorMessage
       params.userPrompt,
-      params.whisperPrompt
+      params.whisperPrompt,
+      params.transcriptionModel,
+      params.geminiSystemPrompt,
+      params.geminiUserPrompt,
+      undefined,  // refinedText
+      params.refinementPrompt,
+      undefined,  // createdAt - will use default
+      undefined,  // updatedAt - will use default
+      undefined   // version - will use default
     );
 
     voiceNote.addDomainEvent(new VoiceNoteUploadedEvent(voiceNote.id.getValue(), {
@@ -124,6 +162,11 @@ export class VoiceNote {
     errorMessage?: string,
     userPrompt?: string,  // Added for custom prompts
     whisperPrompt?: string,  // Added for Whisper prompts
+    transcriptionModel?: string,  // Model selection
+    geminiSystemPrompt?: string,  // Gemini system prompt
+    geminiUserPrompt?: string,  // Gemini user prompt
+    refinedText?: string,  // Refined transcription
+    refinementPrompt?: string,  // Refinement prompt
     createdAt?: Date,
     updatedAt?: Date,
     version?: number
@@ -142,6 +185,11 @@ export class VoiceNote {
       errorMessage,
       userPrompt,
       whisperPrompt,
+      transcriptionModel,
+      geminiSystemPrompt,
+      geminiUserPrompt,
+      refinedText,
+      refinementPrompt,
       createdAt,
       updatedAt,
       version
@@ -167,6 +215,26 @@ export class VoiceNote {
 
   getWhisperPrompt(): string | undefined {
     return this.whisperPrompt;
+  }
+
+  getTranscriptionModel(): string | undefined {
+    return this.transcriptionModel;
+  }
+
+  getGeminiSystemPrompt(): string | undefined {
+    return this.geminiSystemPrompt;
+  }
+
+  getGeminiUserPrompt(): string | undefined {
+    return this.geminiUserPrompt;
+  }
+
+  getRefinedText(): string | undefined {
+    return this.refinedText;
+  }
+
+  getRefinementPrompt(): string | undefined {
+    return this.refinementPrompt;
   }
 
   getTitle(): string {

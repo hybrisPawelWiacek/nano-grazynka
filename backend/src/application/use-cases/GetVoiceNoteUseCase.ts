@@ -14,7 +14,7 @@ export interface GetVoiceNoteInput {
 
 export interface GetVoiceNoteOutput {
   id: string;
-  userId: string;
+  userId?: string;
   sessionId?: string;  // Add sessionId field
   title: string;
   originalFilePath?: string;
@@ -24,6 +24,13 @@ export interface GetVoiceNoteOutput {
   status: string;
   tags: string[];
   errorMessage?: string;
+  userPrompt?: string;  // Custom user prompt
+  whisperPrompt?: string;  // Whisper prompt for GPT-4o
+  transcriptionModel?: string;  // Model selection
+  geminiSystemPrompt?: string;  // Gemini system prompt
+  geminiUserPrompt?: string;  // Gemini user prompt
+  refinedText?: string;  // Refined transcription
+  refinementPrompt?: string;  // Refinement prompt
   createdAt: Date;
   updatedAt: Date;
   version: number;
@@ -31,8 +38,9 @@ export interface GetVoiceNoteOutput {
     id: string;
     text: string;
     language: string;
-    timestamps: string[];
-    createdAt: Date;
+    wordCount?: number;
+    confidence?: number;
+    duration?: number;
   };
   summary?: {
     id: string;
@@ -46,7 +54,7 @@ export interface GetVoiceNoteOutput {
       project?: string;
     }>;
     language: string;
-    createdAt: Date;
+    timestamp?: Date;
   };
 }
 
@@ -64,11 +72,7 @@ export class GetVoiceNoteUseCase extends UseCase<
     try {
       // Find voice note
       const voiceNoteId = VoiceNoteId.fromString(input.voiceNoteId);
-      const voiceNote = await this.voiceNoteRepository.findById(
-        voiceNoteId,
-        input.includeTranscription,
-        input.includeSummary
-      );
+      const voiceNote = await this.voiceNoteRepository.findById(voiceNoteId);
 
       if (!voiceNote) {
         return {
@@ -90,10 +94,26 @@ export class GetVoiceNoteUseCase extends UseCase<
         status: voiceNote.getStatus().getValue(),
         tags: voiceNote.getTags(),
         errorMessage: voiceNote.getErrorMessage(),
+        userPrompt: voiceNote.getUserPrompt(),  // Include custom prompt
+        whisperPrompt: voiceNote.getWhisperPrompt(),  // Include Whisper prompt
+        transcriptionModel: voiceNote.getTranscriptionModel(),  // Include model selection
+        geminiSystemPrompt: voiceNote.getGeminiSystemPrompt(),  // Include Gemini system prompt
+        geminiUserPrompt: voiceNote.getGeminiUserPrompt(),  // Include Gemini user prompt
+        refinedText: voiceNote.getRefinedText(),  // Include refined text
+        refinementPrompt: voiceNote.getRefinementPrompt(),  // Include refinement prompt
         createdAt: voiceNote.getCreatedAt(),
         updatedAt: voiceNote.getUpdatedAt(),
         version: voiceNote.getVersion()
       };
+      
+      console.log('GetVoiceNoteUseCase - Final output:', {
+        id: output.id,
+        transcriptionModel: output.transcriptionModel,
+        whisperPrompt: output.whisperPrompt,
+        geminiSystemPrompt: output.geminiSystemPrompt,
+        geminiUserPrompt: output.geminiUserPrompt,
+        version: output.version
+      });
 
       // Include transcription if requested
       if (input.includeTranscription) {

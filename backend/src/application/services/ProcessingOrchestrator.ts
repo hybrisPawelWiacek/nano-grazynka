@@ -188,15 +188,36 @@ export class ProcessingOrchestrator {
     language?: Language
   ): Promise<{ success: boolean; transcription?: Transcription; error?: Error }> {
     try {
-      // Get the Whisper prompt if available
-      const whisperPrompt = voiceNote.getWhisperPrompt();
+      const model = voiceNote.getTranscriptionModel() || 'gpt-4o-transcribe';
+      let transcriptionResult;
       
-      // Pass to WhisperAdapter with the prompt
-      const transcriptionResult = await this.transcriptionService.transcribe(
-        voiceNote.getOriginalFilePath(),
-        language || voiceNote.getLanguage(),
-        whisperPrompt ? { prompt: whisperPrompt } : undefined
-      );
+      if (model === 'gpt-4o-transcribe') {
+        // Use existing OpenAI flow with whisper prompt
+        const whisperPrompt = voiceNote.getWhisperPrompt();
+        transcriptionResult = await this.transcriptionService.transcribe(
+          voiceNote.getOriginalFilePath(),
+          language || voiceNote.getLanguage(),
+          whisperPrompt ? { prompt: whisperPrompt } : undefined
+        );
+      } else if (model === 'google/gemini-2.0-flash-001') {
+        // Use Gemini flow with extended prompts
+        transcriptionResult = await this.transcriptionService.transcribeWithGemini(
+          voiceNote.getOriginalFilePath(),
+          language || voiceNote.getLanguage(),
+          {
+            systemPrompt: voiceNote.getGeminiSystemPrompt(),
+            prompt: voiceNote.getGeminiUserPrompt()
+          }
+        );
+      } else {
+        // Fallback to default GPT-4o flow
+        const whisperPrompt = voiceNote.getWhisperPrompt();
+        transcriptionResult = await this.transcriptionService.transcribe(
+          voiceNote.getOriginalFilePath(),
+          language || voiceNote.getLanguage(),
+          whisperPrompt ? { prompt: whisperPrompt } : undefined
+        );
+      }
 
       const transcription = Transcription.create(
         transcriptionResult.text,

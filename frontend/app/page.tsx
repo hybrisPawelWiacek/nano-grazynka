@@ -7,6 +7,7 @@ import Link from 'next/link';
 import ConversionModal from '@/components/ConversionModal';
 import PostTranscriptionDialog from '@/components/PostTranscriptionDialog';
 import AdvancedOptions from '@/components/AdvancedOptions';
+import { TranscriptionModel } from '@/components/ModelSelection';
 import styles from './page.module.css';
 
 interface ProcessingStatus {
@@ -17,6 +18,80 @@ interface ProcessingStatus {
     id: string;
     transcription?: string;
     summary?: string;
+  };
+}
+
+// Template system for Gemini
+const PROMPT_TEMPLATES = {
+  meeting: {
+    name: "Meeting Transcription",
+    systemPrompt: "You are a professional meeting transcriber. Focus on accuracy, speaker identification, and action items.",
+    userTemplate: `=== MEETING CONTEXT ===
+Date: {date}
+Attendees: {attendees}
+Agenda: {agenda}
+
+=== COMPANY GLOSSARY ===
+Company: {company}
+Projects: {projects}
+Technical terms: {terms}
+
+=== TRANSCRIPTION INSTRUCTIONS ===
+1. Include timestamps every 30 seconds
+2. Label speakers clearly [Name]:
+3. Mark action items with [ACTION]
+4. Mark decisions with [DECISION]
+5. Note unclear audio with [UNCLEAR]
+6. Preserve technical discussions verbatim
+
+=== SPECIAL INSTRUCTIONS ===
+{customInstructions}`
+  },
+  
+  technical: {
+    name: "Technical Discussion",
+    systemPrompt: "You are a technical transcription specialist with expertise in software development.",
+    userTemplate: `=== TECHNICAL CONTEXT ===
+Domain: {domain}
+Technologies: {technologies}
+Codebase: {codebase}
+
+=== TERMINOLOGY ===
+Frameworks: {frameworks}
+Libraries: {libraries}
+Common variables: {variables}
+
+=== INSTRUCTIONS ===
+1. Preserve code snippets exactly
+2. Maintain technical accuracy
+3. Include API names and endpoints
+4. Note architecture decisions
+5. Flag ambiguous technical terms`
+  },
+  
+  podcast: {
+    name: "Podcast/Interview",
+    systemPrompt: "You are transcribing a podcast or interview. Maintain conversational tone.",
+    userTemplate: `=== SHOW INFORMATION ===
+Show: {showName}
+Host(s): {hosts}
+Guest(s): {guests}
+Topic: {topic}
+
+=== STYLE GUIDE ===
+- Include [LAUGHTER], [PAUSE], [CROSSTALK]
+- Add chapter markers for topic changes
+- Clean up filler words unless significant
+- Preserve personality and tone`
+  }
+};
+
+function getTemplatePrompts(templateName: string) {
+  const template = PROMPT_TEMPLATES[templateName as keyof typeof PROMPT_TEMPLATES];
+  if (!template) return null;
+  return {
+    systemPrompt: template.systemPrompt,
+    userTemplate: template.userTemplate
   };
 }
 
@@ -32,6 +107,11 @@ export default function HomePage() {
   const [showPostTranscriptionDialog, setShowPostTranscriptionDialog] = useState(false);
   const [transcriptionResult, setTranscriptionResult] = useState<{ id: string; text: string } | null>(null);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  
+  // Multi-model transcription state
+  const [selectedModel, setSelectedModel] = useState<TranscriptionModel>('gpt-4o-transcribe');
+  const [geminiPrompt, setGeminiPrompt] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>();
   const [status, setStatus] = useState<ProcessingStatus>({
     stage: 'idle',
     progress: 0,
@@ -107,9 +187,49 @@ export default function HomePage() {
     if (language !== 'AUTO') {
       formData.append('language', language);
     }
-    if (whisperPrompt) {
-      formData.append('whisperPrompt', whisperPrompt);
+    
+    // Add multi-model transcription fields
+    formData.append('transcriptionModel', selectedModel);
+    
+    // DEBUG: Log multi-model data being sent
+    console.log('🔍 DEBUG: Multi-model data being sent:', {
+      transcriptionModel: selectedModel,
+      whisperPrompt: whisperPrompt || null,
+      geminiSystemPrompt: null,
+      geminiUserPrompt: null,
+    });
+    
+    if (selectedModel === 'gpt-4o-transcribe') {
+      // For GPT-4o, use whisperPrompt
+      if (whisperPrompt) {
+        formData.append('whisperPrompt', whisperPrompt);
+        console.log('🔍 DEBUG: Adding whisperPrompt:', whisperPrompt);
+      }
+    } else if (selectedModel === 'google/gemini-2.0-flash-001') {
+      // For Gemini, use extended prompts
+      if (geminiPrompt) {
+        // Parse template if one is selected
+        const template = selectedTemplate ? getTemplatePrompts(selectedTemplate) : null;
+        if (template) {
+          formData.append('geminiSystemPrompt', template.systemPrompt);
+          formData.append('geminiUserPrompt', geminiPrompt);
+          console.log('🔍 DEBUG: Adding Gemini prompts (template):', {
+            systemPrompt: template.systemPrompt.substring(0, 100) + '...',
+            userPrompt: geminiPrompt.substring(0, 100) + '...'
+          });
+        } else {
+          // Use default system prompt with user's custom prompt
+          const defaultSystemPrompt = 'You are a professional transcriber. Transcribe the audio accurately.';
+          formData.append('geminiSystemPrompt', defaultSystemPrompt);
+          formData.append('geminiUserPrompt', geminiPrompt);
+          console.log('🔍 DEBUG: Adding Gemini prompts (default):', {
+            systemPrompt: defaultSystemPrompt,
+            userPrompt: geminiPrompt.substring(0, 100) + '...'
+          });
+        }
+      }
     }
+    
     // Add sessionId for anonymous users
     if (isAnonymous && anonymousSessionId) {
       formData.append('sessionId', anonymousSessionId);
@@ -463,12 +583,18 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Advanced Options with Whisper Prompt */}
+              {/* Advanced Options with Multi-Model Transcription */}
               <AdvancedOptions
                 whisperPrompt={whisperPrompt}
                 onWhisperPromptChange={setWhisperPrompt}
                 isExpanded={showAdvancedOptions}
                 onToggle={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                selectedModel={selectedModel}
+                onModelChange={setSelectedModel}
+                geminiPrompt={geminiPrompt}
+                onGeminiPromptChange={setGeminiPrompt}
+                selectedTemplate={selectedTemplate}
+                onTemplateSelect={setSelectedTemplate}
               />
 
               {/* Submit Button */}

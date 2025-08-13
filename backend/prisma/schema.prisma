@@ -67,6 +67,14 @@ model VoiceNote {
   tags             String   @default("[]") // JSON array
   userPrompt       String?  // Custom user instructions for summarization
   whisperPrompt    String?  // Custom prompt for Whisper transcription
+  
+  // Multi-model transcription fields
+  transcriptionModel    String?     @default("gpt-4o-transcribe")  // Model selection
+  geminiSystemPrompt    String?     // System instructions for Gemini
+  geminiUserPrompt      String?     // User context for Gemini (1M tokens)
+  refinedText           String?     // After LLM refinement (optional)
+  refinementPrompt      String?     // Context used for refinement
+  
   errorMessage     String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

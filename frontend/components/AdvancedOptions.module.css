@@ -274,3 +274,92 @@
     color: #ccc;
   }
 }
+
+/* Extended styles for multi-model support */
+.textareaLarge {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  resize: vertical;
+  min-height: 300px;
+  transition: all 0.2s ease;
+  background: white;
+  color: #333;
+  line-height: 1.6;
+}
+
+.textareaLarge:focus {
+  outline: none;
+  border-color: #007AFF;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.textareaLarge::placeholder {
+  color: #999;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}
+
+.geminiFeatures {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.05));
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+}
+
+.featuresTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.75rem;
+}
+
+.featuresList {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.8;
+  list-style: none;
+}
+
+.featuresList li {
+  margin-bottom: 0.5rem;
+  position: relative;
+  padding-left: 0.25rem;
+}
+
+.featuresList li:last-child {
+  margin-bottom: 0;
+}
+
+/* Dark mode extensions */
+@media (prefers-color-scheme: dark) {
+  .textareaLarge {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #f0f0f0;
+  }
+  
+  .textareaLarge:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+  
+  .geminiFeatures {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+    border-left-color: #3b82f6;
+  }
+  
+  .featuresTitle {
+    color: #f0f0f0;
+  }
+  
+  .featuresList {
+    color: #ccc;
+  }
+}
