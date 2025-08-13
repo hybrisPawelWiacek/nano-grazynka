@@ -377,11 +377,8 @@ export default function HomePage() {
             fileInputRef.current.value = '';
           }
           
-          // Update anonymous usage count
-          if (isAnonymous) {
-            incrementUsageCount();  // Increment local storage count
-            refreshAnonymousUsage();  // Refresh from backend
-          }
+          // Don't increment usage count here - wait for full completion
+          // to avoid double counting
           return; // Stop polling
         } else if (data.status === 'completed' && data.transcription && data.summary) {
           // Both transcription and summary complete

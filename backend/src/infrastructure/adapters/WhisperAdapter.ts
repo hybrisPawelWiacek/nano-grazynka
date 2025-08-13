@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import { TranscriptionService, TranscriptionResult } from '../../domain/services/TranscriptionService';
 import { Language } from '../../domain/value-objects/Language';
 import { ConfigLoader } from '../../config/loader';
@@ -54,8 +53,6 @@ export class WhisperAdapter implements TranscriptionService {
       throw new Error(`Audio file not found: ${fullPath}`);
     }
     
-    const stats = fs.statSync(fullPath);
-
     
     // Read file as buffer
     const fileBuffer = fs.readFileSync(fullPath);
@@ -138,7 +135,7 @@ export class WhisperAdapter implements TranscriptionService {
           throw new Error(`OpenAI transcription failed: ${retryError}`);
         }
         
-        const retryResult = await retryResponse.json();
+        const retryResult: any = await retryResponse.json();
         return {
           text: retryResult.text,
           language,
@@ -150,7 +147,7 @@ export class WhisperAdapter implements TranscriptionService {
       throw new Error(`OpenAI transcription failed: ${error}`);
     }
 
-    const result = await response.json();
+    const result: any = await response.json();
     
     return {
       text: result.text,
@@ -226,7 +223,7 @@ export class WhisperAdapter implements TranscriptionService {
       throw new Error(`OpenRouter transcription failed: ${error}`);
     }
 
-    const result = await response.json();
+    const result: any = await response.json();
     
     return {
       text: result.text,
@@ -236,7 +233,7 @@ export class WhisperAdapter implements TranscriptionService {
     };
   }
 
-  private async transcribeWithGemini(
+  async transcribeWithGemini(
     audioFilePath: string,
     language: Language,
     options?: {
@@ -246,7 +243,7 @@ export class WhisperAdapter implements TranscriptionService {
       model?: string;
     }
   ): Promise<TranscriptionResult> {
-    const apiKey = ConfigLoader.get('openrouter.apiKey');
+    const apiKey = process.env.OPENROUTER_API_KEY || ConfigLoader.get('transcription.apiKey');
     const baseUrl = 'https://openrouter.ai/api/v1';
     
     // Use the path as-is since LocalStorageAdapter now returns full path
@@ -288,9 +285,10 @@ export class WhisperAdapter implements TranscriptionService {
             text: options?.prompt || "Please transcribe this audio accurately."
           },
           {
-            type: "audio_url",
-            audio_url: {
-              url: `data:${mimeType};base64,${base64Audio}`
+            type: "audio",
+            audio: {
+              data: base64Audio,
+              mime_type: mimeType
             }
           }
         ]
@@ -321,7 +319,7 @@ export class WhisperAdapter implements TranscriptionService {
       throw new Error(`Gemini transcription failed: ${error}`);
     }
 
-    const result = await response.json();
+    const result: any = await response.json();
     
     // Extract transcription from response
     const transcriptionText = result.choices?.[0]?.message?.content || '';
