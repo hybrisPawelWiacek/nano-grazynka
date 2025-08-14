@@ -168,10 +168,12 @@ All animations use ease timing functions:
 ```
 
 ### Loading States
-- **Inline Spinners** - For button actions
+- **Inline Spinners** - For button actions (RefreshCw icon with spin animation)
 - **Progress Bars** - For multi-step processes
-- **Skeleton Screens** - For content loading
+- **Skeleton Screens** - For content loading with shimmer effects
 - **Processing Bars** - Gradient animated bars for active processes
+- **Progressive Line Animation** - Simulating content generation with staggered fade-ins
+- **Animated Dots** - "Generating..." text with cycling ellipsis
 
 ### Error Handling
 - **Inline Errors** - Near the relevant field
@@ -188,10 +190,12 @@ All animations use ease timing functions:
 - **Progressive Options** - Show advanced only after file selection
 
 ### Note Details Page
-- **Clean Header** - Back button, title, overflow menu
+- **Clean Header** - Back button, title, overflow menu, Library navigation
 - **Tab Navigation** - Summary/Transcription toggle
-- **Content Focus** - Maximum readable width (800px)
+- **Content Focus** - Consistent width (1200px container)
 - **Floating Actions** - Customize Summary button
+- **Content Sections** - Unified card design with copy functionality
+- **Smart Formatting** - Markdown rendering for summaries, intelligent paragraph detection for transcriptions
 
 ### Dashboard
 - **Card Grid** - Visual hierarchy for voice notes
@@ -251,6 +255,10 @@ All animations use ease timing functions:
 3. **Ultra-Minimal Homepage** - Everything visible without scroll
 4. **iOS-Style Controls** - Familiar patterns for users
 5. **Removed Dark Mode** - Simplified maintenance
+6. **Content Formatting** - Markdown rendering, copy functionality, intelligent paragraph detection
+7. **Loading Experience** - Skeleton screens with shimmer, progressive animations
+8. **UI Polish** - Fixed width consistency (1200px), eliminated polling flicker
+9. **Enhanced Textareas** - Optimized height for template visibility (8 rows)
 
 ### Future Considerations
 - **Micro-interactions** - Delightful feedback animations
@@ -271,6 +279,8 @@ All animations use ease timing functions:
 8. **Tab** - Navigation between views
 9. **Progress** - Bar and spinner variants
 10. **Empty State** - Consistent no-content messaging
+11. **ContentSection** - Unified content display with markdown/transcription formatting
+12. **SkeletonLoader** - Progressive loading animation with shimmer effects
 
 ### Usage Examples
 Each component should follow these principles:
@@ -302,5 +312,9 @@ Consider migrating to CSS custom properties for easier theming:
 ---
 
 *Last Updated: 2025-08-14*
-*Version: 1.0*
+*Version: 1.1*
 *Status: Living Document - Update as design evolves*
+
+### Changelog
+- **v1.1 (2025-08-14)** - Added content formatting, loading animations, and UI polish improvements
+- **v1.0 (2025-08-14)** - Initial comprehensive design system documentation
