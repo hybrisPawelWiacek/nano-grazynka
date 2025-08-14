@@ -20,6 +20,7 @@ export class VoiceNote {
   private title: string;
   private originalFilePath: string;
   private fileSize: number;
+  private duration?: number;  // Duration in seconds
   private mimeType: string;
   private language: Language;
   private status: ProcessingStatus;
@@ -54,6 +55,7 @@ export class VoiceNote {
     tags: string[],
     userId?: string,  // Optional for anonymous
     sessionId?: string,  // For anonymous users
+    duration?: number,  // Duration in seconds
     errorMessage?: string,
     userPrompt?: string,  // Custom user prompt
     whisperPrompt?: string,  // Custom Whisper prompt
@@ -75,6 +77,7 @@ export class VoiceNote {
     this.title = title;
     this.originalFilePath = originalFilePath;
     this.fileSize = fileSize;
+    this.duration = duration;
     this.mimeType = mimeType;
     this.language = language;
     this.status = status;
@@ -103,6 +106,7 @@ export class VoiceNote {
     title: string;
     originalFilePath: string;
     fileSize: number;
+    duration?: number;  // Duration in seconds
     mimeType: string;
     language: Language;
     tags?: string[];
@@ -124,6 +128,7 @@ export class VoiceNote {
       params.tags || [],
       params.userId,
       params.sessionId,
+      params.duration,  // duration
       undefined,  // errorMessage
       params.userPrompt,
       params.whisperPrompt,
@@ -160,6 +165,7 @@ export class VoiceNote {
     tags: string[],
     userId?: string,  // Made optional
     sessionId?: string,  // Added for anonymous users
+    duration?: number,  // Duration in seconds
     errorMessage?: string,
     userPrompt?: string,  // Added for custom prompts
     whisperPrompt?: string,  // Added for Whisper prompts
@@ -186,6 +192,7 @@ export class VoiceNote {
       tags,
       userId,
       sessionId,
+      duration,
       errorMessage,
       userPrompt,
       whisperPrompt,
@@ -285,6 +292,15 @@ export class VoiceNote {
 
   getFileSize(): number {
     return this.fileSize;
+  }
+
+  getDuration(): number | undefined {
+    return this.duration;
+  }
+
+  setDuration(duration: number): void {
+    this.duration = duration;
+    this.updatedAt = new Date();
   }
 
   getMimeType(): string {

@@ -146,6 +146,9 @@ When making choices, ask:
 #### 2. Verify Configuration Sources
 **Database Configuration:**
 - Check `.env` for `DATABASE_URL` (currently: `file:/data/nano-grazynka.db`)
+- **CRITICAL: The database in Docker is at `/data/nano-grazynka.db` NOT `/app/prisma/data/nano-grazynka.db`**
+- **ALWAYS use DATABASE_URL=file:/data/nano-grazynka.db when running Prisma commands in Docker**
+- **The host database is at `./data/nano-grazynka.db` which maps to `/data/nano-grazynka.db` in container**
 - NEVER create new databases - always use the configured location
 - Docker mounts `/data` volume - this is where SQLite database lives
 
@@ -500,8 +503,10 @@ When encountering issues:
 - **Backend**: Node.js + Fastify + TypeScript
 - **Frontend**: Next.js 15 + TypeScript  
 - **Database**: SQLite via Prisma
-  - **Location in Docker**: `/app/prisma/data/nano-grazynka.db`
-  - **Query via Prisma**: `docker exec nano-grazynka_cc-backend-1 sh -c 'echo "SELECT * FROM TableName;" | npx prisma db execute --url "file:/app/prisma/data/nano-grazynka.db" --stdin'`
+  - **Location in Docker**: `/data/nano-grazynka.db`
+  - **Location on Host**: `./data/nano-grazynka.db`
+  - **Query via Prisma**: `docker exec nano-grazynka_cc-backend-1 sh -c 'echo "SELECT * FROM TableName;" | DATABASE_URL="file:/data/nano-grazynka.db" npx prisma db execute --stdin'`
+  - **Apply Migrations**: `cd backend && DATABASE_URL="file:../data/nano-grazynka.db" npx prisma migrate deploy`
 - **Container**: Docker Compose
 - **AI Services**: OpenAI/OpenRouter
 - **Environment**: Single root .env file (NO backend/.env - use only root .env)

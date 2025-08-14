@@ -62,12 +62,17 @@
   flex-shrink: 0;
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-left: auto;
+}
+
 .nav {
   display: flex;
   align-items: center;
   gap: 24px;
-  flex: 1;
-  justify-content: center;
 }
 
 .navLink {

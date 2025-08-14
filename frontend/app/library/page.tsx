@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { voiceNotesApi } from '@/lib/api/voiceNotes';
 import { VoiceNote, ProcessingStatus, Language } from '@/lib/types';
 import { getOrCreateSessionId } from '@/lib/anonymousSession';
+import VoiceNoteCard from '@/components/VoiceNoteCard';
 import styles from './page.module.css';
 
 interface SearchFilters {
@@ -60,14 +61,9 @@ export default function LibraryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return;
-    
-    try {
-      await voiceNotesApi.delete(id);
-      await fetchVoiceNotes();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete voice note');
-    }
+    // The VoiceNoteCard component handles the deletion and confirmation
+    // We just need to refresh the list after successful deletion
+    await fetchVoiceNotes();
   };
 
   const formatDate = (dateString: string) => {
@@ -206,52 +202,11 @@ export default function LibraryPage() {
             <>
               <div className={styles.notesList}>
                 {voiceNotes.map(note => (
-                  <div key={note.id} className={styles.noteCard}>
-                    <Link href={`/note/${note.id}`} className={styles.noteLink}>
-                      <div className={styles.noteContent}>
-                        <div className={styles.noteHeader}>
-                          <h3 className={styles.noteTitle}>
-                            {note.title || 'Untitled Note'}
-                          </h3>
-                          <span className={styles.noteDate}>
-                            {formatDate(note.createdAt)}
-                          </span>
-                        </div>
-                        {note.summary && (
-                          <p className={styles.noteSummary}>
-                            {note.summary.length > 150 
-                              ? `${note.summary.substring(0, 150)}...` 
-                              : note.summary}
-                          </p>
-                        )}
-                        <div className={styles.noteMeta}>
-                          <span className={`${styles.noteStatus} ${styles[`status${note.status.charAt(0).toUpperCase() + note.status.slice(1)}`]}`}>
-                            {note.status}
-                          </span>
-                          {note.language && (
-                            <span className={styles.noteLanguage}>
-                              {note.language}
-                            </span>
-                          )}
-                          {note.duration && (
-                            <span className={styles.noteDuration}>
-                              {Math.round(note.duration / 60)} min
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(note.id)}
-                      className={styles.deleteButton}
-                      title="Delete note"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" 
-                              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </button>
-                  </div>
+                  <VoiceNoteCard 
+                    key={note.id} 
+                    note={note} 
+                    onDelete={handleDelete}
+                  />
                 ))}
               </div>
               {renderPagination()}

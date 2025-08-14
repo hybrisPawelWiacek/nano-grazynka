@@ -245,16 +245,17 @@ export default function VoiceNoteDetailPage() {
             nano-Grazynka
           </Link>
           
-          <nav className={styles.nav}>
-            <Link href="/dashboard" className={styles.navLink}>
-              Dashboard
-            </Link>
-            <Link href="/library" className={styles.navLink}>
-              Library
-            </Link>
-          </nav>
-          
-          <div className={styles.headerActions}>
+          <div className={styles.headerRight}>
+            <nav className={styles.nav}>
+              <Link href="/dashboard" className={styles.navLink}>
+                Dashboard
+              </Link>
+              <Link href="/library" className={styles.navLink}>
+                Library
+              </Link>
+            </nav>
+            
+            <div className={styles.headerActions}>
             <button 
               onClick={() => setShowMoreMenu(!showMoreMenu)} 
               className={styles.moreButton}
@@ -280,6 +281,7 @@ export default function VoiceNoteDetailPage() {
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
       </header>

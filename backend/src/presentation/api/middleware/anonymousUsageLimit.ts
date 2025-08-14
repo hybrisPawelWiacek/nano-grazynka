@@ -1,7 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { DatabaseClient } from '../../../infrastructure/database/DatabaseClient';
 
-const prisma = new PrismaClient();
 const ANONYMOUS_USAGE_LIMIT = 5;
 
 /**
@@ -32,6 +31,8 @@ export function createAnonymousUsageLimitMiddleware() {
     }
 
     try {
+      const prisma = DatabaseClient.getInstance();
+      
       // Check if session exists
       let session = await prisma.anonymousSession.findUnique({
         where: { sessionId }

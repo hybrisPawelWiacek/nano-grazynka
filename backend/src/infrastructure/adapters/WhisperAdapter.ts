@@ -328,36 +328,80 @@ ${options?.prompt || "Please transcribe this audio accurately."}`;
     
     // Use the correct Gemini API endpoint
     const modelName = 'models/gemini-2.0-flash-exp';
-    const response = await fetch(`${baseUrl}/${modelName}:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
+    
+    // Retry logic with exponential backoff for 503 errors
+    let lastError;
+    const maxRetries = 3;
+    const baseDelay = 1000; // Start with 1 second
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const response = await fetch(`${baseUrl}/${modelName}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
 
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Gemini transcription error:', error);
-      throw new Error(`Gemini transcription failed: ${error}`);
+        if (!response.ok) {
+          const error = await response.text();
+          console.error(`Gemini transcription error (attempt ${attempt + 1}):`, error);
+          
+          // Check if it's a 503 overload error
+          if (response.status === 503 || error.includes('overloaded')) {
+            lastError = new Error(`Gemini model overloaded: ${error}`);
+            
+            // If not the last attempt, wait with exponential backoff
+            if (attempt < maxRetries - 1) {
+              const delay = baseDelay * Math.pow(2, attempt);
+              console.log(`[Gemini] Model overloaded, retrying in ${delay}ms...`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+          } else {
+            // For non-503 errors, throw immediately
+            throw new Error(`Gemini transcription failed: ${error}`);
+          }
+        } else {
+          // Success! Process the response
+          const result: any = await response.json();
+          
+          // Extract transcription from Gemini response structure
+          const transcriptionText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          
+          if (!transcriptionText) {
+            console.error('Gemini response:', JSON.stringify(result, null, 2));
+            throw new Error('Gemini returned empty transcription');
+          }
+          
+          return {
+            text: transcriptionText,
+            language,
+            duration: 0, // Gemini doesn't provide duration
+            confidence: 0.95, // Default high confidence for Gemini
+          };
+        }
+      } catch (error) {
+        lastError = error;
+        
+        // If it's a network error, retry with backoff
+        if (attempt < maxRetries - 1) {
+          const delay = baseDelay * Math.pow(2, attempt);
+          console.log(`[Gemini] Network error, retrying in ${delay}ms...`, error);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
     }
-
-    const result: any = await response.json();
     
-    // Extract transcription from Gemini response structure
-    const transcriptionText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
-    if (!transcriptionText) {
-      console.error('Gemini response:', JSON.stringify(result, null, 2));
-      throw new Error('Gemini returned empty transcription');
+    // All retries exhausted, try fallback to OpenAI if configured
+    if (lastError && process.env.OPENAI_API_KEY) {
+      console.log('[Gemini] All retries exhausted, falling back to OpenAI...');
+      return this.transcribeWithOpenAI(audioFilePath, language, options);
     }
     
-    return {
-      text: transcriptionText,
-      language,
-      duration: 0, // Gemini doesn't provide duration
-      confidence: 0.95, // Default high confidence for Gemini
-    };
+    throw lastError || new Error('Gemini transcription failed after all retries');
   }
 
   private calculateConfidence(segments?: any[]): number {

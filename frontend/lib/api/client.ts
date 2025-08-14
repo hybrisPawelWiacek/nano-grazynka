@@ -27,13 +27,28 @@ export class ApiClient {
       throw error;
     }
 
-    // Handle empty responses
+    // Handle 204 No Content responses
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    // Handle empty responses or non-JSON content types
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       return {} as T;
     }
 
-    return response.json();
+    // Handle empty body even with JSON content type
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {} as T;
+    }
   }
 
   private createAbortController(): { controller: AbortController; timeoutId: NodeJS.Timeout } {
@@ -140,8 +155,22 @@ export class ApiClient {
     const { controller, timeoutId } = this.createAbortController();
 
     try {
+      // Get session ID for anonymous users
+      let sessionId: string | undefined;
+      if (typeof window !== 'undefined') {
+        sessionId = localStorage.getItem('anonymousSessionId') || undefined;
+      }
+      
+      const headers: Record<string, string> = {};
+      
+      // Add session ID header if available
+      if (sessionId) {
+        headers['x-session-id'] = sessionId;
+      }
+      
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'POST',
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
         body: formData,
         credentials: 'include', // Send cookies for authentication
         signal: controller.signal,
@@ -167,11 +196,24 @@ export class ApiClient {
     const { controller, timeoutId } = this.createAbortController();
 
     try {
+      // Get session ID for anonymous users
+      let sessionId: string | undefined;
+      if (typeof window !== 'undefined') {
+        sessionId = localStorage.getItem('anonymousSessionId') || undefined;
+      }
+      
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add session ID header if available
+      if (sessionId) {
+        headers['x-session-id'] = sessionId;
+      }
+      
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: body ? JSON.stringify(body) : undefined,
         credentials: 'include', // Send cookies for authentication
         signal: controller.signal,
@@ -196,11 +238,22 @@ export class ApiClient {
     const { controller, timeoutId } = this.createAbortController();
 
     try {
+      // Get session ID for anonymous users
+      let sessionId: string | undefined;
+      if (typeof window !== 'undefined') {
+        sessionId = localStorage.getItem('anonymousSessionId') || undefined;
+      }
+      
+      const headers: Record<string, string> = {};
+      
+      // Add session ID header if available
+      if (sessionId) {
+        headers['x-session-id'] = sessionId;
+      }
+      
       const response = await fetch(`${this.baseUrl}${path}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
         credentials: 'include', // Send cookies for authentication
         signal: controller.signal,
       });

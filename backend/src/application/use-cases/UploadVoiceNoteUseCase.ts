@@ -6,6 +6,7 @@ import { StorageService } from '../../domain/services/StorageService';
 import { EventStore } from '../../domain/repositories/EventStore';
 import { Language } from '../../domain/value-objects/Language';
 import { Config } from '../../config/schema';
+import { AudioMetadataExtractor } from '../../infrastructure/adapters/AudioMetadataExtractor';
 import * as path from 'path';
 
 export interface UploadVoiceNoteInput {
@@ -63,7 +64,8 @@ export class UploadVoiceNoteUseCase extends UseCase<
     private readonly voiceNoteRepository: VoiceNoteRepository,
     private readonly storageService: StorageService,
     private readonly eventStore: EventStore,
-    private readonly config: any  // ConfigLoader instance
+    private readonly config: any,  // ConfigLoader instance
+    private readonly audioMetadataExtractor: AudioMetadataExtractor
   ) {
     super();
   }
@@ -86,6 +88,12 @@ export class UploadVoiceNoteUseCase extends UseCase<
       // Extract title from filename
       const title = this.extractTitleFromFilename(input.file.originalName);
 
+      // Extract audio duration
+      const duration = await this.audioMetadataExtractor.extractDuration(
+        input.file.buffer,
+        input.file.mimeType
+      );
+
       // Create voice note entity
       const voiceNote = VoiceNote.create({
         userId: input.userId,
@@ -96,6 +104,7 @@ export class UploadVoiceNoteUseCase extends UseCase<
         mimeType: input.file.mimeType,
         language: input.language ? Language.fromString(input.language) : Language.EN,
         tags: input.tags || [],
+        duration: duration || undefined,
         userPrompt: input.userPrompt,
         whisperPrompt: input.whisperPrompt,
         transcriptionModel: input.transcriptionModel,

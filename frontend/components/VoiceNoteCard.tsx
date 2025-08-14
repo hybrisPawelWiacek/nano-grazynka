@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { VoiceNote } from '@/lib/types';
 import { voiceNotesApi } from '@/lib/api/voiceNotes';
+import ConfirmationModal from './ConfirmationModal';
 import styles from './VoiceNoteCard.module.css';
 
 interface VoiceNoteCardProps {
@@ -11,6 +13,9 @@ interface VoiceNoteCardProps {
 }
 
 export default function VoiceNoteCard({ note, onDelete }: VoiceNoteCardProps) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
@@ -50,23 +55,34 @@ export default function VoiceNoteCard({ note, onDelete }: VoiceNoteCardProps) {
     }
   };
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (window.confirm('Are you sure you want to delete this voice note?')) {
-      try {
-        await voiceNotesApi.delete(note.id);
-        onDelete?.(note.id);
-      } catch (error) {
-        console.error('Failed to delete voice note:', error);
-        alert('Failed to delete voice note');
-      }
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await voiceNotesApi.delete(note.id);
+      onDelete?.(note.id);
+      setShowDeleteModal(false);
+    } catch (error: any) {
+      console.error('Failed to delete voice note:', error);
+      const errorMessage = error?.message || error?.error || 'Unknown error occurred';
+      alert(`Failed to delete voice note: ${errorMessage}`);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
   return (
-    <Link href={`/notes/${note.id}`} className={styles.card}>
+    <>
+      <Link href={`/note/${note.id}`} className={styles.card}>
       <div className={styles.header}>
         <div className={styles.titleRow}>
           <h3 className={styles.title}>{note.displayTitle || note.aiGeneratedTitle || note.title}</h3>
@@ -75,12 +91,12 @@ export default function VoiceNoteCard({ note, onDelete }: VoiceNoteCardProps) {
             <span className={styles.statusText}>{note.status}</span>
           </div>
         </div>
+        {/* Show original filename if AI title exists */}
+        {(note.aiGeneratedTitle || note.displayTitle) && note.originalFilename && (
+          <div className={styles.originalFilename}>{note.originalFilename}</div>
+        )}
         <div className={styles.meta}>
           <span className={styles.language}>{note.language.toUpperCase()}</span>
-          <span className={styles.separator}>•</span>
-          <span className={styles.fileSize}>
-            {voiceNotesApi.formatFileSize(note.fileSize)}
-          </span>
           {note.duration && (
             <>
               <span className={styles.separator}>•</span>
@@ -128,7 +144,7 @@ export default function VoiceNoteCard({ note, onDelete }: VoiceNoteCardProps) {
         <span className={styles.date}>{formatDate(note.createdAt)}</span>
         <button
           className={styles.deleteButton}
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           aria-label="Delete voice note"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -137,5 +153,17 @@ export default function VoiceNoteCard({ note, onDelete }: VoiceNoteCardProps) {
         </button>
       </div>
     </Link>
+    
+    <ConfirmationModal
+      isOpen={showDeleteModal}
+      title="Delete Voice Note"
+      message={`Are you sure you want to delete "${note.displayTitle || note.aiGeneratedTitle || note.title}"? This action cannot be undone.`}
+      confirmText={isDeleting ? "Deleting..." : "Delete"}
+      cancelText="Cancel"
+      confirmStyle="danger"
+      onConfirm={handleConfirmDelete}
+      onCancel={handleCancelDelete}
+    />
+    </>
   );
 }

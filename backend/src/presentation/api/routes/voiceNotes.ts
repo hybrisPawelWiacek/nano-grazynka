@@ -28,7 +28,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
   // Upload voice note (supports both authenticated and anonymous users)
   fastify.post('/api/voice-notes', 
     { 
-      preHandler: [optionalAuthMiddleware, rateLimitMiddleware, anonymousUsageLimitMiddleware] 
+      preHandler: [optionalAuthMiddleware, rateLimitMiddleware] 
     }, 
     async (request: FastifyRequest & { user?: UserEntity }, reply: FastifyReply) => {
     try {
@@ -225,7 +225,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
 
   // Process voice note (supports both authenticated and anonymous users)
   fastify.post('/api/voice-notes/:id/process', 
-    { preHandler: [optionalAuthMiddleware] },
+    { preHandler: [optionalAuthMiddleware, rateLimitMiddleware] },
     async (request: any, reply: any) => {
     const useCase = container.getProcessVoiceNoteUseCase();
     const result = await useCase.execute({
@@ -426,21 +426,74 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     return reply.send(result.data);
   });
 
-  // Delete voice note (protected route)
+  // Delete voice note (supports both authenticated and anonymous users)
   fastify.delete('/api/voice-notes/:id', 
-    { preHandler: [authMiddleware] },
-    async (request: any, reply: any) => {
-    const useCase = container.getDeleteVoiceNoteUseCase();
-    const result = await useCase.execute({
-      voiceNoteId: request.params.id,
-      deleteAudioFile: request.query?.keepAudioFile !== 'true'
-    });
+    { preHandler: [optionalAuthMiddleware] },
+    async (request: FastifyRequest & { user?: UserEntity }, reply: FastifyReply) => {
+    try {
+      const params = request.params as { id: string };
+      
+      // Get the voice note first to check ownership
+      const getUseCase = container.getGetVoiceNoteUseCase();
+      const voiceNoteResult = await getUseCase.execute({
+        voiceNoteId: params.id,
+        includeTranscription: false,
+        includeSummary: false
+      });
 
-    if (!result.success) {
-      throw result.error;
+      if (!voiceNoteResult.success) {
+        return reply.status(404).send({
+          error: 'Not Found',
+          message: 'Voice note not found'
+        });
+      }
+
+      const voiceNote = voiceNoteResult.data;
+      
+      // Check ownership for authenticated users
+      if (request.user && voiceNote.userId !== request.user.id) {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Access denied'
+        });
+      }
+      
+      // Check session for anonymous users
+      const sessionId = request.headers['x-session-id'] as string;
+      if (!request.user && voiceNote.sessionId !== sessionId) {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Access denied'
+        });
+      }
+
+      // If neither user nor session matches, deny access
+      if (!request.user && !sessionId) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required'
+        });
+      }
+
+      // Proceed with deletion
+      const deleteUseCase = container.getDeleteVoiceNoteUseCase();
+      const result = await deleteUseCase.execute({
+        voiceNoteId: params.id,
+        deleteAudioFile: (request.query as any)?.keepAudioFile !== 'true'
+      });
+
+      if (!result.success) {
+        throw result.error;
+      }
+
+      return reply.status(204).send();
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      return reply.status(500).send({
+        error: 'Internal Server Error',
+        message: error.message || 'Failed to delete voice note'
+      });
     }
-
-    return reply.status(204).send();
   });
 
   // Reprocess voice note

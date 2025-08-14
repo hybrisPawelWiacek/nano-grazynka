@@ -29,6 +29,7 @@ export interface ListVoiceNotesOutput {
     language: string;
     status: string;
     tags: string[];
+    duration?: number;  // Audio duration in seconds
     aiGeneratedTitle?: string;  // AI-generated title
     briefDescription?: string;  // Brief AI description
     derivedDate?: Date;  // Date from content
@@ -92,11 +93,13 @@ export class ListVoiceNotesUseCase extends UseCase<
         id: voiceNote.getId().toString(),
         userId: voiceNote.getUserId() || '',  // Handle optional userId
         title: voiceNote.getTitle(),
+        originalFilename: voiceNote.getTitle(),  // Add original filename explicitly
         fileSize: voiceNote.getFileSize(),
         mimeType: voiceNote.getMimeType(),
         language: voiceNote.getLanguage().getValue(),
         status: voiceNote.getStatus().getValue() as string,  // Cast to string
         tags: voiceNote.getTags(),
+        duration: voiceNote.getDuration(),  // Include audio duration
         aiGeneratedTitle: voiceNote.getAIGeneratedTitle(),  // Include AI title
         briefDescription: voiceNote.getBriefDescription(),  // Include description
         derivedDate: voiceNote.getDerivedDate(),  // Include derived date

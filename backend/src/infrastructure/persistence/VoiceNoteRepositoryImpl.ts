@@ -288,6 +288,7 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       aiGeneratedTitle: voiceNote.getAIGeneratedTitle() || null,
       briefDescription: voiceNote.getBriefDescription() || null,
       derivedDate: voiceNote.getDerivedDate() || null,
+      duration: voiceNote.getDuration() || null,
       errorMessage: voiceNote.getErrorMessage() || null,
       createdAt: voiceNote.getCreatedAt(),
       updatedAt: voiceNote.getUpdatedAt(),
@@ -310,6 +311,7 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       JSON.parse(data.tags || '[]'),
       data.userId,
       data.sessionId,  // Add sessionId parameter
+      data.duration || undefined,  // Add duration parameter
       data.errorMessage || undefined,
       data.userPrompt || undefined,  // Add userPrompt parameter
       data.whisperPrompt || undefined,  // Add whisperPrompt parameter

@@ -79,6 +79,7 @@ model VoiceNote {
   aiGeneratedTitle      String?     // AI-generated 3-4 word title
   briefDescription      String?     // AI-generated 10-15 word summary
   derivedDate           DateTime?   // Date extracted from content
+  duration              Float?      // Audio duration in seconds
   
   errorMessage     String?
   createdAt        DateTime @default(now())

@@ -23,6 +23,7 @@ export interface GetVoiceNoteOutput {
   language: string;
   status: string;
   tags: string[];
+  duration?: number;  // Audio duration in seconds
   errorMessage?: string;
   userPrompt?: string;  // Custom user prompt
   whisperPrompt?: string;  // Whisper prompt for GPT-4o
@@ -97,6 +98,7 @@ export class GetVoiceNoteUseCase extends UseCase<
         language: voiceNote.getLanguage().getValue(),
         status: voiceNote.getStatus().getValue(),
         tags: voiceNote.getTags(),
+        duration: voiceNote.getDuration(),  // Include audio duration
         errorMessage: voiceNote.getErrorMessage(),
         userPrompt: voiceNote.getUserPrompt(),  // Include custom prompt
         whisperPrompt: voiceNote.getWhisperPrompt(),  // Include Whisper prompt

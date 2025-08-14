@@ -10,6 +10,7 @@ import { WhisperAdapter } from '../../infrastructure/adapters/WhisperAdapter';
 import { LLMAdapter } from '../../infrastructure/adapters/LLMAdapter';
 import { LocalStorageAdapter } from '../../infrastructure/adapters/LocalStorageAdapter';
 import { TitleGenerationAdapter } from '../../infrastructure/adapters/TitleGenerationAdapter';
+import { AudioMetadataExtractor } from '../../infrastructure/adapters/AudioMetadataExtractor';
 import { DatabaseClient } from '../../infrastructure/database/DatabaseClient';
 import { ProcessingOrchestrator } from '../../application/services/ProcessingOrchestrator';
 import {
@@ -35,6 +36,7 @@ export class Container {
   private summarizationService: LLMAdapter;
   private titleGenerationService: TitleGenerationAdapter;
   private storageService: LocalStorageAdapter;
+  private audioMetadataExtractor: AudioMetadataExtractor;
   private processingOrchestrator: ProcessingOrchestrator;
   
   private constructor() {
@@ -55,6 +57,7 @@ export class Container {
     this.summarizationService = new LLMAdapter();
     this.titleGenerationService = new TitleGenerationAdapter(this.config);
     this.storageService = new LocalStorageAdapter();
+    this.audioMetadataExtractor = new AudioMetadataExtractor();
     
     this.processingOrchestrator = new ProcessingOrchestrator(
       this.transcriptionService,
@@ -98,7 +101,8 @@ export class Container {
       this.voiceNoteRepository,
       this.storageService,
       this.eventStore,
-      this.config  // Pass the ConfigLoader instance
+      this.config,  // Pass the ConfigLoader instance
+      this.audioMetadataExtractor
     );
   }
   
