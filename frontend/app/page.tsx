@@ -290,6 +290,13 @@ export default function HomePage() {
       const uploadData = await uploadResponse.json();
       const voiceNoteId = uploadData.voiceNote.id;
 
+      // Update anonymous usage count immediately after successful upload
+      // This matches backend behavior which increments on upload, not after processing
+      if (isAnonymous) {
+        incrementUsageCount();  // Increment local storage count
+        refreshAnonymousUsage();  // Refresh from backend
+      }
+
       // Update status - processing
       setStatus({ stage: 'processing', progress: 40, message: 'Processing audio file...' });
       
@@ -400,11 +407,7 @@ export default function HomePage() {
             fileInputRef.current.value = '';
           }
           
-          // Update anonymous usage count
-          if (isAnonymous) {
-            incrementUsageCount();  // Increment local storage count
-            refreshAnonymousUsage();  // Refresh from backend
-          }
+          // Don't increment usage count here - already incremented after upload
         } else if (data.status === 'failed') {
           throw new Error('Processing failed');
         } else if (attempts < maxAttempts) {

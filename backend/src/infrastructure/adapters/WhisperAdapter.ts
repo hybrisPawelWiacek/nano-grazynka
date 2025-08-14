@@ -243,8 +243,13 @@ export class WhisperAdapter implements TranscriptionService {
       model?: string;
     }
   ): Promise<TranscriptionResult> {
-    const apiKey = process.env.OPENROUTER_API_KEY || ConfigLoader.get('transcription.apiKey');
-    const baseUrl = 'https://openrouter.ai/api/v1';
+    console.log('[WhisperAdapter.transcribeWithGemini] Called with options:', options);
+    // Use direct Gemini API key instead of OpenRouter
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY not configured in environment variables');
+    }
+    const baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
     
     // Use the path as-is since LocalStorageAdapter now returns full path
     const fullPath = audioFilePath;
@@ -257,13 +262,15 @@ export class WhisperAdapter implements TranscriptionService {
     const fileBuffer = fs.readFileSync(fullPath);
     const base64Audio = fileBuffer.toString('base64');
     
-    // Determine MIME type
+    // Determine MIME type for direct Gemini API
     const fileName = audioFilePath.split('/').pop() || 'audio.m4a';
-    const mimeType = fileName.endsWith('.m4a') ? 'audio/m4a' : 
-                     fileName.endsWith('.mp3') ? 'audio/mpeg' :
+    const mimeType = fileName.endsWith('.m4a') ? 'audio/mp4' :  // M4A uses audio/mp4 MIME type
+                     fileName.endsWith('.mp3') ? 'audio/mp3' :
                      fileName.endsWith('.mp4') ? 'audio/mp4' :
                      fileName.endsWith('.wav') ? 'audio/wav' : 
-                     fileName.endsWith('.webm') ? 'audio/webm' : 'audio/mpeg';
+                     fileName.endsWith('.webm') ? 'audio/webm' : 
+                     fileName.endsWith('.ogg') ? 'audio/ogg' :
+                     fileName.endsWith('.flac') ? 'audio/flac' : 'audio/mp4';
     
     // Construct default system prompt if not provided
     const defaultSystemPrompt = `You are a professional audio transcriber. Transcribe the following audio accurately in ${language.getValue() || 'English'}. 
@@ -271,46 +278,62 @@ export class WhisperAdapter implements TranscriptionService {
     If you hear technical terms, proper nouns, or acronyms, transcribe them correctly.
     Format the transcription clearly with proper punctuation.`;
     
-    // Construct messages for Gemini
-    const messages = [
-      {
-        role: "system",
-        content: options?.systemPrompt || defaultSystemPrompt
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: options?.prompt || "Please transcribe this audio accurately."
-          },
-          {
-            type: "audio",
-            audio: {
-              data: base64Audio,
-              mime_type: mimeType
-            }
-          }
-        ]
-      }
-    ];
+    // Debug: Log audio file size
+    console.log(`[Gemini] Processing audio file: ${fileName}, size: ${fileBuffer.length} bytes, mime: ${mimeType}`);
     
+    // Construct request for direct Gemini API
+    // Combine system prompt and user prompt into single instruction
+    const fullPrompt = `${options?.systemPrompt || defaultSystemPrompt}
 
+${options?.prompt || "Please transcribe this audio accurately."}`;
+
+    // Gemini API expects different structure
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            {
+              text: fullPrompt
+            },
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: base64Audio
+              }
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: options?.temperature || 0.3,
+        maxOutputTokens: 8192,
+        topP: 0.95,
+        topK: 40
+      }
+    };
     
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    // Debug: Log the exact request structure (without the full base64 data)
+    console.log('[Gemini] Request structure:', JSON.stringify({
+      model: 'gemini-2.0-flash-exp',
+      contents: [
+        {
+          parts: [
+            { text: fullPrompt },
+            { inline_data: { mime_type: mimeType, data: `[BASE64_DATA_${base64Audio.length}_CHARS]` } }
+          ]
+        }
+      ],
+      generationConfig: requestBody.generationConfig
+    }, null, 2));
+    
+    // Use the correct Gemini API endpoint
+    const modelName = 'models/gemini-2.0-flash-exp';
+    const response = await fetch(`${baseUrl}/${modelName}:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://nano-grazynka.app',
-        'X-Title': 'nano-Grazynka'
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-001',
-        messages,
-        temperature: options?.temperature || 0.3,
-        max_tokens: 8192
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
@@ -321,10 +344,11 @@ export class WhisperAdapter implements TranscriptionService {
 
     const result: any = await response.json();
     
-    // Extract transcription from response
-    const transcriptionText = result.choices?.[0]?.message?.content || '';
+    // Extract transcription from Gemini response structure
+    const transcriptionText = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
     
     if (!transcriptionText) {
+      console.error('Gemini response:', JSON.stringify(result, null, 2));
       throw new Error('Gemini returned empty transcription');
     }
     

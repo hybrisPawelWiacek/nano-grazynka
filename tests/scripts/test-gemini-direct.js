@@ -23,7 +23,7 @@ async function uploadFileAnonymous() {
     form.append('sessionId', sessionId);
     form.append('language', 'PL');  // Polish language for zabka audio
     form.append('tags', 'test,gemini,zabka');
-    form.append('transcriptionModel', 'gemini-2.0-flash');  // Use Gemini 2.0 Flash
+    form.append('transcriptionModel', 'google/gemini-2.0-flash-001');  // Use correct Gemini model name
     
     // Add x-session-id header for anonymous authentication
     const headers = form.getHeaders();

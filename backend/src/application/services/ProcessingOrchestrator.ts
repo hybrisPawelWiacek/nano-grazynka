@@ -201,6 +201,10 @@ export class ProcessingOrchestrator {
         );
       } else if (model === 'google/gemini-2.0-flash-001') {
         // Use Gemini flow with extended prompts
+        console.log('[ProcessingOrchestrator] Using Gemini model:', model);
+        console.log('[ProcessingOrchestrator] System prompt:', voiceNote.getGeminiSystemPrompt());
+        console.log('[ProcessingOrchestrator] User prompt:', voiceNote.getGeminiUserPrompt());
+        
         transcriptionResult = await this.transcriptionService.transcribe(
           voiceNote.getOriginalFilePath(),
           language || voiceNote.getLanguage(),

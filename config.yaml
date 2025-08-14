@@ -30,8 +30,9 @@ transcription:
       processingTime: "5-10 seconds"
       
     google/gemini-2.0-flash-001:
-      provider: openrouter
-      endpoint: /v1/chat/completions
+      provider: gemini-direct  # Using direct Google Gemini API
+      endpoint: /v1beta/models/gemini-2.0-flash-exp:generateContent
+      apiKey: GEMINI_API_KEY  # Uses environment variable
       maxPromptTokens: 1000000
       supportsTemplates: true
       requiresBase64: true
