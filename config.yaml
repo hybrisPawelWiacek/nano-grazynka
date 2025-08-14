@@ -56,6 +56,26 @@ summarization:
       Extract actionable items from the following transcript as a bullet list.
       Present them in the same language as the transcript.
 
+titleGeneration:
+  provider: openrouter  # Use same provider as summarization for consistency
+  model: google/gemini-2.5-flash  # Fast and efficient for metadata extraction
+  maxTokens: 150  # Small output for title and brief description
+  temperature: 0.3  # Lower temperature for more consistent results
+  prompt: |
+    Given this voice note transcription, generate:
+    1. A 3-4 word descriptive title
+    2. A 10-15 word summary of the main topic
+    3. Any specific date mentioned in the content (or null if none)
+    
+    Respond ONLY in JSON format:
+    {
+      "title": "...",
+      "description": "...",
+      "date": "YYYY-MM-DD or null"
+    }
+    
+    Transcription:
+
 storage:
   uploadDir: /data/uploads
   maxFileAgeDays: 30

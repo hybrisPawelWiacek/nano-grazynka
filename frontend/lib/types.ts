@@ -14,6 +14,10 @@ export interface VoiceNote {
   language: Language;
   status: ProcessingStatus;
   failureReason?: string;
+  aiGeneratedTitle?: string;      // AI-generated 3-4 word title
+  briefDescription?: string;      // AI-generated 10-15 word summary
+  derivedDate?: string;           // Date extracted from content
+  displayTitle?: string;          // Title to display (AI or original)
   createdAt: string;
   updatedAt: string;
   processedAt?: string;

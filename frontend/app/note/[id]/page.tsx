@@ -290,8 +290,16 @@ export default function VoiceNoteDetailPage() {
           <div className={styles.content}>
             {/* Note Header */}
             <div className={styles.noteHeader}>
-              <h1 className={styles.title}>{voiceNote.title || 'Untitled Note'}</h1>
+              <h1 className={styles.title}>{voiceNote.displayTitle || voiceNote.aiGeneratedTitle || voiceNote.title || 'Untitled Note'}</h1>
+              {voiceNote.briefDescription && (
+                <p className={styles.briefDescription}>{voiceNote.briefDescription}</p>
+              )}
               <div className={styles.metadata}>
+                {voiceNote.derivedDate && (
+                  <span className={styles.metaItem}>
+                    📅 {new Date(voiceNote.derivedDate).toLocaleDateString()}
+                  </span>
+                )}
                 {voiceNote.status && (
                   <span className={`${styles.status} ${styles[`status${voiceNote.status.charAt(0).toUpperCase() + voiceNote.status.slice(1)}`]}`}>
                     {voiceNote.status}

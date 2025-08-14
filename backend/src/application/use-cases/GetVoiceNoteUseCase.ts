@@ -31,6 +31,10 @@ export interface GetVoiceNoteOutput {
   geminiUserPrompt?: string;  // Gemini user prompt
   refinedText?: string;  // Refined transcription
   refinementPrompt?: string;  // Refinement prompt
+  aiGeneratedTitle?: string;  // AI-generated 3-4 word title
+  briefDescription?: string;  // AI-generated 10-15 word summary
+  derivedDate?: Date;  // Date extracted from content
+  displayTitle?: string;  // Title to display (AI-generated or original)
   createdAt: Date;
   updatedAt: Date;
   version: number;
@@ -101,6 +105,10 @@ export class GetVoiceNoteUseCase extends UseCase<
         geminiUserPrompt: voiceNote.getGeminiUserPrompt(),  // Include Gemini user prompt
         refinedText: voiceNote.getRefinedText(),  // Include refined text
         refinementPrompt: voiceNote.getRefinementPrompt(),  // Include refinement prompt
+        aiGeneratedTitle: voiceNote.getAIGeneratedTitle(),  // Include AI-generated title
+        briefDescription: voiceNote.getBriefDescription(),  // Include brief description
+        derivedDate: voiceNote.getDerivedDate(),  // Include derived date
+        displayTitle: voiceNote.getDisplayTitle(),  // Include display title (AI or original)
         createdAt: voiceNote.getCreatedAt(),
         updatedAt: voiceNote.getUpdatedAt(),
         version: voiceNote.getVersion()

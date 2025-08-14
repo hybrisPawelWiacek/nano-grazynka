@@ -69,7 +69,7 @@ export default function VoiceNoteCard({ note, onDelete }: VoiceNoteCardProps) {
     <Link href={`/notes/${note.id}`} className={styles.card}>
       <div className={styles.header}>
         <div className={styles.titleRow}>
-          <h3 className={styles.title}>{note.title}</h3>
+          <h3 className={styles.title}>{note.displayTitle || note.aiGeneratedTitle || note.title}</h3>
           <div className={`${styles.status} ${styles[note.status]}`}>
             {getStatusIcon()}
             <span className={styles.statusText}>{note.status}</span>
@@ -89,10 +89,23 @@ export default function VoiceNoteCard({ note, onDelete }: VoiceNoteCardProps) {
               </span>
             </>
           )}
+          {note.derivedDate && (
+            <>
+              <span className={styles.separator}>•</span>
+              <span className={styles.derivedDate}>
+                {formatDate(note.derivedDate)}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
-      {note.summaries && note.summaries.length > 0 && (
+      {/* Show brief description if available, otherwise fall back to summary */}
+      {note.briefDescription ? (
+        <div className={styles.summary}>
+          <p className={styles.summaryText}>{note.briefDescription}</p>
+        </div>
+      ) : note.summaries && note.summaries.length > 0 && (
         <div className={styles.summary}>
           <p className={styles.summaryText}>
             {note.summaries[0].summary.substring(0, 150)}

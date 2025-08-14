@@ -9,6 +9,7 @@ import { EventStoreImpl } from '../../infrastructure/persistence/EventStoreImpl'
 import { WhisperAdapter } from '../../infrastructure/adapters/WhisperAdapter';
 import { LLMAdapter } from '../../infrastructure/adapters/LLMAdapter';
 import { LocalStorageAdapter } from '../../infrastructure/adapters/LocalStorageAdapter';
+import { TitleGenerationAdapter } from '../../infrastructure/adapters/TitleGenerationAdapter';
 import { DatabaseClient } from '../../infrastructure/database/DatabaseClient';
 import { ProcessingOrchestrator } from '../../application/services/ProcessingOrchestrator';
 import {
@@ -32,6 +33,7 @@ export class Container {
   private eventStore: EventStoreImpl;
   private transcriptionService: WhisperAdapter;
   private summarizationService: LLMAdapter;
+  private titleGenerationService: TitleGenerationAdapter;
   private storageService: LocalStorageAdapter;
   private processingOrchestrator: ProcessingOrchestrator;
   
@@ -51,11 +53,13 @@ export class Container {
     
     this.transcriptionService = new WhisperAdapter();
     this.summarizationService = new LLMAdapter();
+    this.titleGenerationService = new TitleGenerationAdapter(this.config);
     this.storageService = new LocalStorageAdapter();
     
     this.processingOrchestrator = new ProcessingOrchestrator(
       this.transcriptionService,
       this.summarizationService,
+      this.titleGenerationService,
       this.voiceNoteRepository,
       this.eventStore,
       this.config  // Pass the ConfigLoader instance

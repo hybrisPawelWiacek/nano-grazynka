@@ -125,9 +125,11 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       searchQuery?: string;
       fromDate?: Date;
       toDate?: Date;
+      sessionId?: string;
     }
   ): Promise<{ items: VoiceNote[]; total: number; page: number; pageSize: number; totalPages: number }> {
-    const where: any = { userId };
+    // Support both userId and sessionId filtering
+    const where: any = filter?.sessionId ? { sessionId: filter.sessionId } : { userId };
     
     if (filter) {
       if (filter.status) where.status = filter.status.toString();
@@ -283,6 +285,9 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       geminiUserPrompt: voiceNote.getGeminiUserPrompt() || null,
       refinedText: voiceNote.getRefinedText() || null,
       refinementPrompt: voiceNote.getRefinementPrompt() || null,
+      aiGeneratedTitle: voiceNote.getAIGeneratedTitle() || null,
+      briefDescription: voiceNote.getBriefDescription() || null,
+      derivedDate: voiceNote.getDerivedDate() || null,
       errorMessage: voiceNote.getErrorMessage() || null,
       createdAt: voiceNote.getCreatedAt(),
       updatedAt: voiceNote.getUpdatedAt(),
@@ -313,6 +318,9 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       data.geminiUserPrompt || undefined,  // Add geminiUserPrompt
       data.refinedText || undefined,  // Add refinedText
       data.refinementPrompt || undefined,  // Add refinementPrompt
+      data.aiGeneratedTitle || undefined,  // Add aiGeneratedTitle
+      data.briefDescription || undefined,  // Add briefDescription
+      data.derivedDate ? new Date(data.derivedDate) : undefined,  // Add derivedDate
       data.createdAt,
       data.updatedAt,
       data.version

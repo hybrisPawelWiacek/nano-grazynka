@@ -29,6 +29,10 @@ export interface ListVoiceNotesOutput {
     language: string;
     status: string;
     tags: string[];
+    aiGeneratedTitle?: string;  // AI-generated title
+    briefDescription?: string;  // Brief AI description
+    derivedDate?: Date;  // Date from content
+    displayTitle?: string;  // Title to display (AI or original)
     createdAt: Date;
     updatedAt: Date;
     hasSummary: boolean;
@@ -67,7 +71,8 @@ export class ListVoiceNotesUseCase extends UseCase<
         tags: input.filter?.tags,
         search: input.filter?.search,
         startDate: input.filter?.startDate,
-        endDate: input.filter?.endDate
+        endDate: input.filter?.endDate,
+        sessionId: (input.filter as any)?.sessionId
       };
 
       // Get paginated results
@@ -92,6 +97,10 @@ export class ListVoiceNotesUseCase extends UseCase<
         language: voiceNote.getLanguage().getValue(),
         status: voiceNote.getStatus().getValue() as string,  // Cast to string
         tags: voiceNote.getTags(),
+        aiGeneratedTitle: voiceNote.getAIGeneratedTitle(),  // Include AI title
+        briefDescription: voiceNote.getBriefDescription(),  // Include description
+        derivedDate: voiceNote.getDerivedDate(),  // Include derived date
+        displayTitle: voiceNote.getDisplayTitle(),  // Include display title
         createdAt: voiceNote.getCreatedAt(),
         updatedAt: voiceNote.getUpdatedAt(),
         hasSummary: !!voiceNote.getSummary(),

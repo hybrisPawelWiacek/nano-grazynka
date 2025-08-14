@@ -37,6 +37,10 @@ export class VoiceNote {
   private geminiUserPrompt?: string;  // User prompt for Gemini
   private refinedText?: string;  // Refined transcription text
   private refinementPrompt?: string;  // Prompt used for refinement
+  // AI-generated metadata fields
+  private aiGeneratedTitle?: string;
+  private briefDescription?: string;
+  private derivedDate?: Date;
   private domainEvents: any[] = [];
 
   private constructor(
@@ -58,6 +62,9 @@ export class VoiceNote {
     geminiUserPrompt?: string,  // Gemini user prompt
     refinedText?: string,  // Refined transcription
     refinementPrompt?: string,  // Refinement prompt
+    aiGeneratedTitle?: string,  // AI-generated title
+    briefDescription?: string,  // AI-generated brief description
+    derivedDate?: Date,  // Date extracted from content
     createdAt?: Date,
     updatedAt?: Date,
     version?: number
@@ -82,6 +89,9 @@ export class VoiceNote {
     this.geminiUserPrompt = geminiUserPrompt;
     this.refinedText = refinedText;
     this.refinementPrompt = refinementPrompt;
+    this.aiGeneratedTitle = aiGeneratedTitle;
+    this.briefDescription = briefDescription;
+    this.derivedDate = derivedDate;
     this.createdAt = createdAt || new Date();
     this.updatedAt = updatedAt || new Date();
     this.version = version || 1;
@@ -158,6 +168,9 @@ export class VoiceNote {
     geminiUserPrompt?: string,  // Gemini user prompt
     refinedText?: string,  // Refined transcription
     refinementPrompt?: string,  // Refinement prompt
+    aiGeneratedTitle?: string,  // AI-generated title
+    briefDescription?: string,  // AI-generated brief description
+    derivedDate?: Date,  // Date extracted from content
     createdAt?: Date,
     updatedAt?: Date,
     version?: number
@@ -181,6 +194,9 @@ export class VoiceNote {
       geminiUserPrompt,
       refinedText,
       refinementPrompt,
+      aiGeneratedTitle,
+      briefDescription,
+      derivedDate,
       createdAt,
       updatedAt,
       version
@@ -226,6 +242,37 @@ export class VoiceNote {
 
   getRefinementPrompt(): string | undefined {
     return this.refinementPrompt;
+  }
+
+  getAIGeneratedTitle(): string | undefined {
+    return this.aiGeneratedTitle;
+  }
+
+  getBriefDescription(): string | undefined {
+    return this.briefDescription;
+  }
+
+  getDerivedDate(): Date | undefined {
+    return this.derivedDate;
+  }
+
+  getDisplayTitle(): string {
+    return this.aiGeneratedTitle || this.title;
+  }
+
+  setAIGeneratedTitle(title: string): void {
+    this.aiGeneratedTitle = title;
+    this.updatedAt = new Date();
+  }
+
+  setBriefDescription(description: string): void {
+    this.briefDescription = description;
+    this.updatedAt = new Date();
+  }
+
+  setDerivedDate(date: Date): void {
+    this.derivedDate = date;
+    this.updatedAt = new Date();
   }
 
   getTitle(): string {

@@ -75,6 +75,11 @@ model VoiceNote {
   refinedText           String?     // After LLM refinement (optional)
   refinementPrompt      String?     // Context used for refinement
   
+  // AI-generated metadata fields
+  aiGeneratedTitle      String?     // AI-generated 3-4 word title
+  briefDescription      String?     // AI-generated 10-15 word summary
+  derivedDate           DateTime?   // Date extracted from content
+  
   errorMessage     String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

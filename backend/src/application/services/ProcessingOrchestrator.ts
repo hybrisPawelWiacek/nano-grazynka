@@ -7,6 +7,7 @@ import { VoiceNoteRepository } from '../../domain/repositories/VoiceNoteReposito
 import { EventStore } from '../../domain/repositories/EventStore';
 import { TranscriptionService } from '../../domain/services/TranscriptionService';
 import { SummarizationService } from '../../domain/services/SummarizationService';
+import { TitleGenerationService } from '../../domain/services/TitleGenerationService';
 import { Config } from '../../config/schema';
 import {
   VoiceNoteProcessingStartedEvent,
@@ -24,6 +25,7 @@ export class ProcessingOrchestrator {
   constructor(
     private transcriptionService: TranscriptionService,
     private summarizationService: SummarizationService,
+    private titleGenerationService: TitleGenerationService,
     private voiceNoteRepository: VoiceNoteRepository,
     private eventStore: EventStore,
     private config: Config
@@ -65,6 +67,29 @@ export class ProcessingOrchestrator {
         }
       );
       await this.eventStore.append(transcribedEvent);
+
+      // Generate AI title and metadata after transcription
+      try {
+        const titleResult = await this.titleGenerationService.generateMetadata(
+          transcriptionResult.transcription!.getText(),
+          voiceNote.getLanguage().toString()
+        );
+        
+        voiceNote.setAIGeneratedTitle(titleResult.title);
+        voiceNote.setBriefDescription(titleResult.description);
+        if (titleResult.date) {
+          voiceNote.setDerivedDate(titleResult.date);
+        }
+        
+        console.log('[ProcessingOrchestrator] Generated AI metadata:', {
+          title: titleResult.title,
+          description: titleResult.description,
+          date: titleResult.date
+        });
+      } catch (error) {
+        // Title generation is non-critical, log error but continue
+        console.error('[ProcessingOrchestrator] Title generation failed:', error);
+      }
 
       // Skip summarization on initial upload - will be done via PostTranscriptionDialog
       // Comment out the auto-summarization to enable two-step flow
@@ -156,6 +181,32 @@ export class ProcessingOrchestrator {
       }
 
       voiceNote.addSummary(summaryResult.summary!);
+      
+      // Regenerate AI title when reprocessing with new summary
+      try {
+        const transcription = voiceNote.getTranscription();
+        if (transcription) {
+          const titleResult = await this.titleGenerationService.generateMetadata(
+            transcription.getText(),
+            voiceNote.getLanguage().toString()
+          );
+          
+          voiceNote.setAIGeneratedTitle(titleResult.title);
+          voiceNote.setBriefDescription(titleResult.description);
+          if (titleResult.date) {
+            voiceNote.setDerivedDate(titleResult.date);
+          }
+          
+          console.log('[ProcessingOrchestrator] Regenerated AI metadata during reprocess:', {
+            title: titleResult.title,
+            description: titleResult.description,
+            date: titleResult.date
+          });
+        }
+      } catch (error) {
+        // Title generation is non-critical, log error but continue
+        console.error('[ProcessingOrchestrator] Title regeneration failed:', error);
+      }
       
       // Only mark as completed if this was initial generation
       if (isInitialGeneration) {
