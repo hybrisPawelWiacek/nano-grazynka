@@ -22,6 +22,16 @@ export class DatabaseClient {
           }
         });
         
+        // Configure SQLite for better WAL handling
+        DatabaseClient.instance.$queryRawUnsafe('PRAGMA journal_mode = WAL;')
+          .then((result) => console.log('SQLite WAL mode enabled:', result))
+          .catch((error) => console.warn('Failed to set WAL mode:', error));
+        
+        // Ensure proper synchronization
+        DatabaseClient.instance.$queryRawUnsafe('PRAGMA synchronous = NORMAL;')
+          .then((result) => console.log('SQLite synchronous mode set:', result))
+          .catch((error) => console.warn('Failed to set synchronous mode:', error));
+        
         console.log('PrismaClient initialized successfully');
       } catch (error) {
         console.error('Failed to initialize PrismaClient:', error);

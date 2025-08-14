@@ -34,7 +34,7 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - ./data:/data
+      - ./data:/data:delegated
       - ./config.yaml:/app/config.yaml:ro
     env_file:
       - .env

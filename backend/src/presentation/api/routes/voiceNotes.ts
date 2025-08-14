@@ -411,9 +411,10 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         tags: query.tags ? query.tags.split(',') : undefined,
         startDate: query.fromDate ? new Date(query.fromDate) : undefined,
         endDate: query.toDate ? new Date(query.toDate) : undefined,
-        projects: query.projects ? query.projects.split(',') : undefined
+        projects: query.projects ? query.projects.split(',') : undefined,
+        sessionId: !user && sessionId ? sessionId : undefined
       },
-      userId: user?.id || sessionId || 'anonymous',
+      userId: user?.id || 'anonymous',
       sortBy: query.sortBy || 'createdAt',
       sortOrder: query.sortOrder || 'desc'
     });
