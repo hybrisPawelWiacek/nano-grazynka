@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import VoiceNoteCard from '@/components/VoiceNoteCard';
-import SearchBar from '@/components/SearchBar';
 import { voiceNotesApi } from '@/lib/api/voiceNotes';
 import { VoiceNote, ProcessingStatus, Language } from '@/lib/types';
 import { getOrCreateSessionId } from '@/lib/anonymousSession';
@@ -14,8 +12,6 @@ interface SearchFilters {
   query: string;
   status?: ProcessingStatus;
   language?: Language;
-  startDate?: string;
-  endDate?: string;
 }
 
 export default function LibraryPage() {
@@ -26,15 +22,10 @@ export default function LibraryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [filters, setFilters] = useState<SearchFilters>({
-    query: searchParams.get('q') || '',
-    status: (searchParams.get('status') as ProcessingStatus) || undefined,
-    language: (searchParams.get('language') as Language) || undefined,
-    startDate: searchParams.get('from') || undefined,
-    endDate: searchParams.get('to') || undefined,
-  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ProcessingStatus | ''>('');
 
-  const itemsPerPage = 12;
+  const itemsPerPage = 10;
 
   const fetchVoiceNotes = useCallback(async () => {
     setLoading(true);
@@ -44,9 +35,8 @@ export default function LibraryPage() {
       const response = await voiceNotesApi.list({
         page: currentPage,
         limit: itemsPerPage,
-        search: filters.query,
-        status: filters.status,
-        language: filters.language,
+        search: searchQuery,
+        status: statusFilter || undefined,
       });
       
       setVoiceNotes(response.items || []);
@@ -57,23 +47,21 @@ export default function LibraryPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, filters]);
+  }, [currentPage, searchQuery, statusFilter]);
 
   useEffect(() => {
     fetchVoiceNotes();
   }, [fetchVoiceNotes]);
 
-  const handleSearch = (query: string) => {
-    setFilters(prev => ({ ...prev, query }));
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
     setCurrentPage(1);
-  };
-
-  const handleFilter = (filterUpdate: Partial<SearchFilters>) => {
-    setFilters(prev => ({ ...prev, ...filterUpdate }));
-    setCurrentPage(1);
+    fetchVoiceNotes();
   };
 
   const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this note?')) return;
+    
     try {
       await voiceNotesApi.delete(id);
       await fetchVoiceNotes();
@@ -82,163 +70,194 @@ export default function LibraryPage() {
     }
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   const renderPagination = () => {
     if (totalPages <= 1) return null;
 
-    const pages = [];
-    const maxVisible = 5;
-    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let end = Math.min(totalPages, start + maxVisible - 1);
-
-    if (end - start < maxVisible - 1) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    if (start > 1) {
-      pages.push(
-        <button
-          key={1}
-          onClick={() => handlePageChange(1)}
-          className={styles.pageButton}
-        >
-          1
-        </button>
-      );
-      if (start > 2) {
-        pages.push(<span key="dots1" className={styles.pageDots}>...</span>);
-      }
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(
-        <button
-          key={i}
-          onClick={() => handlePageChange(i)}
-          className={`${styles.pageButton} ${i === currentPage ? styles.pageButtonActive : ''}`}
-          disabled={i === currentPage}
-        >
-          {i}
-        </button>
-      );
-    }
-
-    if (end < totalPages) {
-      if (end < totalPages - 1) {
-        pages.push(<span key="dots2" className={styles.pageDots}>...</span>);
-      }
-      pages.push(
-        <button
-          key={totalPages}
-          onClick={() => handlePageChange(totalPages)}
-          className={styles.pageButton}
-        >
-          {totalPages}
-        </button>
-      );
-    }
-
     return (
       <div className={styles.pagination}>
         <button
-          onClick={() => handlePageChange(currentPage - 1)}
+          onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
           disabled={currentPage === 1}
           className={styles.pageButton}
         >
-          Previous
+          ← Previous
         </button>
-        <div className={styles.pageNumbers}>{pages}</div>
+        <span className={styles.pageInfo}>
+          Page {currentPage} of {totalPages}
+        </span>
         <button
-          onClick={() => handlePageChange(currentPage + 1)}
+          onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
           disabled={currentPage === totalPages}
           className={styles.pageButton}
         >
-          Next
+          Next →
         </button>
       </div>
     );
   };
 
   return (
-    <div className={styles.container}>
-      <nav className={styles.nav}>
-        <div className={styles.navContent}>
-          <h1 className={styles.logo}>nano-Grazynka</h1>
-          <div className={styles.navLinks}>
+    <div className={styles.page}>
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <Link href="/" className={styles.logo}>
+            nano-Grazynka
+          </Link>
+          <nav className={styles.nav}>
             <Link href="/" className={styles.navLink}>
               Upload
             </Link>
-            <Link href="/library" className={`${styles.navLink} ${styles.navLinkActive}`}>
-              Library
+            <Link href="/dashboard" className={styles.navLink}>
+              Dashboard
             </Link>
-          </div>
+          </nav>
         </div>
-      </nav>
+      </header>
 
+      {/* Main Content */}
       <main className={styles.main}>
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <h2 className={styles.title}>Your Voice Notes</h2>
+        <div className={styles.container}>
+          {/* Page Title */}
+          <div className={styles.titleSection}>
+            <h1 className={styles.title}>Library</h1>
             <p className={styles.subtitle}>
-              {totalItems} {totalItems === 1 ? 'note' : 'notes'} in your library
+              {totalItems} {totalItems === 1 ? 'note' : 'notes'} in your collection
             </p>
           </div>
-        </div>
 
-        <div className={styles.searchSection}>
-          <SearchBar
-            onSearch={handleSearch}
-            onFilterChange={handleFilter}
-          />
-        </div>
+          {/* Search and Filters */}
+          <div className={styles.searchSection}>
+            <form onSubmit={handleSearch} className={styles.searchForm}>
+              <input
+                type="text"
+                placeholder="Search notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
+              />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as ProcessingStatus | '')}
+                className={styles.filterSelect}
+              >
+                <option value="">All Status</option>
+                <option value="completed">Completed</option>
+                <option value="processing">Processing</option>
+                <option value="failed">Failed</option>
+              </select>
+              <button type="submit" className={styles.searchButton}>
+                Search
+              </button>
+            </form>
+          </div>
 
-        {error && (
-          <div className={styles.error}>
-            <span>{error}</span>
-            <button onClick={fetchVoiceNotes} className={styles.retryButton}>
-              Retry
-            </button>
-          </div>
-        )}
-
-        {loading ? (
-          <div className={styles.loading}>
-            <div className={styles.spinner}></div>
-            <p>Loading voice notes...</p>
-          </div>
-        ) : (!voiceNotes || voiceNotes.length === 0) ? (
-          <div className={styles.empty}>
-            <div className={styles.emptyIcon}>📭</div>
-            <h3>No voice notes found</h3>
-            <p>
-              {filters.query || filters.status || filters.language
-                ? 'Try adjusting your search filters'
-                : 'Upload your first voice note to get started'}
-            </p>
-            {!filters.query && !filters.status && !filters.language && (
-              <Link href="/" className={styles.uploadButton}>
-                Upload Voice Note
-              </Link>
-            )}
-          </div>
-        ) : (
-          <>
-            <div className={styles.grid}>
-              {voiceNotes.map(note => (
-                <VoiceNoteCard
-                  key={note.id}
-                  note={note}
-                  onDelete={handleDelete}
-                />
-              ))}
+          {/* Error State */}
+          {error && (
+            <div className={styles.errorMessage}>
+              <p>{error}</p>
+              <button onClick={fetchVoiceNotes} className={styles.retryButton}>
+                Try Again
+              </button>
             </div>
-            {renderPagination()}
-          </>
-        )}
+          )}
+
+          {/* Loading State */}
+          {loading ? (
+            <div className={styles.loadingState}>
+              <div className={styles.spinner}></div>
+            </div>
+          ) : voiceNotes.length === 0 ? (
+            /* Empty State */
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" 
+                        stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h3 className={styles.emptyTitle}>No notes found</h3>
+              <p className={styles.emptyText}>
+                {searchQuery || statusFilter
+                  ? 'Try adjusting your search filters'
+                  : 'Upload your first voice note to get started'}
+              </p>
+              {!searchQuery && !statusFilter && (
+                <Link href="/" className={styles.uploadButton}>
+                  Upload Voice Note
+                </Link>
+              )}
+            </div>
+          ) : (
+            /* Notes List */
+            <>
+              <div className={styles.notesList}>
+                {voiceNotes.map(note => (
+                  <div key={note.id} className={styles.noteCard}>
+                    <Link href={`/note/${note.id}`} className={styles.noteLink}>
+                      <div className={styles.noteContent}>
+                        <div className={styles.noteHeader}>
+                          <h3 className={styles.noteTitle}>
+                            {note.title || 'Untitled Note'}
+                          </h3>
+                          <span className={styles.noteDate}>
+                            {formatDate(note.createdAt)}
+                          </span>
+                        </div>
+                        {note.summary && (
+                          <p className={styles.noteSummary}>
+                            {note.summary.length > 150 
+                              ? `${note.summary.substring(0, 150)}...` 
+                              : note.summary}
+                          </p>
+                        )}
+                        <div className={styles.noteMeta}>
+                          <span className={`${styles.noteStatus} ${styles[`status${note.status.charAt(0).toUpperCase() + note.status.slice(1)}`]}`}>
+                            {note.status}
+                          </span>
+                          {note.language && (
+                            <span className={styles.noteLanguage}>
+                              {note.language}
+                            </span>
+                          )}
+                          {note.duration && (
+                            <span className={styles.noteDuration}>
+                              {Math.round(note.duration / 60)} min
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(note.id)}
+                      className={styles.deleteButton}
+                      title="Delete note"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6" 
+                              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {renderPagination()}
+            </>
+          )}
+        </div>
       </main>
     </div>
   );

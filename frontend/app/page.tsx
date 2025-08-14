@@ -5,9 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConversionModal from '@/components/ConversionModal';
-import PostTranscriptionDialog from '@/components/PostTranscriptionDialog';
 import AdvancedOptions from '@/components/AdvancedOptions';
-import { TranscriptionModel } from '@/components/ModelSelection';
 import { getOrCreateSessionId, getUsageCount, incrementUsageCount, getRemainingUsage } from '@/lib/anonymousSession';
 import styles from './page.module.css';
 
@@ -131,22 +129,19 @@ export default function HomePage() {
   
   const [file, setFile] = useState<File | null>(null);
   const [whisperPrompt, setWhisperPrompt] = useState('');
-  const [language, setLanguage] = useState<'AUTO' | 'EN' | 'PL'>('AUTO');
   const [showConversionModal, setShowConversionModal] = useState(false);
-  const [showPostTranscriptionDialog, setShowPostTranscriptionDialog] = useState(false);
-  const [transcriptionResult, setTranscriptionResult] = useState<{ id: string; text: string } | null>(null);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   
   // Multi-model transcription state with localStorage persistence
-  const [selectedModel, setSelectedModel] = useState<TranscriptionModel>(() => {
+  const [selectedModel, setSelectedModel] = useState<string>(() => {
     // Initialize from localStorage if available
     if (typeof window !== 'undefined') {
       const savedModel = localStorage.getItem('selectedTranscriptionModel');
       if (savedModel === 'gpt-4o-transcribe' || savedModel === 'google/gemini-2.0-flash-001') {
-        return savedModel as TranscriptionModel;
+        return savedModel;
       }
     }
-    return 'gpt-4o-transcribe';
+    return 'google/gemini-2.0-flash-001'; // Gemini as default
   });
   const [geminiPrompt, setGeminiPrompt] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>();
@@ -231,10 +226,7 @@ export default function HomePage() {
 
     const formData = new FormData();
     formData.append('file', file);
-    // Only send language if not AUTO (AUTO means automatic detection)
-    if (language !== 'AUTO') {
-      formData.append('language', language);
-    }
+    // Always use auto-detect for language
     
     // Add multi-model transcription fields
     formData.append('transcriptionModel', selectedModel);
@@ -316,11 +308,7 @@ export default function HomePage() {
           method: 'POST',
           credentials: 'include',
           headers: processHeaders,
-          body: JSON.stringify(
-            language === 'AUTO' 
-              ? {} 
-              : { language }
-          )
+          body: JSON.stringify({}) // Always auto-detect language
         });
         
         if (!response.ok && response.status >= 500) {
@@ -370,44 +358,27 @@ export default function HomePage() {
 
         const data = await statusResponse.json();
         
-        // Check if transcription is complete but summary not yet generated
-        if (data.transcription && !data.summary) {
-          // Transcription complete - show PostTranscriptionDialog
-          setTranscriptionResult({ id: voiceNoteId, text: data.transcription.text });
-          setShowPostTranscriptionDialog(true);
-          setStatus({ stage: 'idle', progress: 0, message: '' });
-          
-          // Clear form
-          setFile(null);
-          setWhisperPrompt('');
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-          
-          // Don't increment usage count here - wait for full completion
-          // to avoid double counting
-          return; // Stop polling
-        } else if (data.status === 'completed' && data.transcription && data.summary) {
-          // Both transcription and summary complete
+        // Check if processing is complete
+        if (data.status === 'completed' && data.transcription) {
+          // Processing complete - redirect to note page
           setStatus({
             stage: 'complete',
             progress: 100,
-            message: 'Processing complete!',
-            result: {
-              id: voiceNoteId,
-              transcription: data.transcription.text,
-              summary: data.summary.text
-            }
+            message: 'Processing complete! Redirecting...'
           });
           
           // Clear form
           setFile(null);
           setWhisperPrompt('');
+          setGeminiPrompt('');
           if (fileInputRef.current) {
             fileInputRef.current.value = '';
           }
           
-          // Don't increment usage count here - already incremented after upload
+          // Redirect to note details page
+          setTimeout(() => {
+            router.push(`/note/${voiceNoteId}`);
+          }, 500);
         } else if (data.status === 'failed') {
           throw new Error('Processing failed');
         } else if (attempts < maxAttempts) {
@@ -439,10 +410,7 @@ export default function HomePage() {
   const resetUpload = () => {
     setFile(null);
     setWhisperPrompt('');
-    setLanguage('AUTO');
     setStatus({ stage: 'idle', progress: 0, message: '' });
-    setTranscriptionResult(null);
-    setShowPostTranscriptionDialog(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -475,6 +443,9 @@ export default function HomePage() {
                 <Link href="/dashboard" className={styles.navLink}>
                   Dashboard
                 </Link>
+                <Link href="/library" className={styles.navLink}>
+                  Library
+                </Link>
                 <Link href="/settings" className={styles.navLink}>
                   Settings
                 </Link>
@@ -490,6 +461,12 @@ export default function HomePage() {
               </>
             ) : (
               <>
+                <Link href="/dashboard" className={styles.navLink}>
+                  Dashboard
+                </Link>
+                <Link href="/library" className={styles.navLink}>
+                  Library
+                </Link>
                 <Link href="/login" className={styles.navLink}>
                   Login
                 </Link>
@@ -612,36 +589,32 @@ export default function HomePage() {
                 </label>
               </div>
 
-              {/* Language Selection */}
-              <div className={styles.formGroup}>
-                <label className={styles.label}>
-                  Language
-                </label>
-                <div className={styles.languageButtons}>
-                  {(['AUTO', 'EN', 'PL'] as const).map((lang) => (
-                    <button
-                      key={lang}
-                      onClick={() => setLanguage(lang)}
-                      className={`${styles.languageButton} ${language === lang ? styles.languageButtonActive : ''}`}
-                    >
-                      {lang === 'AUTO' ? 'Auto-detect' : lang === 'EN' ? 'English' : 'Polish'}
-                    </button>
-                  ))}
-                </div>
+              {/* Minimal Model Toggle */}
+              <div className={styles.modelToggle}>
+                <button 
+                  type="button"
+                  className={selectedModel === 'google/gemini-2.0-flash-001' ? styles.active : ''}
+                  onClick={() => setSelectedModel('google/gemini-2.0-flash-001')}
+                >
+                  Smart
+                </button>
+                <button 
+                  type="button"
+                  className={selectedModel === 'gpt-4o-transcribe' ? styles.active : ''}
+                  onClick={() => setSelectedModel('gpt-4o-transcribe')}
+                >
+                  Fast
+                </button>
               </div>
 
-              {/* Advanced Options with Multi-Model Transcription */}
+              {/* Simplified Advanced Options - Only shows when file is selected */}
               <AdvancedOptions
                 whisperPrompt={whisperPrompt}
                 onWhisperPromptChange={setWhisperPrompt}
-                isExpanded={showAdvancedOptions}
-                onToggle={() => setShowAdvancedOptions(!showAdvancedOptions)}
                 selectedModel={selectedModel}
-                onModelChange={setSelectedModel}
                 geminiPrompt={geminiPrompt}
                 onGeminiPromptChange={setGeminiPrompt}
-                selectedTemplate={selectedTemplate}
-                onTemplateSelect={setSelectedTemplate}
+                showOptions={!!file}
               />
 
               {/* Submit Button */}
@@ -657,24 +630,6 @@ export default function HomePage() {
                   : 'Upload and Process'}
               </button>
 
-              {/* Anonymous User Benefits */}
-              {isAnonymous && !user && (
-                <div className={styles.benefitsCard}>
-                  <h4 className={styles.benefitsTitle}>
-                    Try it free - no signup required!
-                  </h4>
-                  <ul className={styles.benefitsList}>
-                    <li>✓ {5 - anonymousUsageCount} free transcriptions remaining</li>
-                    <li>✓ Full quality AI transcription & summary</li>
-                    <li>✓ No credit card required</li>
-                  </ul>
-                  {anonymousUsageCount > 0 && (
-                    <p className={styles.benefitsNote}>
-                      Love it? <Link href="/register" className={styles.benefitsLink}>Create an account</Link> to save your transcriptions and get more monthly credits!
-                    </p>
-                  )}
-                </div>
-              )}
 
               {/* User Status */}
               {user && (
@@ -738,27 +693,6 @@ export default function HomePage() {
         usageCount={5}
       />
       
-      {/* Post-Transcription Dialog */}
-      {transcriptionResult && (
-        <PostTranscriptionDialog
-          isOpen={showPostTranscriptionDialog}
-          onClose={() => {
-            setShowPostTranscriptionDialog(false);
-            setTranscriptionResult(null);
-            resetUpload();
-          }}
-          transcriptionText={transcriptionResult.text}
-          noteId={transcriptionResult.id}
-          onSummaryGenerated={(summaryPrompt) => {
-            // Summary will be generated on the backend
-            // Just close the dialog and let the user view results
-            setShowPostTranscriptionDialog(false);
-            setTranscriptionResult(null);
-            // Navigate to the note details page
-            router.push(`/note/${transcriptionResult.id}`);
-          }}
-        />
-      )}
     </div>
   );
 }

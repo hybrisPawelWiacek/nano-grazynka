@@ -444,6 +444,38 @@
   color: var(--color-text-tertiary);
 }
 
+/* Minimal Model Toggle */
+.modelToggle {
+  display: inline-flex;
+  background: #f5f5f7;
+  border-radius: 8px;
+  padding: 2px;
+  margin: 1rem 0;
+}
+
+.modelToggle button {
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  color: #86868b;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.2s;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+}
+
+.modelToggle button:hover {
+  color: #1d1d1f;
+}
+
+.modelToggle button.active {
+  background: white;
+  color: #1d1d1f;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
 /* Submit Button */
 .submitButton {
   width: 100%;

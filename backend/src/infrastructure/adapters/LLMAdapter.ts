@@ -130,15 +130,24 @@ export class LLMAdapter implements SummarizationService {
     const prompts = ConfigLoader.get('summarization.prompts');
     const basePrompt = prompts.summary || 'Summarize the following transcript concisely, capturing key points and main ideas.';
     
-    // Add JSON format instruction for Gemini compatibility
+    // Add JSON format instruction with Markdown formatting
     return `${basePrompt}
+    
+    Format your response using Markdown for better readability:
+    - Use **bold** for emphasis on important points
+    - Use bullet points (- or •) for lists
+    - Use ### for section headers if needed
+    - Format action items with checkboxes: - [ ] Action item
+    - Add appropriate line breaks between sections
     
     IMPORTANT: You must respond with valid JSON in the following format:
     {
-      "summary": "A concise summary of the transcript",
-      "key_points": ["Key point 1", "Key point 2", "Key point 3"],
-      "action_items": ["Action item 1", "Action item 2"]
-    }`;
+      "summary": "A well-formatted markdown summary with **emphasis** where appropriate",
+      "key_points": ["• **Key point 1** with explanation", "• **Key point 2** with details", "• **Key point 3** with context"],
+      "action_items": ["- [ ] Action item 1 with owner if mentioned", "- [ ] Action item 2 with deadline if specified"]
+    }
+    
+    Ensure the content is professional and well-structured.`;
   }
 
   private parseResult(content: any): SummarizationResult {

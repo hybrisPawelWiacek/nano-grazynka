@@ -93,6 +93,7 @@ nano-grazynka/
 - [API Contract](./docs/api/api-contract.md) - API endpoints
 - [Development Guide](./docs/development/DEVELOPMENT.md) - Local setup
 - [AI Models Setup](./docs/development/AI_MODELS_SETUP.md) - AI configuration
+- [UI/UX Design](./docs/design/UI_UX_DESIGN.md) - Design system & guidelines
 
 ## 🚀 Recent Updates (August 13, 2025)
 

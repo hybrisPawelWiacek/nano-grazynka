@@ -32,6 +32,9 @@ System design and technical architecture:
 - **DEVELOPMENT.md** - Development setup and debugging
 - **AI_MODELS_SETUP.md** - AI models configuration (OpenRouter/OpenAI)
 
+#### Design Documentation (`docs/design/`)
+- **UI_UX_DESIGN.md** - Complete UI/UX design system, principles, and component library
+
 ### AI Process Documentation (`imp_docs/`)
 
 #### Requirements Documents (`imp_docs/requirements/`)

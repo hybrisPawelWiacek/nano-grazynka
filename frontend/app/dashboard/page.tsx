@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
@@ -25,44 +24,41 @@ interface VoiceNote {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
+    // Get or create session ID
+    const storedSessionId = localStorage.getItem('sessionId');
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+    } else {
+      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('sessionId', newSessionId);
+      setSessionId(newSessionId);
     }
-  }, [user, router]);
+  }, []);
 
   useEffect(() => {
-    if (user) {
+    if (sessionId) {
       fetchDashboardStats();
     }
-  }, [user]);
-
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'processing':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  }, [sessionId]);
 
   const fetchDashboardStats = async () => {
+    if (!sessionId) return;
+    
     try {
       setLoading(true);
       
       // Fetch user's voice notes
       const voiceNotesRes = await fetch('http://localhost:3101/api/voice-notes?limit=5', {
-        credentials: 'include',
+        headers: {
+          'x-session-id': sessionId
+        }
       });
       
       if (!voiceNotesRes.ok) {
@@ -71,14 +67,14 @@ export default function DashboardPage() {
       
       const voiceNotesData = await voiceNotesRes.json();
       
-      // Calculate stats (mock data for premium features)
+      // Calculate stats
       const dashboardStats: DashboardStats = {
-        creditsUsed: 0,
+        creditsUsed: voiceNotesData.data?.length || 0,
         creditLimit: 5,
         tier: 'free',
-        totalVoiceNotes: voiceNotesData.pagination?.total || 0,
+        totalVoiceNotes: voiceNotesData.data?.length || 0,
         recentVoiceNotes: voiceNotesData.data || [],
-        monthlyReset: new Date().toLocaleDateString()
+        monthlyReset: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })
       };
       
       setStats(dashboardStats);
@@ -94,37 +90,23 @@ export default function DashboardPage() {
     return Math.round((stats.creditsUsed / stats.creditLimit) * 100);
   };
 
-  const getTierClass = (tier: string) => {
-    switch (tier) {
-      case 'pro':
-        return styles.tierPro;
-      case 'business':
-        return styles.tierBusiness;
-      default:
-        return styles.tierFree;
-    }
-  };
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return styles.statusCompleted;
-      case 'processing':
-        return styles.statusProcessing;
-      case 'failed':
-        return styles.statusFailed;
-      default:
-        return styles.statusPending;
-    }
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
-        <div className={styles.loadingContent}>
-          <div className={styles.spinner}></div>
-          <p className={styles.loadingText}>Loading dashboard...</p>
-        </div>
+        <div className={styles.spinner}></div>
       </div>
     );
   }
@@ -133,223 +115,153 @@ export default function DashboardPage() {
     return (
       <div className={styles.errorContainer}>
         <div className={styles.errorContent}>
-          <p className={styles.errorText}>Error loading dashboard: {error}</p>
+          <p className={styles.errorText}>Unable to load dashboard</p>
           <button
             onClick={fetchDashboardStats}
             className={styles.retryButton}
           >
-            Retry
+            Try Again
           </button>
         </div>
       </div>
     );
   }
 
-  if (!user || !stats) {
+  if (!stats) {
     return null;
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.wrapper}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <div>
-              <h1 className={styles.headerTitle}>Dashboard</h1>
-              <p className={styles.headerSubtitle}>
-                Welcome back, {user.email}
-              </p>
-            </div>
-            <div className={styles.headerActions}>
-              <Link
-                href="/settings"
-                className={styles.settingsLink}
-              >
-                Settings
-              </Link>
-              <Link
-                href="/"
-                className={styles.uploadLink}
-              >
-                Upload Voice Note
-              </Link>
-            </div>
-          </div>
+    <div className={styles.page}>
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <Link href="/" className={styles.logo}>
+            nano-Grazynka
+          </Link>
+          <nav className={styles.nav}>
+            <Link href="/" className={styles.navLink}>
+              Upload
+            </Link>
+            <Link href="/library" className={styles.navLink}>
+              Library
+            </Link>
+          </nav>
         </div>
+      </header>
 
-        {/* Stats Grid */}
-        <div className={styles.statsGrid}>
-          {/* Usage Card */}
-          <div className={styles.statCard}>
-            <h3 className={styles.statLabel}>Monthly Usage</h3>
-            <div className={styles.statContent}>
-              <div className={styles.statValue}>
-                <span className={styles.statNumber}>
-                  {stats.creditsUsed}
-                </span>
-                <span className={styles.statUnit}>
-                  / {stats.creditLimit} transcriptions
-                </span>
-              </div>
-              <div className={styles.progressContainer}>
-                <div className={styles.progressBar}>
-                  <div
-                    className={styles.progressFill}
-                    style={{ width: `${getUsagePercentage()}%` }}
-                  ></div>
-                </div>
-                <p className={styles.resetDate}>
-                  Resets on {stats.monthlyReset}
-                </p>
-              </div>
-            </div>
+      {/* Main Content */}
+      <main className={styles.main}>
+        <div className={styles.container}>
+          {/* Welcome Section */}
+          <div className={styles.welcomeSection}>
+            <h1 className={styles.title}>Dashboard</h1>
+            <p className={styles.subtitle}>Track your transcriptions and manage your account</p>
           </div>
 
-          {/* Tier Card */}
-          <div className={styles.statCard}>
-            <h3 className={styles.statLabel}>Current Tier</h3>
-            <div className={styles.statContent}>
-              <span className={`${styles.tierValue} ${getTierClass(stats.tier)}`}>
-                {stats.tier}
-              </span>
-              {stats.tier === 'free' && (
-                <div>
-                  <Link
-                    href="/pricing"
-                    className={styles.upgradeLink}
-                  >
-                    Upgrade for more features →
-                  </Link>
-                </div>
-              )}
+          {/* Stats Cards */}
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <div className={styles.statInfo}>
+                <p className={styles.statLabel}>This Month</p>
+                <p className={styles.statValue}>{stats.creditsUsed}</p>
+                <p className={styles.statDetail}>of {stats.creditLimit} transcriptions</p>
+              </div>
             </div>
-          </div>
 
-          {/* Total Notes Card */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-sm font-medium text-gray-500">Total Voice Notes</h3>
-            <div className="mt-2">
-              <span className="text-2xl font-semibold text-gray-900">
-                {stats.totalVoiceNotes}
-              </span>
-              <div className="mt-3">
-                <Link
-                  href="/voice-notes"
-                  className="text-sm text-indigo-600 hover:text-indigo-500"
-                >
-                  View all notes →
-                </Link>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M9 11l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className={styles.statInfo}>
+                <p className={styles.statLabel}>Total Notes</p>
+                <p className={styles.statValue}>{stats.totalVoiceNotes}</p>
+                <p className={styles.statDetail}>All time</p>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Recent Voice Notes */}
-        <div className="bg-white shadow rounded-lg">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Recent Voice Notes</h2>
+          {/* Usage Progress */}
+          <div className={styles.usageCard}>
+            <div className={styles.usageHeader}>
+              <h3 className={styles.usageTitle}>Monthly Usage</h3>
+              <span className={styles.usagePercentage}>{getUsagePercentage()}%</span>
+            </div>
+            <div className={styles.progressBar}>
+              <div 
+                className={styles.progressFill}
+                style={{ width: `${getUsagePercentage()}%` }}
+              />
+            </div>
+            <p className={styles.resetText}>Resets {stats.monthlyReset}</p>
           </div>
-          <div className="p-6">
+
+          {/* Recent Notes */}
+          <div className={styles.recentSection}>
+            <h2 className={styles.sectionTitle}>Recent Notes</h2>
+            
             {stats.recentVoiceNotes.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">No voice notes yet</p>
-                <Link
-                  href="/"
-                  className="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700"
-                >
-                  Upload Your First Note
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                    <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" 
+                          stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <p className={styles.emptyText}>No notes yet</p>
+                <p className={styles.emptySubtext}>Upload your first voice note to get started</p>
+                <Link href="/" className={styles.uploadButton}>
+                  Upload Voice Note
                 </Link>
               </div>
             ) : (
-              <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Title
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Language
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {stats.recentVoiceNotes.map((note) => (
-                      <tr key={note.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {note.title || 'Untitled'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(note.status)}`}>
-                            {note.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {note.language || 'Auto'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(note.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <Link
-                            href={`/note/${note.id}`}
-                            className="text-indigo-600 hover:text-indigo-900"
-                          >
-                            View
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className={styles.notesList}>
+                {stats.recentVoiceNotes.map((note) => (
+                  <Link 
+                    key={note.id} 
+                    href={`/note/${note.id}`}
+                    className={styles.noteCard}
+                  >
+                    <div className={styles.noteHeader}>
+                      <h3 className={styles.noteTitle}>
+                        {note.title || 'Untitled Note'}
+                      </h3>
+                      <span className={styles.noteDate}>
+                        {formatDate(note.createdAt)}
+                      </span>
+                    </div>
+                    <div className={styles.noteMeta}>
+                      <span className={`${styles.noteStatus} ${styles[`status${note.status.charAt(0).toUpperCase() + note.status.slice(1)}`]}`}>
+                        {note.status}
+                      </span>
+                      {note.language && (
+                        <span className={styles.noteLanguage}>
+                          {note.language}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+                
+                {stats.totalVoiceNotes > 5 && (
+                  <Link href="/library" className={styles.viewAllLink}>
+                    View all {stats.totalVoiceNotes} notes →
+                  </Link>
+                )}
               </div>
             )}
           </div>
         </div>
-
-        {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Link
-            href="/pricing"
-            className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow"
-          >
-            <h3 className="text-lg font-medium text-gray-900">Upgrade Plan</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Get more transcriptions and advanced features
-            </p>
-          </Link>
-          
-          <Link
-            href="/settings"
-            className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow"
-          >
-            <h3 className="text-lg font-medium text-gray-900">Account Settings</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Manage your profile and preferences
-            </p>
-          </Link>
-          
-          <Link
-            href="/help"
-            className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow"
-          >
-            <h3 className="text-lg font-medium text-gray-900">Get Help</h3>
-            <p className="mt-2 text-sm text-gray-500">
-              View documentation and contact support
-            </p>
-          </Link>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

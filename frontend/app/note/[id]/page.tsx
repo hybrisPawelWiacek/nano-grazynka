@@ -3,65 +3,167 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowLeft, MoreHorizontal, Sparkles, Download, Trash2, RefreshCw } from 'lucide-react';
 import { voiceNotesApi } from '@/lib/api/voiceNotes';
-import { VoiceNote } from '@/lib/types';
+import { VoiceNote, ProcessingStatus } from '@/lib/types';
+import { useAuth } from '@/contexts/AuthContext';
+import ContentSection from '@/components/ContentSection';
 import styles from './page.module.css';
+
+const SUMMARY_TEMPLATE = `Focus on:
+- Key decisions and conclusions
+- Action items with owners
+- Technical details discussed
+- Next steps and deadlines
+
+Additional requirements: [customize here]`;
 
 export default function VoiceNoteDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { anonymousSessionId } = useAuth();
   const id = params.id as string;
   
   const [voiceNote, setVoiceNote] = useState<VoiceNote | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [reprocessing, setReprocessing] = useState(false);
-  const [exporting, setExporting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'transcription' | 'summary'>('summary');
-  const [customPrompt, setCustomPrompt] = useState('');
-  const [showReprocessForm, setShowReprocessForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'summary' | 'transcription'>('transcription');
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showCustomizePrompt, setShowCustomizePrompt] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState(SUMMARY_TEMPLATE);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<string | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    fetchVoiceNote();
+    // Initial load
+    fetchVoiceNote(false);
+    
+    // Cleanup on unmount
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
   }, [id]);
 
-  const fetchVoiceNote = async () => {
-    setLoading(true);
+  useEffect(() => {
+    // Start or stop polling based on voice note status
+    if (voiceNote?.status === 'processing' || voiceNote?.status === 'pending') {
+      // Start polling if not already polling
+      if (!pollingInterval) {
+        const interval = setInterval(() => {
+          fetchVoiceNote(true);
+        }, 2000);
+        setPollingInterval(interval);
+      }
+    } else {
+      // Stop polling if status is complete
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+      }
+    }
+  }, [voiceNote?.status]);
+
+  const fetchVoiceNote = async (isPolling: boolean = false) => {
+    // Only show loading on initial load, not during polling
+    if (!isPolling) {
+      setLoading(true);
+    }
     setError(null);
     
     try {
-      const data = await voiceNotesApi.getById(id);
-      setVoiceNote(data);
+      const headers: Record<string, string> = {};
+      if (anonymousSessionId) {
+        headers['x-session-id'] = anonymousSessionId;
+      }
+      
+      const response = await fetch(`http://localhost:3101/api/voice-notes/${id}?includeTranscription=true&includeSummary=true`, {
+        credentials: 'include',
+        headers
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load voice note');
+      }
+      
+      const data = await response.json();
+      
+      // Only update state if data has actually changed
+      setVoiceNote(prevNote => {
+        // Check if key fields have changed
+        if (!prevNote || 
+            prevNote.status !== data.status ||
+            prevNote.transcription?.text !== data.transcription?.text ||
+            prevNote.summary?.summary !== data.summary?.summary) {
+          return data;
+        }
+        return prevNote;
+      });
+      
+      // Update processing status
+      if (data.status === 'processing') {
+        if (!data.transcription) {
+          setProcessingStatus('Transcribing audio...');
+        } else if (!data.summary) {
+          setProcessingStatus('Generating summary...');
+        }
+      } else {
+        setProcessingStatus(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load voice note');
     } finally {
-      setLoading(false);
+      if (!isPolling) {
+        setLoading(false);
+      }
     }
   };
 
-  const handleReprocess = async () => {
+  const handleGenerateSummary = async () => {
     if (!voiceNote) return;
     
-    setReprocessing(true);
+    setIsGeneratingSummary(true);
     setError(null);
     
     try {
-      await voiceNotesApi.reprocess(voiceNote.id, customPrompt ? { userPrompt: customPrompt } : undefined);
-      await fetchVoiceNote();
-      setShowReprocessForm(false);
-      setCustomPrompt('');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (anonymousSessionId) {
+        headers['x-session-id'] = anonymousSessionId;
+      }
+      
+      const response = await fetch(`http://localhost:3101/api/voice-notes/${voiceNote.id}/regenerate-summary`, {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({
+          summaryPrompt: customPrompt !== SUMMARY_TEMPLATE ? customPrompt : undefined
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate summary');
+      }
+      
+      // Hide the customize prompt and set processing status
+      setShowCustomizePrompt(false);
+      setProcessingStatus('Generating new summary...');
+      
+      // Update the voice note to trigger polling via the existing mechanism
+      setVoiceNote(prev => prev ? { ...prev, status: 'processing' as ProcessingStatus } : null);
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reprocess voice note');
+      setError(err instanceof Error ? err.message : 'Failed to generate summary');
     } finally {
-      setReprocessing(false);
+      setIsGeneratingSummary(false);
     }
   };
 
   const handleExport = async (format: 'markdown' | 'json') => {
     if (!voiceNote) return;
-    
-    setExporting(true);
-    setError(null);
     
     try {
       const blob = await voiceNotesApi.export(voiceNote.id, format);
@@ -74,9 +176,7 @@ export default function VoiceNoteDetailPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to export voice note');
-    } finally {
-      setExporting(false);
+      setError(err instanceof Error ? err.message : 'Failed to export');
     }
   };
 
@@ -85,26 +185,16 @@ export default function VoiceNoteDetailPage() {
     
     try {
       await voiceNotesApi.delete(voiceNote.id);
-      router.push('/library');
+      router.push('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete voice note');
+      setError(err instanceof Error ? err.message : 'Failed to delete');
     }
-  };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
   if (loading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>
+        <div className={styles.loadingState}>
           <div className={styles.spinner}></div>
           <p>Loading voice note...</p>
         </div>
@@ -115,12 +205,11 @@ export default function VoiceNoteDetailPage() {
   if (error && !voiceNote) {
     return (
       <div className={styles.container}>
-        <div className={styles.error}>
-          <h2>Error Loading Voice Note</h2>
+        <div className={styles.errorState}>
           <p>{error}</p>
-          <Link href="/library" className={styles.backButton}>
-            Back to Library
-          </Link>
+          <button onClick={() => router.push('/dashboard')} className={styles.backButton}>
+            Back to Dashboard
+          </button>
         </div>
       </div>
     );
@@ -129,11 +218,11 @@ export default function VoiceNoteDetailPage() {
   if (!voiceNote) {
     return (
       <div className={styles.container}>
-        <div className={styles.error}>
-          <h2>Voice Note Not Found</h2>
-          <Link href="/library" className={styles.backButton}>
-            Back to Library
-          </Link>
+        <div className={styles.errorState}>
+          <p>Voice note not found</p>
+          <button onClick={() => router.push('/dashboard')} className={styles.backButton}>
+            Back to Dashboard
+          </button>
         </div>
       </div>
     );
@@ -143,204 +232,296 @@ export default function VoiceNoteDetailPage() {
   const latestSummary = voiceNote.summary;
 
   return (
-    <div className={styles.container}>
-      <nav className={styles.nav}>
-        <div className={styles.navContent}>
-          <h1 className={styles.logo}>nano-Grazynka</h1>
-          <div className={styles.navLinks}>
-            <Link href="/" className={styles.navLink}>
-              Upload
+    <div className={styles.page}>
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <button onClick={() => router.back()} className={styles.backButton}>
+            <ArrowLeft size={20} />
+            <span>Back</span>
+          </button>
+          
+          <Link href="/" className={styles.logo}>
+            nano-Grazynka
+          </Link>
+          
+          <nav className={styles.nav}>
+            <Link href="/dashboard" className={styles.navLink}>
+              Dashboard
             </Link>
             <Link href="/library" className={styles.navLink}>
               Library
             </Link>
-          </div>
-        </div>
-      </nav>
-
-      <main className={styles.main}>
-        <div className={styles.breadcrumb}>
-          <Link href="/library">Library</Link>
-          <span>/</span>
-          <span>{voiceNote.title || 'Untitled Note'}</span>
-        </div>
-
-        {error && (
-          <div className={styles.errorBanner}>
-            <span>{error}</span>
-            <button onClick={() => setError(null)} className={styles.dismissButton}>
-              Dismiss
+          </nav>
+          
+          <div className={styles.headerActions}>
+            <button 
+              onClick={() => setShowMoreMenu(!showMoreMenu)} 
+              className={styles.moreButton}
+              aria-label="More actions"
+            >
+              <MoreHorizontal size={20} />
             </button>
-          </div>
-        )}
-
-        <div className={styles.header}>
-          <div className={styles.headerInfo}>
-            <h2 className={styles.title}>{voiceNote.title || 'Untitled Note'}</h2>
-            <div className={styles.metadata}>
-              <span className={`${styles.status} ${styles[`status${voiceNote.status}`]}`}>
-                {voiceNote.status}
-              </span>
-              <span className={styles.language}>
-                {voiceNote.language === 'en' ? '🇬🇧 English' : '🇵🇱 Polish'}
-              </span>
-              <span className={styles.date}>
-                {formatDate(voiceNote.createdAt)}
-              </span>
-              {voiceNote.duration && (
-                <span className={styles.duration}>
-                  {voiceNotesApi.formatDuration(voiceNote.duration)}
-                </span>
-              )}
-            </div>
-            {voiceNote.tags && voiceNote.tags.length > 0 && (
-              <div className={styles.tags}>
-                {voiceNote.tags.map(tag => (
-                  <span key={tag} className={styles.tag}>
-                    {tag}
-                  </span>
-                ))}
+            
+            {showMoreMenu && (
+              <div className={styles.dropdown}>
+                <button onClick={() => handleExport('markdown')} className={styles.dropdownItem}>
+                  <Download size={16} />
+                  Export as Markdown
+                </button>
+                <button onClick={() => handleExport('json')} className={styles.dropdownItem}>
+                  <Download size={16} />
+                  Export as JSON
+                </button>
+                <div className={styles.dropdownDivider} />
+                <button onClick={handleDelete} className={styles.dropdownItem}>
+                  <Trash2 size={16} />
+                  Delete Note
+                </button>
               </div>
             )}
           </div>
-          <div className={styles.headerActions}>
-            <button
-              onClick={() => handleExport('markdown')}
-              disabled={exporting || voiceNote.status !== 'completed'}
-              className={styles.actionButton}
-            >
-              Export MD
-            </button>
-            <button
-              onClick={() => handleExport('json')}
-              disabled={exporting || voiceNote.status !== 'completed'}
-              className={styles.actionButton}
-            >
-              Export JSON
-            </button>
-            <button
-              onClick={() => setShowReprocessForm(!showReprocessForm)}
-              disabled={voiceNote.status !== 'completed'}
-              className={styles.actionButton}
-            >
-              Reprocess
-            </button>
-            <button
-              onClick={handleDelete}
-              className={`${styles.actionButton} ${styles.deleteButton}`}
-            >
-              Delete
-            </button>
-          </div>
         </div>
+      </header>
 
-        {showReprocessForm && (
-          <div className={styles.reprocessForm}>
-            <h3>Reprocess with Custom Prompt</h3>
-            <textarea
-              value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Enter a custom prompt for reprocessing (optional)..."
-              className={styles.promptInput}
-              rows={4}
-            />
-            <div className={styles.reprocessActions}>
+      {/* Main Content */}
+      <main className={styles.main}>
+        <div className={styles.container}>
+          <div className={styles.content}>
+            {/* Note Header */}
+            <div className={styles.noteHeader}>
+              <h1 className={styles.title}>{voiceNote.title || 'Untitled Note'}</h1>
+              <div className={styles.metadata}>
+                {voiceNote.status && (
+                  <span className={`${styles.status} ${styles[`status${voiceNote.status.charAt(0).toUpperCase() + voiceNote.status.slice(1)}`]}`}>
+                    {voiceNote.status}
+                  </span>
+                )}
+                <span className={styles.metaItem}>
+                  {new Date(voiceNote.createdAt).toLocaleDateString()}
+                </span>
+                {voiceNote.duration && (
+                  <span className={styles.metaItem}>
+                    {Math.round(voiceNote.duration / 60)} min
+                  </span>
+                )}
+                {voiceNote.language && (
+                  <span className={styles.metaItem}>
+                    {voiceNote.language}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Processing Status */}
+            {processingStatus && (
+              <div className={styles.processingBar}>
+                <div className={styles.processingSpinner} />
+                <span>{processingStatus}</span>
+              </div>
+            )}
+
+            {/* Clean Tab Switcher */}
+            <div className={styles.tabs}>
               <button
-                onClick={handleReprocess}
-                disabled={reprocessing}
-                className={styles.primaryButton}
+                onClick={() => setActiveTab('summary')}
+                className={`${styles.tab} ${activeTab === 'summary' ? styles.active : ''}`}
               >
-                {reprocessing ? 'Reprocessing...' : 'Start Reprocessing'}
+                Summary
               </button>
               <button
-                onClick={() => {
-                  setShowReprocessForm(false);
-                  setCustomPrompt('');
-                }}
-                className={styles.secondaryButton}
+                onClick={() => setActiveTab('transcription')}
+                className={`${styles.tab} ${activeTab === 'transcription' ? styles.active : ''}`}
               >
-                Cancel
+                Transcription
               </button>
             </div>
-          </div>
-        )}
 
-        <div className={styles.content}>
-          <div className={styles.tabs}>
-            <button
-              onClick={() => setActiveTab('summary')}
-              className={`${styles.tab} ${activeTab === 'summary' ? styles.tabActive : ''}`}
-            >
-              Summary
-            </button>
-            <button
-              onClick={() => setActiveTab('transcription')}
-              className={`${styles.tab} ${activeTab === 'transcription' ? styles.tabActive : ''}`}
-            >
-              Transcription
-            </button>
-          </div>
-
-          <div className={styles.tabContent}>
-            {activeTab === 'summary' && latestSummary ? (
-              <div className={styles.summary}>
-                <section className={styles.section}>
-                  <h3>Summary</h3>
-                  <p>{latestSummary.summary}</p>
-                </section>
-
-                {latestSummary.keyPoints && latestSummary.keyPoints.length > 0 && (
-                  <section className={styles.section}>
-                    <h3>Key Points</h3>
-                    <ul className={styles.list}>
-                      {latestSummary.keyPoints.map((point, index) => (
-                        <li key={index}>{point}</li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-
-                {latestSummary.actionItems && latestSummary.actionItems.length > 0 && (
-                  <section className={styles.section}>
-                    <h3>Action Items</h3>
-                    <ul className={styles.list}>
-                      {latestSummary.actionItems.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-
-                <div className={styles.summaryMeta}>
-                  <span>Model: {latestSummary.model}</span>
-                  <span>Version: {latestSummary.version}</span>
-                  <span>Created: {formatDate(latestSummary.createdAt)}</span>
+            {/* Content Area */}
+            <div className={styles.tabContent}>
+        {activeTab === 'summary' ? (
+          <div className={styles.summaryContent}>
+            {/* Show loading skeleton when generating */}
+            {isGeneratingSummary || (voiceNote.status === 'processing' && !latestSummary && processingStatus?.includes('summary')) ? (
+              <div className={styles.summaryLoading}>
+                <div className={styles.skeletonCard}>
+                  <div className={styles.skeletonHeader}>
+                    <div className={styles.skeletonTitle}></div>
+                    <div className={styles.skeletonSparkle}>✨</div>
+                  </div>
+                  <div className={styles.skeletonContent}>
+                    <div className={styles.skeletonLine} style={{ width: '90%' }}></div>
+                    <div className={styles.skeletonLine} style={{ width: '75%' }}></div>
+                    <div className={styles.skeletonLine} style={{ width: '85%' }}></div>
+                    <div className={styles.skeletonLine} style={{ width: '60%' }}></div>
+                    
+                    <div className={styles.skeletonSection}>
+                      <div className={styles.skeletonSubtitle}></div>
+                      <div className={styles.skeletonBullet}></div>
+                      <div className={styles.skeletonBullet} style={{ width: '60%' }}></div>
+                      <div className={styles.skeletonBullet} style={{ width: '65%' }}></div>
+                    </div>
+                    
+                    <div className={styles.generatingText}>
+                      <span>Generating your summary</span>
+                      <span className={styles.dots}>...</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ) : activeTab === 'transcription' && latestTranscription ? (
-              <div className={styles.transcription}>
-                <div className={styles.transcriptionText}>
-                  {latestTranscription.text}
-                </div>
-                <div className={styles.transcriptionMeta}>
-                  <span>Model: {latestTranscription.model}</span>
-                  <span>Created: {formatDate(latestTranscription.createdAt)}</span>
-                </div>
+            ) : latestSummary ? (
+              <div className={styles.summaryFadeIn}>
+                
+                <ContentSection
+                  title="Summary"
+                  content={[
+                    latestSummary.summary,
+                    latestSummary.keyPoints && latestSummary.keyPoints.length > 0 
+                      ? '\n\n### Key Points\n' + latestSummary.keyPoints.map(point => `- ${point}`).join('\n')
+                      : '',
+                    latestSummary.actionItems && latestSummary.actionItems.length > 0
+                      ? '\n\n### Action Items\n' + latestSummary.actionItems.map(item => `- ${item}`).join('\n')
+                      : ''
+                  ].filter(Boolean).join('')}
+                  type="summary"
+                  onRegenerate={() => setShowCustomizePrompt(!showCustomizePrompt)}
+                  showRegenerate={!!latestTranscription}
+                  isRegenerating={voiceNote.status === 'processing' || isGeneratingSummary}
+                />
+                
+                {/* Inline customization for regeneration */}
+                {showCustomizePrompt && (
+                  <div className={styles.inlineCustomize}>
+                    <textarea
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      className={styles.customizeTextarea}
+                      placeholder="Add custom instructions for the summary..."
+                      rows={8}
+                    />
+                    <div className={styles.customizeActions}>
+                      <button
+                        onClick={() => {
+                          setShowCustomizePrompt(false);
+                          setCustomPrompt(SUMMARY_TEMPLATE);
+                        }}
+                        className={styles.cancelButton}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleGenerateSummary}
+                        disabled={isGeneratingSummary}
+                        className={styles.generateButton}
+                      >
+                        {isGeneratingSummary ? (
+                          <>
+                            <RefreshCw size={16} className={styles.spinning} />
+                            Regenerating...
+                          </>
+                        ) : (
+                          <>Regenerate Summary</>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className={styles.noContent}>
-                <p>No {activeTab} available yet.</p>
-                {voiceNote.status === 'pending' && (
-                  <p>The voice note is pending processing.</p>
-                )}
-                {voiceNote.status === 'processing' && (
-                  <p>The voice note is currently being processed.</p>
-                )}
-                {voiceNote.status === 'failed' && (
-                  <p>Processing failed. Please try reprocessing.</p>
+              <div className={styles.emptySummary}>
+                <div className={styles.emptyIcon}>
+                  <Sparkles size={32} />
+                </div>
+                <h3 className={styles.emptyTitle}>No summary yet</h3>
+                {voiceNote.status === 'completed' && latestTranscription ? (
+                  <>
+                    {!showCustomizePrompt ? (
+                      <>
+                        <p className={styles.emptyText}>Generate an AI summary of your transcription</p>
+                        <button
+                          onClick={() => handleGenerateSummary()}
+                          className={styles.primaryButton}
+                          disabled={isGeneratingSummary}
+                        >
+                          {isGeneratingSummary ? (
+                            <>
+                              <RefreshCw size={16} className={styles.spinning} />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles size={16} />
+                              Generate Summary
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setShowCustomizePrompt(true)}
+                          className={styles.customizeLink}
+                        >
+                          Customize instructions
+                        </button>
+                      </>
+                    ) : (
+                      <div className={styles.inlineCustomize}>
+                        <textarea
+                          value={customPrompt}
+                          onChange={(e) => setCustomPrompt(e.target.value)}
+                          className={styles.customizeTextarea}
+                          placeholder="Add custom instructions for the summary..."
+                          rows={8}
+                          autoFocus
+                        />
+                        <div className={styles.customizeActions}>
+                          <button
+                            onClick={() => {
+                              setShowCustomizePrompt(false);
+                              setCustomPrompt(SUMMARY_TEMPLATE);
+                            }}
+                            className={styles.cancelButton}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleGenerateSummary}
+                            disabled={isGeneratingSummary}
+                            className={styles.generateButton}
+                          >
+                            {isGeneratingSummary ? (
+                              <>
+                                <RefreshCw size={16} className={styles.spinning} />
+                                Generating...
+                              </>
+                            ) : (
+                              <>Generate Summary</>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className={styles.emptyText}>Transcription required to generate summary</p>
                 )}
               </div>
             )}
+          </div>
+        ) : (
+          <div className={styles.transcriptionContent}>
+            {latestTranscription ? (
+              <ContentSection
+                title="Transcription"
+                content={latestTranscription.text}
+                type="transcription"
+              />
+            ) : (
+              <div className={styles.emptyTranscription}>
+                <p>No transcription available yet</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
           </div>
         </div>
       </main>

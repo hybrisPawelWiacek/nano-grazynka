@@ -1,80 +1,347 @@
 .container {
-  width: 100%;
-  margin: 1.5rem 0;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.02);
+  margin-top: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #d2d2d7;
   overflow: hidden;
-  transition: all 0.3s ease;
 }
 
-.toggleButton {
-  width: 100%;
-  padding: 1rem 1.25rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
+/* Section Header */
+.sectionHeader {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.sectionIcon {
+  width: 20px;
+  height: 20px;
+  color: #6366f1;
+}
+
+.sectionSubtitle {
+  margin: 0.25rem 0 0 1.75rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Model Section */
+.modelSection {
+  padding: 1.25rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Instructions Section */
+.instructionsSection {
+  padding: 1.5rem;
+  background: white;
+}
+
+.instructionsHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #333;
-  transition: background-color 0.2s ease;
+  margin-bottom: 1rem;
 }
 
-.toggleButton:hover {
-  background: rgba(0, 0, 0, 0.03);
-}
-
-.toggleButton:focus-visible {
-  outline: 2px solid #007AFF;
-  outline-offset: -2px;
-  border-radius: 8px;
-}
-
-.toggleLabel {
+.instructionsLabel {
+  font-size: 1rem;
   font-weight: 600;
-  color: #555;
-  letter-spacing: -0.01em;
+  color: #1f2937;
 }
 
-.toggleIcon {
-  width: 20px;
-  height: 20px;
-  color: #999;
-  transition: transform 0.3s ease;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background: #007aff;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-.toggleIcon.expanded {
-  transform: rotate(180deg);
+.badgeIcon {
+  width: 14px;
+  height: 14px;
 }
 
-.content {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: all 0.3s ease;
+.badgeMuted {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
-.contentExpanded {
-  max-height: 600px;
-  opacity: 1;
-  padding: 0 1.25rem 1.25rem;
+/* Template Section */
+.templateSection {
+  margin-bottom: 1rem;
 }
 
-.section {
+/* Prompt Container */
+.promptContainer {
+  margin-bottom: 1rem;
+}
+
+.promptTextarea {
+  width: 100%;
+  padding: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SF Pro Text', sans-serif;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  resize: vertical;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.promptTextarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.promptTextarea::placeholder {
+  color: #9ca3af;
+  line-height: 1.6;
+}
+
+/* Compact version for GPT */
+.promptContainerCompact {
+  margin-bottom: 0.75rem;
+}
+
+.promptTextareaCompact {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'SF Pro Text', sans-serif;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  resize: vertical;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.promptTextareaCompact:focus {
+  outline: none;
+  border-color: #6366f1;
+  background: white;
+}
+
+.textareaError {
+  border-color: #ef4444 !important;
+}
+
+/* Helper Section */
+.promptHelper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+}
+
+.helperText {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.helperIcon {
+  width: 14px;
+  height: 14px;
+  color: #9ca3af;
+}
+
+/* Examples Section */
+.examplesSection {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.examplesSummary {
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6366f1;
+  list-style: none;
+  transition: color 0.2s ease;
+}
+
+.examplesSummary:hover {
+  color: #4f46e5;
+}
+
+.examplesSummary::-webkit-details-marker {
+  display: none;
+}
+
+.examplesContent {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.exampleGroup {
+  margin-bottom: 1.25rem;
+}
+
+.exampleGroup:last-child {
+  margin-bottom: 0;
+}
+
+.exampleTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.5rem 0;
+}
+
+.exampleCode {
+  display: block;
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #4b5563;
+}
+
+/* GPT Section */
+.gptSection {
   animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.upgradeHint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f5f5f7;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #86868b;
+}
+
+.upgradeIcon {
+  width: 16px;
+  height: 16px;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+/* Additional Options */
+.additionalOptions {
+  border-top: 1px solid #f0f0f0;
+  background: #fafbfc;
+}
+
+.additionalSummary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  list-style: none;
+  transition: all 0.2s ease;
+}
+
+.additionalSummary:hover {
+  color: #4b5563;
+}
+
+.additionalSummary::-webkit-details-marker {
+  display: none;
+}
+
+.additionalIcon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+details[open] .additionalIcon {
+  transform: rotate(180deg);
+}
+
+.additionalContent {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.comingSoon {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 0.75rem 0;
+}
+
+.futureFeatures {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.futureFeatures li {
+  padding: 0.5rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.futureFeatures li::before {
+  content: '○';
+  position: absolute;
+  left: 0;
+  color: #d1d5db;
+}
+
+/* Legacy styles for compatibility */
+.toggleButton {
+  display: none;
+}
+
+.content {
+  display: block;
+  opacity: 1;
+  max-height: none;
+}
+
+.contentExpanded {
+  display: block;
+}
+
+.section {
+  display: block;
 }
 
 .labelContainer {
@@ -88,7 +355,6 @@
   font-size: 0.9rem;
   font-weight: 600;
   color: #333;
-  letter-spacing: -0.01em;
 }
 
 .tooltip {
@@ -130,152 +396,15 @@
   visibility: visible;
 }
 
-.tooltipContent::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: #333;
-}
-
 .textarea {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   font-size: 0.9rem;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
   resize: vertical;
-  transition: all 0.2s ease;
-  background: white;
-  color: #333;
-  line-height: 1.5;
 }
 
-.textarea:focus {
-  outline: none;
-  border-color: #007AFF;
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
-}
-
-.textarea::placeholder {
-  color: #999;
-  font-size: 0.85rem;
-}
-
-.textareaError {
-  border-color: #FF3B30;
-}
-
-.textareaError:focus {
-  border-color: #FF3B30;
-  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.1);
-}
-
-.helperText {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.5rem;
-  font-size: 0.85rem;
-}
-
-.charCount {
-  color: #666;
-  transition: color 0.2s ease;
-}
-
-.charCountWarning {
-  color: #FF9500;
-  font-weight: 500;
-}
-
-.charCountError {
-  color: #FF3B30;
-  font-weight: 500;
-}
-
-.errorText {
-  color: #FF3B30;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.examples {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(0, 122, 255, 0.05);
-  border-radius: 8px;
-  border-left: 3px solid #007AFF;
-}
-
-.examplesTitle {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 0.5rem;
-}
-
-.examplesList {
-  margin: 0;
-  padding-left: 1.25rem;
-  font-size: 0.85rem;
-  color: #555;
-  line-height: 1.6;
-}
-
-.examplesList li {
-  margin-bottom: 0.25rem;
-}
-
-.examplesList li:last-child {
-  margin-bottom: 0;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .container {
-    background: rgba(255, 255, 255, 0.05);
-  }
-  
-  .toggleButton {
-    color: #f0f0f0;
-  }
-  
-  .toggleButton:hover {
-    background: rgba(255, 255, 255, 0.08);
-  }
-  
-  .toggleLabel {
-    color: #ccc;
-  }
-  
-  .label {
-    color: #f0f0f0;
-  }
-  
-  .textarea {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #f0f0f0;
-  }
-  
-  .examples {
-    background: rgba(0, 122, 255, 0.1);
-  }
-  
-  .examplesTitle {
-    color: #f0f0f0;
-  }
-  
-  .examplesList {
-    color: #ccc;
-  }
-}
-
-/* Extended styles for multi-model support */
 .textareaLarge {
   width: 100%;
   padding: 1rem;
@@ -285,30 +414,14 @@
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
   resize: vertical;
   min-height: 300px;
-  transition: all 0.2s ease;
-  background: white;
-  color: #333;
-  line-height: 1.6;
-}
-
-.textareaLarge:focus {
-  outline: none;
-  border-color: #007AFF;
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
-}
-
-.textareaLarge::placeholder {
-  color: #999;
-  font-size: 0.85rem;
-  white-space: pre-wrap;
 }
 
 .geminiFeatures {
   margin-top: 1.5rem;
   padding: 1rem;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.05));
+  background: #f5f5f7;
   border-radius: 8px;
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid #007aff;
 }
 
 .featuresTitle {
@@ -327,39 +440,43 @@
   list-style: none;
 }
 
-.featuresList li {
-  margin-bottom: 0.5rem;
-  position: relative;
-  padding-left: 0.25rem;
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.featuresList li:last-child {
-  margin-bottom: 0;
+/* Minimal styles for ultra-clean design */
+.minimalContainer {
+  margin: 1rem 0;
 }
 
-/* Dark mode extensions */
-@media (prefers-color-scheme: dark) {
-  .textareaLarge {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #f0f0f0;
-  }
-  
-  .textareaLarge:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-  }
-  
-  .geminiFeatures {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
-    border-left-color: #3b82f6;
-  }
-  
-  .featuresTitle {
-    color: #f0f0f0;
-  }
-  
-  .featuresList {
-    color: #ccc;
-  }
+.minimalTextarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  background: #fafafa;
+  resize: none;
+  transition: all 0.2s ease;
 }
+
+.minimalTextarea:focus {
+  outline: none;
+  border-color: #007aff;
+  background: white;
+}
+
+.minimalTextarea::placeholder {
+  color: #86868b;
+}
+
+/* Removed dark mode support for cleaner, Apple-like design */
