@@ -43,16 +43,56 @@ export default function LibraryPage() {
       setVoiceNotes(response.items || []);
       setTotalPages(response.pagination?.totalPages || 1);
       setTotalItems(response.pagination?.total || 0);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load voice notes');
+    } catch (err: any) {
+      // Don't show error for cancelled requests
+      if (!err.cancelled) {
+        setError(err instanceof Error ? err.message : 'Failed to load voice notes');
+      }
     } finally {
       setLoading(false);
     }
   }, [currentPage, searchQuery, statusFilter]);
 
   useEffect(() => {
-    fetchVoiceNotes();
-  }, [fetchVoiceNotes]);
+    let abortFunction: (() => void) | null = null;
+
+    const loadVoiceNotes = async () => {
+      setLoading(true);
+      setError(null);
+      
+      const { promise, abort } = voiceNotesApi.listWithAbort({
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchQuery,
+        status: statusFilter || undefined,
+      });
+      
+      abortFunction = abort;
+      
+      try {
+        const response = await promise;
+        setVoiceNotes(response.items || []);
+        setTotalPages(response.pagination?.totalPages || 1);
+        setTotalItems(response.pagination?.total || 0);
+      } catch (err: any) {
+        // Don't show error for cancelled requests
+        if (!err.cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load voice notes');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVoiceNotes();
+
+    // Cleanup function to abort request on unmount or dependency change
+    return () => {
+      if (abortFunction) {
+        abortFunction();
+      }
+    };
+  }, [currentPage, searchQuery, statusFilter]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

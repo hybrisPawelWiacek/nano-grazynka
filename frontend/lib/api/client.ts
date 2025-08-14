@@ -109,6 +109,69 @@ export class ApiClient {
     }
   }
 
+  // New method that returns both promise and abort function
+  getWithAbort<T>(path: string, params?: Record<string, any>): { promise: Promise<T>; abort: () => void } {
+    const url = new URL(`${this.baseUrl}${path}`);
+    
+    // Add query parameters
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          url.searchParams.append(key, String(value));
+        }
+      });
+    }
+
+    const { controller, timeoutId } = this.createAbortController();
+    
+    const promise = (async () => {
+      try {
+        // Get session ID for anonymous users
+        let sessionId: string | undefined;
+        if (typeof window !== 'undefined') {
+          sessionId = localStorage.getItem('anonymousSessionId') || undefined;
+        }
+        
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        
+        // Add session ID header if available
+        if (sessionId) {
+          headers['x-session-id'] = sessionId;
+        }
+        
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers,
+          credentials: 'include', // Send cookies for authentication
+          signal: controller.signal,
+        });
+
+        return await this.handleResponse<T>(response);
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          throw {
+            statusCode: 0,
+            error: 'Request Cancelled',
+            message: 'The request was cancelled',
+            cancelled: true,
+          } as ApiError;
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    })();
+
+    const abort = () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+
+    return { promise, abort };
+  }
+
   async post<T>(path: string, body?: any): Promise<T> {
     const { controller, timeoutId } = this.createAbortController();
 

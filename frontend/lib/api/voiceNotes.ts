@@ -18,6 +18,11 @@ export const voiceNotesApi = {
     return apiClient.get<PaginatedResponse<VoiceNote>>('/api/voice-notes', params);
   },
 
+  // List voice notes with abort capability
+  listWithAbort(params?: SearchParams): { promise: Promise<PaginatedResponse<VoiceNote>>; abort: () => void } {
+    return apiClient.getWithAbort<PaginatedResponse<VoiceNote>>('/api/voice-notes', params);
+  },
+
   // Get single voice note by ID
   async getById(id: string): Promise<VoiceNote> {
     return apiClient.get<VoiceNote>(`/api/voice-notes/${id}?includeTranscription=true&includeSummary=true`);
