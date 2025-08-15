@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConversionModal from '@/components/ConversionModal';
 import AdvancedOptions from '@/components/AdvancedOptions';
-import { getOrCreateSessionId, getUsageCount, incrementUsageCount, getRemainingUsage } from '@/lib/anonymousSession';
+import { getOrCreateSessionId, getUsageCount, getRemainingUsage } from '@/lib/anonymousSession';
 import styles from './page.module.css';
 
 interface ProcessingStatus {
@@ -283,10 +283,9 @@ export default function HomePage() {
       const voiceNoteId = uploadData.voiceNote.id;
 
       // Update anonymous usage count immediately after successful upload
-      // This matches backend behavior which increments on upload, not after processing
+      // The backend increments the count, so we just fetch the updated value
       if (isAnonymous) {
-        incrementUsageCount();  // Increment local storage count
-        refreshAnonymousUsage();  // Refresh from backend
+        await refreshAnonymousUsage();  // Fetch updated count from backend
       }
 
       // Update status - processing

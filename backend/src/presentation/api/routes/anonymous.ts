@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+import { Container } from '../container';
+
 export async function anonymousRoutes(fastify: FastifyInstance) {
   // Get anonymous session usage info
   fastify.get('/api/anonymous/usage/:sessionId', async (request: FastifyRequest<{
@@ -119,6 +121,65 @@ export async function anonymousRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({
         error: 'Internal Server Error',
         message: 'Failed to get voice notes'
+      });
+    }
+  });
+
+  // Migrate anonymous session to user account
+  fastify.post('/api/anonymous/migrate', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['sessionId', 'userId'],
+        properties: {
+          sessionId: { type: 'string' },
+          userId: { type: 'string' }
+        }
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            migrated: { type: 'number' },
+            message: { type: 'string' }
+          }
+        }
+      }
+    }
+  }, async (request: FastifyRequest<{
+    Body: { sessionId: string; userId: string }
+  }>, reply: FastifyReply) => {
+    try {
+      const { sessionId, userId } = request.body;
+
+      // Get the use case from container
+      const container = Container.getInstance();
+      const migrateUseCase = container.getMigrateAnonymousToUserUseCase();
+
+      // Execute migration
+      const result = await migrateUseCase.execute({ sessionId, userId });
+
+      return reply.send(result);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Session not found') {
+          return reply.status(404).send({
+            error: 'Not Found',
+            message: 'Session not found'
+          });
+        }
+        if (error.message === 'User not found') {
+          return reply.status(404).send({
+            error: 'Not Found',
+            message: 'User not found'
+          });
+        }
+      }
+      
+      console.error('Migration error:', error);
+      return reply.status(500).send({
+        error: 'Internal Server Error',
+        message: 'Failed to migrate session'
       });
     }
   });

@@ -5,6 +5,7 @@ export { ListVoiceNotesUseCase } from './ListVoiceNotesUseCase';
 export { DeleteVoiceNoteUseCase } from './DeleteVoiceNoteUseCase';
 export { ReprocessVoiceNoteUseCase } from './ReprocessVoiceNoteUseCase';
 export { ExportVoiceNoteUseCase } from './ExportVoiceNoteUseCase';
+export { MigrateAnonymousToUserUseCase } from './MigrateAnonymousToUserUseCase';
 
 export type { UploadVoiceNoteInput, UploadVoiceNoteOutput } from './UploadVoiceNoteUseCase';
 export type { ProcessVoiceNoteInput, ProcessVoiceNoteOutput } from './ProcessVoiceNoteUseCase';

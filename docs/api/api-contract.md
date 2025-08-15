@@ -138,27 +138,38 @@ X-Session-Id: string // From localStorage
 ```
 
 #### POST /api/anonymous/migrate
-Convert anonymous session to registered user.
+Migrate anonymous session voice notes to a registered user account.
+This endpoint transfers all voice notes from an anonymous session to a user account
+in an atomic transaction. The anonymous session is deleted after successful migration.
+
+**Authentication:** Not required (allows migration during auth flow)
 
 **Request:**
 ```typescript
 {
-  sessionId: string,
-  userId: string
+  sessionId: string,  // Anonymous session ID from localStorage
+  userId: string      // Target user ID to migrate notes to
 }
 ```
 
 **Response:**
 ```typescript
 {
-  migrated: number, // Number of notes migrated
-  message: string
+  migrated: number,   // Number of notes successfully migrated
+  message: string,    // Success message
+  noteIds?: string[]  // Array of migrated note IDs (optional)
 }
 ```
 
+**Behavior:**
+- Atomic transaction ensures all-or-nothing migration
+- Updates user's creditsUsed count
+- Deletes anonymous session after successful migration
+- Creates audit log entry for compliance
+
 **Errors:**
-- 400: Invalid session or user ID
-- 404: Session not found
+- 404: Session or user not found
+- 500: Migration failed (transaction rolled back)
 
 ### 1. Health Check
 

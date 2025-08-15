@@ -20,7 +20,8 @@ import {
   ListVoiceNotesUseCase,
   DeleteVoiceNoteUseCase,
   ReprocessVoiceNoteUseCase,
-  ExportVoiceNoteUseCase
+  ExportVoiceNoteUseCase,
+  MigrateAnonymousToUserUseCase
 } from '../../application/use-cases';
 
 export class Container {
@@ -140,6 +141,12 @@ export class Container {
   
   getExportVoiceNoteUseCase(): ExportVoiceNoteUseCase {
     return new ExportVoiceNoteUseCase(this.voiceNoteRepository);
+  }
+  
+  getMigrateAnonymousToUserUseCase(): MigrateAnonymousToUserUseCase {
+    return new MigrateAnonymousToUserUseCase(
+      this.prisma
+    );
   }
   
   async shutdown(): Promise<void> {

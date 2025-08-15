@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
+// import { toast } from 'sonner';  // TODO: Install sonner for toast notifications
 import { 
   getOrCreateSessionId, 
   getUsageCount, 
@@ -9,6 +10,7 @@ import {
   clearAnonymousSession,
   getSessionIdForMigration 
 } from '@/lib/anonymousSession';
+import { migrateAnonymousSession, getAnonymousUsage } from '@/lib/api/anonymous';
 
 interface User {
   id: string;
@@ -29,7 +31,7 @@ interface AuthContextType {
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
-  refreshAnonymousUsage: () => void;
+  refreshAnonymousUsage: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,6 +78,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (email: string, password: string, rememberMe = false) => {
+    // Keep the session ID before clearing
+    const sessionToMigrate = anonymousSessionId;
+    const hasAnonymousNotes = anonymousUsageCount > 0;
+    
     const response = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
@@ -93,6 +99,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await response.json();
     setUser(data.user);
     
+    // Try to migrate anonymous session if there are notes
+    if (sessionToMigrate && hasAnonymousNotes && data.user?.id) {
+      try {
+        const result = await migrateAnonymousSession(sessionToMigrate, data.user.id);
+        if (result.migrated > 0) {
+          console.log(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
+          // TODO: toast.success(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
+        }
+      } catch (error) {
+        console.error('Migration failed:', error);
+        // Don't show error to user, just log it
+      }
+    }
+    
     // Clear anonymous session after successful login
     clearAnonymousSession();
     setAnonymousSessionId(null);
@@ -100,6 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (email: string, password: string) => {
+    // Keep the session ID before clearing
+    const sessionToMigrate = anonymousSessionId;
+    const hasAnonymousNotes = anonymousUsageCount > 0;
+    
     const response = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
       headers: {
@@ -117,7 +141,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await response.json();
     setUser(data.user);
     
-    // Clear anonymous session after successful login
+    // Try to migrate anonymous session if there are notes
+    if (sessionToMigrate && hasAnonymousNotes && data.user?.id) {
+      try {
+        const result = await migrateAnonymousSession(sessionToMigrate, data.user.id);
+        if (result.migrated > 0) {
+          console.log(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
+          // TODO: toast.success(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
+        }
+      } catch (error) {
+        console.error('Migration failed:', error);
+        // Don't show error to user, just log it
+      }
+    }
+    
+    // Clear anonymous session after successful registration
     clearAnonymousSession();
     setAnonymousSessionId(null);
     setAnonymousUsageCount(0);
@@ -151,9 +189,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await checkAuth();
   };
 
-  const refreshAnonymousUsage = () => {
+  const refreshAnonymousUsage = async () => {
     if (typeof window !== 'undefined') {
-      setAnonymousUsageCount(getUsageCount());
+      const sessionId = getOrCreateSessionId();
+      if (sessionId) {
+        try {
+          const usage = await getAnonymousUsage(sessionId);
+          setAnonymousUsageCount(usage.usageCount);
+          // Also update localStorage for offline resilience
+          localStorage.setItem('anonymousUsageCount', String(usage.usageCount));
+        } catch (error) {
+          console.error('Failed to fetch usage:', error);
+          // Fallback to localStorage
+          setAnonymousUsageCount(getUsageCount());
+        }
+      }
     }
   };
 
