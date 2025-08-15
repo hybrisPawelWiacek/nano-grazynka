@@ -1,4 +1,6 @@
 # AI Models Configuration
+**Last Updated**: August 15, 2025
+**Version**: 2.0
 
 ## Overview
 nano-Grazynka supports multiple AI models for transcription and summarization:

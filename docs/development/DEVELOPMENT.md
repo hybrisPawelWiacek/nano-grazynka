@@ -1,4 +1,6 @@
 # Development Guide
+**Last Updated**: August 15, 2025
+**Version**: 2.0
 
 ## Quick Start
 

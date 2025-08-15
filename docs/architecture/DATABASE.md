@@ -1,4 +1,6 @@
 # Database Schema Documentation
+**Last Updated**: August 15, 2025
+**Version**: 2.0
 
 ## Overview
 
@@ -169,6 +171,10 @@ Primary entity representing an uploaded audio file with multi-model transcriptio
 | createdAt | DateTime | NOT NULL | Creation timestamp |
 | updatedAt | DateTime | NOT NULL | Last update timestamp |
 | version | Int | DEFAULT 1 | Version number for tracking |
+| aiGeneratedTitle | String? | NULL | AI-generated title from transcript |
+| briefDescription | String? | NULL | AI-generated brief description |
+| derivedDate | DateTime? | NULL | Date extracted from transcript content |
+| duration | Int? | NULL | Audio duration in milliseconds |
 
 **Indexes:**
 - `idx_voicenote_userid` on (userId) - for authenticated users
@@ -334,6 +340,12 @@ Recent migrations:
   - `whisperPrompt`: Hints for GPT-4o transcription (224 token limit)
   - `geminiSystemPrompt`: System instructions for Gemini
   - `geminiUserPrompt`: Context/templates for Gemini (1M token capacity)
+- `20250814_add_ai_generated_fields` - Added AI-generated metadata:
+  - `aiGeneratedTitle`: AI-generated title from transcript analysis
+  - `briefDescription`: Short description for better context
+  - `derivedDate`: Date extracted from transcript content
+- `20250814_add_duration` - Added duration field for audio playback:
+  - `duration`: Audio duration in milliseconds for UI display
 
 ### Schema Location
 `/backend/prisma/schema.prisma`
@@ -359,6 +371,33 @@ Strategic indexes for common queries:
 - **Text fields**: 1GB max per field
 - **Practical limit**: ~100GB for good performance
 - **Concurrent writes**: Limited (SQLite limitation)
+
+### SQLite Performance Configuration
+
+#### WAL Mode (Write-Ahead Logging)
+Enabled for better concurrent access:
+```sql
+PRAGMA journal_mode = WAL;
+```
+- Allows readers and writers to work concurrently
+- Improves write performance by 2-3x
+- Reduces database locking issues
+- Automatically managed by Prisma on connection
+
+#### Synchronous Mode
+Set to NORMAL for balanced performance:
+```sql
+PRAGMA synchronous = NORMAL;
+```
+- Good balance between safety and performance
+- Prevents data loss in most scenarios
+- Significantly faster than FULL mode
+
+#### Benefits of Optimizations
+- **Write Performance**: 2-3x faster operations
+- **Concurrency**: Better handling of simultaneous reads/writes
+- **Lock Reduction**: Fewer "database is locked" errors
+- **Data Integrity**: Maintained with acceptable performance
 
 ## Data Integrity
 

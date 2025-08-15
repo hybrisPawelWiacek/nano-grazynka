@@ -1,4 +1,6 @@
 # UI/UX Design System - nano-Grazynka
+**Last Updated**: August 15, 2025
+**Version**: 2.0
 
 ## Design Philosophy
 

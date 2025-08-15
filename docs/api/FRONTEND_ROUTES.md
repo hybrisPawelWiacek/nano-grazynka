@@ -1,4 +1,6 @@
 # Frontend Routes Documentation
+**Last Updated**: August 15, 2025
+**Version**: 1.0
 
 ## Overview
 This document defines all frontend routes in the nano-Grazynka application to ensure consistency and prevent routing errors.
@@ -33,6 +35,7 @@ This document defines all frontend routes in the nano-Grazynka application to en
 Backend API endpoints use `/api/voice-notes/*` but frontend routes use `/note/*`:
 - Backend: `GET /api/voice-notes/{id}` → Frontend: `/note/{id}`
 - Backend: `POST /api/voice-notes/{id}/process` → No direct frontend route
+- Backend: `POST /api/voice-notes/{id}/regenerate-summary` → Accessed from `/note/{id}` page
 - Backend: `GET /api/voice-notes/{id}/export` → Accessed from `/note/{id}` page
 
 ### Navigation Examples
@@ -53,5 +56,6 @@ Backend API endpoints use `/api/voice-notes/*` but frontend routes use `/note/*`
 - Anonymous users can view their own notes via `/note/[id]` if they have the ID
 
 ## Updates History
+- 2025-08-14: Added regenerate-summary endpoint accessed from `/note/[id]` page
 - 2025-08-12: Fixed route mismatch - changed from `/voice-notes/[id]` to `/note/[id]`
 - 2025-08-12: Documented correct routing patterns to prevent future errors

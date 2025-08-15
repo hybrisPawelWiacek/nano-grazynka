@@ -1,4 +1,6 @@
 # Documentation Structure
+**Last Updated**: August 15, 2025
+**Version**: 1.0
 
 ## Overview
 This document explains the organization of documentation in the nano-Grazynka project.

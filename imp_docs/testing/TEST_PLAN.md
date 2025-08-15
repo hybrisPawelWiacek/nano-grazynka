@@ -1,7 +1,7 @@
 # nano-Grazynka Test Plan
-Version: 3.0
-Date: 2025-08-13
-Status: UPDATED - Multi-Model Transcription Tests Added
+**Last Updated**: August 15, 2025
+**Version**: 4.0
+**Status**: UPDATED - AI Features & Bug Fix Tests Added
 
 ## 🚨 CRITICAL: Use Playwright MCP Server for ALL E2E Testing
 
@@ -149,6 +149,51 @@ All browser automation MUST use MCP tools directly.
 | E6.4 | Special characters | Filename with émojis 🎵 | Handles gracefully |
 | E6.5 | Long transcription | 30 min audio | Processes successfully |
 | E6.6 | Network interruption | Kill connection mid-upload | Error recovery |
+
+### Suite 9: AI-Generated Names Tests (10 min)
+**Purpose**: Test AI title and description generation
+
+| Test ID | Test Case | Expected Result |
+|---------|-----------|-----------------|
+| AI9.1 | Upload with AI title generation | Title generated and displayed |
+| AI9.2 | Brief description accuracy | 10-15 word summary created |
+| AI9.3 | Date extraction from content | Date parsed if mentioned |
+| AI9.4 | Fallback to original filename | Original shown if generation fails |
+| AI9.5 | UI display hierarchy | AI title primary, original secondary |
+
+### Suite 10: Duration Display Tests (5 min)
+**Purpose**: Test audio duration extraction and display
+
+| Test ID | Test Case | Expected Result |
+|---------|-----------|-----------------|
+| D10.1 | Duration extraction m4a | Shows MM:SS format |
+| D10.2 | Duration extraction mp3 | Shows MM:SS format |
+| D10.3 | Long audio (>1hr) | Shows HH:MM:SS format |
+| D10.4 | File size removed | No file size in UI |
+| D10.5 | Duration in list view | All cards show duration |
+
+### Suite 11: Custom Prompt Regeneration Tests (10 min)
+**Purpose**: Test summary regeneration with custom prompts
+
+| Test ID | Test Case | Expected Result |
+|---------|-----------|-----------------|
+| CP11.1 | Regenerate with custom prompt | New summary generated |
+| CP11.2 | UI updates after regeneration | Summary refreshes without reload |
+| CP11.3 | API client consistency | Uses lib/api not direct fetch |
+| CP11.4 | Error handling | Shows error if regeneration fails |
+| CP11.5 | Loading state | Shows spinner during regeneration |
+| CP11.6 | Flexible JSON parsing | "2 sentences only" works |
+
+### Suite 12: Gemini 2.0 Flash Tests (15 min)
+**Purpose**: Test Gemini 2.0 Flash transcription model
+
+| Test ID | Test Case | Expected Result |
+|---------|-----------|-----------------|
+| G12.1 | Gemini model selection | Processes with Gemini 2.0 |
+| G12.2 | Large prompt handling | 1M token prompts work |
+| G12.3 | Base64 audio encoding | Audio properly encoded |
+| G12.4 | Cost calculation | Shows 75% savings |
+| G12.5 | Proof of work | Validation succeeds |
 
 ## Test Execution Plan
 

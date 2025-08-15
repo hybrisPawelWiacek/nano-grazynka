@@ -1,4 +1,6 @@
 # nano-Grazynka 🎙️
+**Last Updated**: August 15, 2025
+**Version**: 2.0
 
 A voice note transcription and summarization utility that processes audio files in English and Polish, generating intelligent summaries with key points and action items.
 
@@ -9,10 +11,13 @@ A voice note transcription and summarization utility that processes audio files 
 - **Multi-Model Transcription** - Choose between:
   - GPT-4o-transcribe: Fast processing, 224 token prompts ($0.006/min)
   - Gemini 2.0 Flash: Context-aware, 1M token prompts ($0.0015/min - 75% cheaper)
+- **AI-Generated Titles** - Smart naming from transcription content
+- **Duration Display** - Audio duration instead of file size
 - **AI Summarization** - Automatic summary generation with:
   - Brief overview (2-3 sentences)
   - Key points extraction
   - Action items identification
+- **Custom Prompt Regeneration** - Regenerate summaries with your own instructions
 - **Template System** - Pre-built prompts for meetings, technical docs, podcasts
 - **Export Options** - Download as Markdown or JSON
 - **Clean Architecture** - Domain-Driven Design with clear boundaries
@@ -95,13 +100,14 @@ nano-grazynka/
 - [AI Models Setup](./docs/development/AI_MODELS_SETUP.md) - AI configuration
 - [UI/UX Design](./docs/design/UI_UX_DESIGN.md) - Design system & guidelines
 
-## 🚀 Recent Updates (August 13, 2025)
+## 🚀 Recent Updates (August 15, 2025)
 
-- ✅ Multi-model transcription: Choose GPT-4o or Gemini 2.0 Flash
-- ✅ Template system for meetings, technical docs, podcasts
-- ✅ Token counter with visual progress bar
-- ✅ Cost estimator showing 75% savings with Gemini
-- ✅ Extended prompts leveraging Gemini's 1M token window
+- ✅ AI-generated titles and descriptions
+- ✅ Audio duration display (replaces file size)
+- ✅ Custom prompt regeneration fixes
+- ✅ Production stability improvements
+- ✅ Fixed intermittent library loading errors
+- ✅ Fixed anonymous session authentication
 
 ## 🏷️ MVP Limitations
 

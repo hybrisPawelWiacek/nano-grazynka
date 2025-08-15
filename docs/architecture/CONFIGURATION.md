@@ -1,6 +1,6 @@
 # Configuration Architecture
-
-**Last Updated**: August 13, 2025  
+**Last Updated**: August 15, 2025  
+**Version**: 2.0
 **Status**: ✅ Multi-Model Transcription Enabled
 
 ## Overview
@@ -74,8 +74,17 @@ server:
 
 transcription:
   provider: openrouter
-  model: whisper-1
+  defaultModel: gpt-4o-transcribe
   maxFileSizeMB: 25
+  models:
+    gpt4o:
+      model: gpt-4o-transcribe
+      maxPromptTokens: 224
+      costPerMinute: 0.006
+    gemini:
+      model: google/gemini-2.0-flash-001
+      maxPromptTokens: 1000000
+      costPerMinute: 0.0015
 
 summarization:
   provider: openrouter
@@ -211,7 +220,18 @@ As of August 13, 2025 - Multi-Model Transcription Support:
   - Excellent multilingual support (English/Polish)
   - JSON-formatted output support
 
-### Configuration Example
+### Proof of Work Configuration (NEW - August 14, 2025)
+
+```yaml
+rateLimit:
+  proofOfWork:
+    enabled: true
+    difficulty: 4  # Number of leading zeros required
+    windowMs: 60000  # Time window for rate limiting
+    maxRequests: 10  # Max requests per window
+```
+
+### Multi-Model Transcription Configuration
 
 ```yaml
 transcription:
@@ -225,16 +245,35 @@ transcription:
     maxPromptTokens: 224
     costPerMinute: 0.006
   
-  # Gemini 2.0 Flash configuration  
+  # Gemini 2.0 Flash configuration (Enhanced August 14, 2025)
   gemini:
     provider: openrouter
     model: google/gemini-2.0-flash-001
     maxPromptTokens: 1000000
-    costPerMinute: 0.0015
+    costPerMinute: 0.0015  # 75% cheaper than GPT-4o
     encoding: base64  # Audio encoding format
+    features:
+      - "Context-aware transcription"
+      - "Support for complex prompt templates"
+      - "Base64 audio encoding"
 ```
 
 ## Migration History
+
+### August 14, 2025 - Gemini 2.0 Flash Enhancement & Proof of Work
+
+Enhanced Gemini integration and added security features:
+
+1. **Gemini 2.0 Flash Improvements**:
+   - 75% cost reduction ($0.0015/min vs GPT-4o's $0.006/min)
+   - 1M token context window for complex prompts
+   - Base64 audio encoding support
+   - Template system for various transcription scenarios
+
+2. **Proof of Work Rate Limiting**:
+   - Configurable difficulty level
+   - Time-window based request limits
+   - Protection against abuse
 
 ### August 13, 2025 - Multi-Model Transcription Support
 

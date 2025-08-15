@@ -545,6 +545,51 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/voice-notes/{id}/regenerate-summary:
+    post:
+      summary: Regenerate summary with custom prompt
+      description: Regenerate the summary with a custom prompt. Supports flexible JSON parsing.
+      tags:
+        - Processing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - customPrompt
+              properties:
+                customPrompt:
+                  type: string
+                  description: Custom prompt for summary regeneration
+      responses:
+        '202':
+          description: Summary regeneration started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  voiceNote:
+                    $ref: '#/components/schemas/VoiceNote'
+                  message:
+                    type: string
+                  version:
+                    type: integer
+                    description: New version number
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
   /api/voice-notes/{id}/export:
     get:
       summary: Export a voice note
@@ -659,7 +704,7 @@ components:
         duration:
           type: integer
           nullable: true
-          description: Duration in seconds
+          description: Audio duration in milliseconds
         fileSize:
           type: integer
           description: File size in bytes
@@ -682,6 +727,34 @@ components:
           type: string
           nullable: true
           description: For anonymous users
+        transcriptionModel:
+          type: string
+          nullable: true
+          description: Model used for transcription (gpt-4o-transcribe or google/gemini-2.0-flash-001)
+        whisperPrompt:
+          type: string
+          nullable: true
+          description: Prompt for GPT-4o transcription (224 tokens max)
+        geminiSystemPrompt:
+          type: string
+          nullable: true
+          description: System prompt for Gemini transcription
+        geminiUserPrompt:
+          type: string
+          nullable: true
+          description: User prompt for Gemini (1M tokens max)
+        aiGeneratedTitle:
+          type: string
+          nullable: true
+          description: AI-generated title from transcript
+        briefDescription:
+          type: string
+          nullable: true
+          description: AI-generated brief description
+        derivedDate:
+          type: string
+          nullable: true
+          description: Date extracted from transcript content
         transcriptions:
           type: array
           items:

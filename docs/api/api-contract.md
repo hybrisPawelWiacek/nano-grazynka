@@ -1,4 +1,6 @@
 # API Contract Documentation
+**Last Updated**: August 15, 2025
+**Version**: 2.0
 
 ## Overview
 This document serves as the single source of truth for the API contract between the frontend (Next.js) and backend (Fastify) services of the nano-Grazynka application. All API endpoints, request/response formats, and data types are defined here.
@@ -337,6 +339,24 @@ Reprocess a voice note with new prompts (creates new version).
 }
 ```
 
+**Response:**
+```typescript
+{
+  voiceNote: VoiceNote,
+  message: string
+}
+```
+
+#### POST /api/voice-notes/:id/regenerate-summary
+Regenerate the summary with a custom prompt. Supports flexible JSON parsing.
+
+**Request Body:**
+```typescript
+{
+  customPrompt: string  // Custom prompt for summary regeneration
+}
+```
+
 **Response:** `202 Accepted`
 ```typescript
 {
@@ -388,17 +408,20 @@ interface VoiceNote {
   status: ProcessingStatus;
   createdAt: string;
   updatedAt: string;
-  duration: number | null;
+  duration: number | null;        // Audio duration in milliseconds
   fileSize: number;
   filePath: string;
   tags: string[];
   language: Language | null;
-  userId?: string;        // Optional for anonymous users
-  sessionId?: string;      // For anonymous users
-  transcriptionModel?: string;  // "gpt-4o-transcribe" | "google/gemini-2.0-flash-001"
-  whisperPrompt?: string;        // Prompt for GPT-4o transcription (224 tokens max)
-  geminiSystemPrompt?: string;   // System prompt for Gemini transcription
-  geminiUserPrompt?: string;     // User prompt for Gemini (1M tokens max)
+  userId?: string;                // Optional for anonymous users
+  sessionId?: string;              // For anonymous users
+  transcriptionModel?: string;     // "gpt-4o-transcribe" | "google/gemini-2.0-flash-001"
+  whisperPrompt?: string;          // Prompt for GPT-4o transcription (224 tokens max)
+  geminiSystemPrompt?: string;     // System prompt for Gemini transcription
+  geminiUserPrompt?: string;       // User prompt for Gemini (1M tokens max)
+  aiGeneratedTitle?: string;       // AI-generated title from transcript
+  briefDescription?: string;       // AI-generated brief description
+  derivedDate?: string;            // Date extracted from transcript content
   transcriptions: Transcription[];
   summaries: Summary[];
 }
@@ -503,6 +526,29 @@ Rate limit headers included in responses:
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
 X-RateLimit-Reset: 1736500000000
+```
+
+## Flexible JSON Parsing
+
+As of August 14, 2025, the API supports flexible JSON parsing for summary regeneration:
+
+1. **Automatic Recovery**: If JSON parsing fails, the system attempts to extract valid JSON from the response
+2. **Fallback to Text**: If no valid JSON is found, plain text summaries are accepted
+3. **Error Tolerance**: Partial responses are preserved rather than failing completely
+
+Example handling:
+```typescript
+try {
+  // Try standard JSON parse
+  return JSON.parse(response);
+} catch {
+  // Extract JSON from markdown code blocks
+  const match = response.match(/```json\s*([\s\S]*?)```/);
+  if (match) return JSON.parse(match[1]);
+  
+  // Fallback to plain text
+  return { summary: response, keyPoints: [], actionItems: [] };
+}
 ```
 
 ## CORS Configuration

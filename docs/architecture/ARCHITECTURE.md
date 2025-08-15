@@ -1,4 +1,6 @@
 # System Architecture
+**Last Updated**: August 15, 2025
+**Version**: 2.0
 
 ## Overview
 
@@ -78,6 +80,12 @@ nano-Grazynka is a voice note transcription and summarization system built with 
     - `transcribeWithGemini()`: Gemini 2.0 Flash via OpenRouter with base64 encoding
   - **LLMAdapter**: Language model integration for summarization
   - **LocalStorageAdapter**: File system operations
+  - **TitleGenerationAdapter**: AI-powered title generation from transcripts
+    - Extracts meaningful titles automatically
+    - Supports brief descriptions and date extraction
+  - **AudioMetadataExtractor**: Audio file metadata extraction
+    - Uses music-metadata library for duration extraction
+    - Supports various audio formats (mp3, m4a, wav, etc.)
 - **Key Principle**: Adapters and implementations of domain contracts
 
 #### Presentation Layer
@@ -282,6 +290,9 @@ Request → CORS → OptionalAuth → UsageLimit → Route Handler
 - Async processing with status polling
 - Connection pooling for database
 - Caching for repeated operations (future)
+- **SQLite WAL Mode**: 2-3x faster write performance
+- **Synchronous=NORMAL**: Balanced durability vs speed
+- **Prisma Auto-regeneration**: Ensures schema consistency in Docker
 
 ## Scalability Considerations
 
@@ -346,11 +357,13 @@ VoiceNoteReprocessedEvent
 
 ### Configurable Elements
 - API endpoints and keys
-- Model selection (GPT-4, Claude, etc.)
+- Model selection (GPT-4o, Gemini 2.0 Flash, Claude, etc.)
 - File size limits
 - Timeout values
 - System prompts
 - Language settings
+- Proof of work difficulty (for rate limiting)
+- Custom prompt regeneration support
 
 ## Monitoring & Observability
 
