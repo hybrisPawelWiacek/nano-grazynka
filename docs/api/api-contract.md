@@ -142,7 +142,7 @@ Migrate anonymous session voice notes to a registered user account.
 This endpoint transfers all voice notes from an anonymous session to a user account
 in an atomic transaction. The anonymous session is deleted after successful migration.
 
-**Authentication:** Not required (allows migration during auth flow)
+**Authentication:** Requires valid JWT token
 
 **Request:**
 ```typescript
@@ -161,11 +161,17 @@ in an atomic transaction. The anonymous session is deleted after successful migr
 }
 ```
 
+**Error Responses:**
+- **400 Bad Request:** Missing required parameters (sessionId or userId)
+- **404 Not Found:** Session not found or user not found
+- **401 Unauthorized:** Missing or invalid JWT token
+
 **Behavior:**
 - Atomic transaction ensures all-or-nothing migration
 - Updates user's creditsUsed count
 - Deletes anonymous session after successful migration
 - Creates audit log entry for compliance
+- Automatically triggered in AuthContext after registration/login
 
 **Errors:**
 - 404: Session or user not found

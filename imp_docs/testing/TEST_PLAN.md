@@ -70,27 +70,47 @@ All browser automation MUST use MCP tools directly.
 | B2.9 | Large file rejection | new test | 413 Payload Too Large |
 | B2.10 | Concurrent uploads | new test | All succeed |
 
-### Suite 4: Frontend E2E Tests with Playwright MCP Server (20 min)
-**Purpose**: Validate all UI functionality
+### Suite 4: Frontend E2E Tests with Playwright MCP Server (30 min)
+**Purpose**: Validate all UI functionality for both anonymous and logged-in users
+
+#### 4A: Anonymous User Happy Path (10 min)
+**Reference**: [PLAYWRIGHT_ANONYMOUS_HAPPY_PATH.md](./PLAYWRIGHT_ANONYMOUS_HAPPY_PATH.md)
 
 | Test ID | Test Case | Steps | Validation |
 |---------|-----------|-------|------------|
-| F3.1 | Upload via drag-drop | 1. Navigate to home<br>2. Drag zabka.m4a<br>3. Drop on zone | File accepted, upload starts |
-| F3.2 | Upload via file picker | 1. Click upload button<br>2. Select file<br>3. Confirm | File uploads, redirects to library |
-| F3.3 | View library | 1. Navigate to /library<br>2. Wait for load | All voice notes displayed |
-| F3.4 | Search by content | 1. Type "Żabka"<br>2. Press Enter | Filtered results shown |
-| F3.5 | Filter by status | 1. Select "Completed"<br>2. Apply filter | Only completed notes shown |
-| F3.6 | Filter by language | 1. Select "Polish"<br>2. Apply filter | Only PL notes shown |
-| F3.7 | View note details | 1. Click note card<br>2. Navigate to detail | Transcription & summary shown |
-| F3.8 | Export as Markdown | 1. Click export<br>2. Select Markdown | File downloads |
-| F3.9 | Export as JSON | 1. Click export<br>2. Select JSON | File downloads |
-| F3.10 | Processing status | 1. Upload file<br>2. Watch status | Updates: pending → processing → completed |
-| F3.11 | Error handling | 1. Upload invalid file | Error message displayed |
-| F3.12 | Empty state | 1. View empty library | "No notes yet" message |
-| F3.13 | Login flow | 1. Click login<br>2. Enter credentials<br>3. Submit | Redirects to dashboard |
-| F3.14 | Register flow | 1. Click register<br>2. Fill form<br>3. Submit | Account created, logged in |
-| F3.15 | Logout | 1. Click logout button | Session cleared, redirect to home |
-| F3.16 | Anonymous limit | 1. Upload 5 files<br>2. Try 6th upload | Shows upgrade modal |
+| F4A.1 | Anonymous session creation | 1. Navigate to home<br>2. Check localStorage | anonymousSessionId created |
+| F4A.2 | Anonymous file upload | 1. Click upload area<br>2. Select zabka.m4a<br>3. Upload and Process | Redirects to note page |
+| F4A.3 | Generate summary (anonymous) | 1. Click Summary tab<br>2. Generate Summary | Full JSON structure displayed |
+| F4A.4 | Custom prompt (anonymous) | 1. Click Regenerate<br>2. Enter "2 sentence summary"<br>3. Submit | Flexible JSON: 2 sentences only |
+| F4A.5 | Library access (anonymous) | 1. Navigate to /library<br>2. View notes | Notes displayed with session |
+| F4A.6 | Session persistence | Throughout test | Session ID remains consistent |
+
+#### 4B: Logged-In User Happy Path (10 min)
+**Reference**: [PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md](./PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md)
+
+| Test ID | Test Case | Steps | Validation |
+|---------|-----------|-------|------------|
+| F4B.1 | User registration | 1. Navigate to /register<br>2. Use timestamp email<br>3. Submit | Account created, auto-login |
+| F4B.2 | Upload as logged-in user | 1. Upload zabka.m4a<br>2. Process | Credits decremented |
+| F4B.3 | Generate summary (logged-in) | 1. Click Summary tab<br>2. Generate | Full JSON structure |
+| F4B.4 | Custom prompt (logged-in) | 1. Regenerate<br>2. "2 sentence summary" | Flexible JSON response |
+| F4B.5 | Dashboard access | Navigate to /dashboard | Shows stats and credits |
+| F4B.6 | Logout verification | Click Logout | Auth token cleared |
+
+#### 4C: General UI Tests (10 min)
+
+| Test ID | Test Case | Steps | Validation |
+|---------|-----------|-------|------------|
+| F4C.1 | Upload via drag-drop | 1. Navigate to home<br>2. Drag zabka.m4a<br>3. Drop on zone | File accepted, upload starts |
+| F4C.2 | Search by content | 1. Type "Żabka"<br>2. Press Enter | Filtered results shown |
+| F4C.3 | Filter by status | 1. Select "Completed"<br>2. Apply filter | Only completed notes shown |
+| F4C.4 | Filter by language | 1. Select "Polish"<br>2. Apply filter | Only PL notes shown |
+| F4C.5 | Export as Markdown | 1. Click export<br>2. Select Markdown | File downloads |
+| F4C.6 | Export as JSON | 1. Click export<br>2. Select JSON | File downloads |
+| F4C.7 | Processing status | 1. Upload file<br>2. Watch status | Updates: pending → processing → completed |
+| F4C.8 | Error handling | 1. Upload invalid file | Error message displayed |
+| F4C.9 | Empty state | 1. View empty library | "No notes yet" message |
+| F4C.10 | Anonymous limit | 1. Upload 5 files<br>2. Try 6th upload | Shows upgrade modal |
 
 ### Suite 5: Integration Tests (30 min)
 **Purpose**: Test complete user journeys
