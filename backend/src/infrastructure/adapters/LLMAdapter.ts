@@ -37,7 +37,7 @@ export class LLMAdapter implements SummarizationService {
     const model = ConfigLoader.get('summarization.model');
     const baseUrl = ConfigLoader.get('summarization.apiUrl') || 'https://api.openai.com/v1';
     
-    const systemPrompt = this.getSystemPrompt(language, options?.prompt);
+    const systemPrompt = this.getSystemPrompt(language, !!options?.prompt);
     const maxTokens = options?.maxTokens || ConfigLoader.get('summarization.maxTokens');
     const temperature = options?.temperature ?? ConfigLoader.get('summarization.temperature');
 
@@ -94,7 +94,7 @@ export class LLMAdapter implements SummarizationService {
       throw new Error('OpenRouter API key not configured');
     }
     
-    const systemPrompt = this.getSystemPrompt(language, options?.prompt);
+    const systemPrompt = this.getSystemPrompt(language, !!options?.prompt);
     const maxTokens = options?.maxTokens || ConfigLoader.get('summarization.maxTokens');
     const temperature = options?.temperature ?? ConfigLoader.get('summarization.temperature');
 
@@ -136,12 +136,13 @@ export class LLMAdapter implements SummarizationService {
     return parsedResult;
   }
 
-  private getSystemPrompt(language: Language, customPrompt?: string): string {
-    if (customPrompt) {
-      // For custom prompts, enforce JSON but allow flexible structure
+  private getSystemPrompt(language: Language, isCustomPrompt: boolean = false): string {
+    // For custom prompts, allow flexible JSON structure
+    if (isCustomPrompt) {
       return "You are a helpful assistant analyzing transcripts. Respond with a JSON object. For simple responses, you can use: {\"summary\": \"your response here\"}. For detailed responses, you can include additional fields like keyPoints and actionItems.";
     }
-
+    
+    // For default prompts, use the rigid structure
     const prompts = ConfigLoader.get('summarization.prompts');
     const basePrompt = prompts.summary || 'Summarize the following transcript concisely, capturing key points and main ideas.';
     
