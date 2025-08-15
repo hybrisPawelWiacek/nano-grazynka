@@ -74,21 +74,7 @@ export default function VoiceNoteDetailPage() {
     setError(null);
     
     try {
-      const headers: Record<string, string> = {};
-      if (anonymousSessionId) {
-        headers['x-session-id'] = anonymousSessionId;
-      }
-      
-      const response = await fetch(`http://localhost:3101/api/voice-notes/${id}?includeTranscription=true&includeSummary=true`, {
-        credentials: 'include',
-        headers
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to load voice note');
-      }
-      
-      const data = await response.json();
+      const data = await voiceNotesApi.getById(id);
       
       // Only update state if data has actually changed
       setVoiceNote(prevNote => {
@@ -128,25 +114,10 @@ export default function VoiceNoteDetailPage() {
     setError(null);
     
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-      if (anonymousSessionId) {
-        headers['x-session-id'] = anonymousSessionId;
-      }
-      
-      const response = await fetch(`http://localhost:3101/api/voice-notes/${voiceNote.id}/regenerate-summary`, {
-        method: 'POST',
-        credentials: 'include',
-        headers,
-        body: JSON.stringify({
-          summaryPrompt: customPrompt !== SUMMARY_TEMPLATE ? customPrompt : undefined
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to generate summary');
-      }
+      await voiceNotesApi.regenerateSummary(
+        voiceNote.id,
+        customPrompt !== SUMMARY_TEMPLATE ? customPrompt : undefined
+      );
       
       // Hide the customize prompt and set processing status
       setShowCustomizePrompt(false);

@@ -58,6 +58,13 @@ export const voiceNotesApi = {
     return apiClient.post<ProcessingResponse>(`/api/voice-notes/${id}/reprocess`, request);
   },
 
+  // Regenerate summary for a voice note
+  async regenerateSummary(id: string, summaryPrompt?: string): Promise<VoiceNote> {
+    return apiClient.post<VoiceNote>(`/api/voice-notes/${id}/regenerate-summary`, {
+      summaryPrompt
+    });
+  },
+
   // Delete voice note
   async delete(id: string): Promise<void> {
     return apiClient.delete<void>(`/api/voice-notes/${id}`);
