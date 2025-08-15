@@ -43,15 +43,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [anonymousUsageCount, setAnonymousUsageCount] = useState(0);
 
   useEffect(() => {
-    checkAuth();
-    // Initialize anonymous session only if not already set
+    // Initialize anonymous session FIRST before checking auth
+    // This ensures session is available for all API calls
     if (typeof window !== 'undefined') {
       const sessionId = getOrCreateSessionId();
-      // Only update state if sessionId is not already set
-      // This prevents resetting the session on navigation
-      setAnonymousSessionId(prevSessionId => prevSessionId || sessionId);
+      // Always set the session ID from localStorage
+      setAnonymousSessionId(sessionId);
       setAnonymousUsageCount(getUsageCount());
     }
+    // Then check auth status
+    checkAuth();
   }, []);
 
   const checkAuth = async () => {

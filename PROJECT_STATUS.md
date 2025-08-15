@@ -5,6 +5,22 @@
 
 ### Latest Updates
 
+#### ✅ Library Page 401 Error Fixed - Third Attempt (2025-08-15)
+**Root Cause Analysis and Comprehensive Fix**:
+- ✅ Identified race condition between AuthContext initialization and localStorage session creation
+- ✅ Created SessionInitializer component that runs before AuthContext to ensure session exists
+- ✅ Reordered AuthContext useEffect to initialize session BEFORE auth check
+- ✅ Enhanced library page to check both context and localStorage for session availability
+- ✅ Library now loads correctly on first attempt without 401 errors
+
+#### ✅ JSON Format Enforcement with Flexible Structure (2025-08-15)
+**Custom Prompt Support Enhanced**:
+- ✅ Always enforce JSON format in OpenAI API responses
+- ✅ Allow flexible JSON structure for custom prompts (simple or complex)
+- ✅ Updated system prompt to guide AI for appropriate response structure
+- ✅ Removed all debug console.log statements from production code
+- ✅ Custom prompt regeneration now works reliably with any prompt
+
 #### ✅ Critical Session ID Bug Fixed (2025-08-15)
 **Anonymous User Flow Restored**:
 - ✅ Fixed session ID persistence across navigation (AuthContext was resetting on mount)

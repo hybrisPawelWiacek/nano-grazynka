@@ -34,18 +34,22 @@ export default function LibraryPage() {
     let abortFunction: (() => void) | null = null;
 
     const loadVoiceNotes = async () => {
-      // Wait for auth to be ready and session to be available for anonymous users
+      // Wait for auth to be ready
       if (authLoading) {
         return;
       }
       
       // For anonymous users, ensure session ID is available
-      if (!user && !anonymousSessionId) {
-        // Wait a bit more for session to initialize
-        setTimeout(() => {
-          loadVoiceNotes();
-        }, 100);
-        return;
+      // Double-check both context and localStorage
+      if (!user) {
+        const localStorageSessionId = localStorage.getItem('anonymousSessionId');
+        if (!localStorageSessionId && !anonymousSessionId) {
+          // Session not ready yet, wait a bit
+          setTimeout(() => {
+            loadVoiceNotes();
+          }, 100);
+          return;
+        }
       }
       
       setLoading(true);
