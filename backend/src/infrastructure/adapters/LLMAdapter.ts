@@ -51,7 +51,10 @@ export class LLMAdapter implements SummarizationService {
         model,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: text },
+          { role: 'user', content: options?.prompt 
+            ? `${options.prompt}\n\nTranscript:\n${text}`
+            : text 
+          },
         ],
         max_tokens: maxTokens,
         temperature,
@@ -103,7 +106,10 @@ export class LLMAdapter implements SummarizationService {
         model,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: text },
+          { role: 'user', content: options?.prompt 
+            ? `${options.prompt}\n\nTranscript:\n${text}`
+            : text 
+          },
         ],
         max_tokens: maxTokens,
         temperature,
@@ -124,7 +130,8 @@ export class LLMAdapter implements SummarizationService {
 
   private getSystemPrompt(language: Language, customPrompt?: string): string {
     if (customPrompt) {
-      return customPrompt;
+      // For custom prompts, only enforce JSON format
+      return "You are a transcript summarization assistant. Always respond with valid JSON.";
     }
 
     const prompts = ConfigLoader.get('summarization.prompts');

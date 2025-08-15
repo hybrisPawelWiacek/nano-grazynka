@@ -61,7 +61,7 @@ export const voiceNotesApi = {
   // Regenerate summary for a voice note
   async regenerateSummary(id: string, summaryPrompt?: string): Promise<VoiceNote> {
     return apiClient.post<VoiceNote>(`/api/voice-notes/${id}/regenerate-summary`, {
-      summaryPrompt
+      userPrompt: summaryPrompt
     });
   },
 

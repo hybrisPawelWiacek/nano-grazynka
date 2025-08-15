@@ -114,17 +114,15 @@ export default function VoiceNoteDetailPage() {
     setError(null);
     
     try {
-      await voiceNotesApi.regenerateSummary(
+      const updatedNote = await voiceNotesApi.regenerateSummary(
         voiceNote.id,
         customPrompt !== SUMMARY_TEMPLATE ? customPrompt : undefined
       );
       
-      // Hide the customize prompt and set processing status
+      // Directly update with the returned data
+      setVoiceNote(updatedNote);
       setShowCustomizePrompt(false);
-      setProcessingStatus('Generating new summary...');
-      
-      // Update the voice note to trigger polling via the existing mechanism
-      setVoiceNote(prev => prev ? { ...prev, status: 'processing' as ProcessingStatus } : null);
+      setProcessingStatus(null); // Clear processing status since it's already done
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate summary');

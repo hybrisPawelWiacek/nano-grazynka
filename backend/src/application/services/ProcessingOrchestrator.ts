@@ -300,14 +300,14 @@ export class ProcessingOrchestrator {
       // For two-pass transcription: use custom prompts if provided
       // The systemPrompt parameter allows customization of the system instruction
       // The userPrompt is additional context/instruction from the user
-      const customSystemPrompt = systemPrompt || userPrompt;
+      // Pass userPrompt directly to LLMAdapter which will handle it appropriately
 
       // Call LLMAdapter with correct signature: (text, language, options)
       const result = await (this.summarizationService as any).summarize(
         transcription.getText(),
         language,
         {
-          prompt: customSystemPrompt || undefined,
+          prompt: userPrompt || systemPrompt || undefined,
           maxTokens: 2000,
           temperature: 0.7
         }

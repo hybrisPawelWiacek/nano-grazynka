@@ -138,7 +138,26 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         'audio/ogg'
       ];
       
-      if (!allowedMimeTypes.includes(fileData.mimetype)) {
+      // Fix mimetype detection for files uploaded as application/octet-stream
+      let detectedMimeType = fileData.mimetype;
+      if (detectedMimeType === 'application/octet-stream') {
+        // Fallback to extension-based detection
+        const ext = fileData.filename.toLowerCase().split('.').pop();
+        const mimeTypeMap: Record<string, string> = {
+          'm4a': 'audio/x-m4a',
+          'mp3': 'audio/mpeg',
+          'wav': 'audio/wav',
+          'webm': 'audio/webm',
+          'ogg': 'audio/ogg',
+          'mp4': 'audio/mp4'
+        };
+        detectedMimeType = mimeTypeMap[ext || ''] || detectedMimeType;
+      }
+      
+      console.log('[Upload] Original mimetype:', fileData.mimetype);
+      console.log('[Upload] Detected mimetype:', detectedMimeType);
+      
+      if (!allowedMimeTypes.includes(detectedMimeType)) {
         return reply.status(400).send({
           error: 'Bad Request',
           message: `Invalid file type. Allowed types: ${allowedMimeTypes.join(', ')}`
@@ -151,7 +170,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
       const result = await useCase.execute({
         file: {
           buffer: fileData.buffer,
-          mimeType: fileData.mimetype,
+          mimeType: detectedMimeType,  // Use the detected mimetype
           originalName: fileData.filename,
           size: fileData.buffer.length
         },
