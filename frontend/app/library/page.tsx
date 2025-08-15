@@ -27,8 +27,10 @@ export default function LibraryPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ProcessingStatus | ''>('');
+  const [retryCount, setRetryCount] = useState(0);
 
   const itemsPerPage = 10;
+  const maxRetries = 3;
 
   useEffect(() => {
     let abortFunction: (() => void) | null = null;
@@ -44,12 +46,22 @@ export default function LibraryPage() {
       if (!user) {
         const localStorageSessionId = localStorage.getItem('anonymousSessionId');
         if (!localStorageSessionId && !anonymousSessionId) {
-          // Session not ready yet, wait a bit
-          setTimeout(() => {
-            loadVoiceNotes();
-          }, 100);
+          // Session not ready yet, wait a bit - but prevent infinite retries
+          if (retryCount < maxRetries) {
+            setRetryCount(prev => prev + 1);
+            setTimeout(() => {
+              loadVoiceNotes();
+            }, 500); // Increased delay from 100ms to 500ms
+          } else {
+            setError('Session initialization failed. Please refresh the page.');
+          }
           return;
         }
+      }
+      
+      // Reset retry count on successful session check
+      if (retryCount > 0) {
+        setRetryCount(0);
       }
       
       setLoading(true);
