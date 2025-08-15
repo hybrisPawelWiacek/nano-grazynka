@@ -60,9 +60,13 @@ export const voiceNotesApi = {
 
   // Regenerate summary for a voice note
   async regenerateSummary(id: string, summaryPrompt?: string): Promise<VoiceNote> {
-    return apiClient.post<VoiceNote>(`/api/voice-notes/${id}/regenerate-summary`, {
-      userPrompt: summaryPrompt
-    });
+    const response = await apiClient.post<{ voiceNote: VoiceNote; message: string }>(
+      `/api/voice-notes/${id}/regenerate-summary`, 
+      {
+        userPrompt: summaryPrompt
+      }
+    );
+    return response.voiceNote;
   },
 
   // Delete voice note

@@ -5,12 +5,18 @@
 
 ### Latest Updates
 
+#### ✅ Critical Session ID Bug Fixed (2025-08-15)
+**Anonymous User Flow Restored**:
+- ✅ Fixed session ID persistence across navigation (AuthContext was resetting on mount)
+- ✅ Fixed API response structure mismatch in summary regeneration endpoint
+- ✅ Anonymous users can now: upload → transcribe → navigate → generate summary → view in library
+- ✅ Created comprehensive Playwright test documentation for anonymous happy path testing
+
 #### ✅ Custom Prompt Regeneration Fixed (2025-08-15)
 **Bug Fixes for Production Stability**:
 - ✅ Fixed custom prompt regeneration on frontend
 - ✅ Replaced direct fetch with API client in note page for consistency
 - ✅ Resolved intermittent 'Failed to load voice notes' error in library page
-- ✅ Fixed anonymous session bug that was blocking users
 
 #### ✅ AI-Generated Names & Metadata Complete (2025-08-15)
 **Smart Voice Note Organization**:

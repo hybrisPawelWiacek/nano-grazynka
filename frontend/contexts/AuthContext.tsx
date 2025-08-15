@@ -44,10 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     checkAuth();
-    // Initialize anonymous session
+    // Initialize anonymous session only if not already set
     if (typeof window !== 'undefined') {
       const sessionId = getOrCreateSessionId();
-      setAnonymousSessionId(sessionId);
+      // Only update state if sessionId is not already set
+      // This prevents resetting the session on navigation
+      setAnonymousSessionId(prevSessionId => prevSessionId || sessionId);
       setAnonymousUsageCount(getUsageCount());
     }
   }, []);
