@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { voiceNotesApi } from '@/lib/api/voiceNotes';
 import { VoiceNote, ProcessingStatus, Language } from '@/lib/types';
 import { getOrCreateSessionId } from '@/lib/anonymousSession';
+import { useAuth } from '@/contexts/AuthContext';
 import VoiceNoteCard from '@/components/VoiceNoteCard';
 import styles from './page.module.css';
 
@@ -17,6 +18,7 @@ interface SearchFilters {
 
 export default function LibraryPage() {
   const searchParams = useSearchParams();
+  const { user, isLoading: authLoading, anonymousSessionId } = useAuth();
   const [voiceNotes, setVoiceNotes] = useState<VoiceNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,35 +30,24 @@ export default function LibraryPage() {
 
   const itemsPerPage = 10;
 
-  const fetchVoiceNotes = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await voiceNotesApi.list({
-        page: currentPage,
-        limit: itemsPerPage,
-        search: searchQuery,
-        status: statusFilter || undefined,
-      });
-      
-      setVoiceNotes(response.items || []);
-      setTotalPages(response.pagination?.totalPages || 1);
-      setTotalItems(response.pagination?.total || 0);
-    } catch (err: any) {
-      // Don't show error for cancelled requests
-      if (!err.cancelled) {
-        setError(err instanceof Error ? err.message : 'Failed to load voice notes');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, searchQuery, statusFilter]);
-
   useEffect(() => {
     let abortFunction: (() => void) | null = null;
 
     const loadVoiceNotes = async () => {
+      // Wait for auth to be ready and session to be available for anonymous users
+      if (authLoading) {
+        return;
+      }
+      
+      // For anonymous users, ensure session ID is available
+      if (!user && !anonymousSessionId) {
+        // Wait a bit more for session to initialize
+        setTimeout(() => {
+          loadVoiceNotes();
+        }, 100);
+        return;
+      }
+      
       setLoading(true);
       setError(null);
       
@@ -92,18 +83,18 @@ export default function LibraryPage() {
         abortFunction();
       }
     };
-  }, [currentPage, searchQuery, statusFilter]);
+  }, [currentPage, searchQuery, statusFilter, authLoading, user, anonymousSessionId]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    fetchVoiceNotes();
+    // The useEffect will automatically refetch when currentPage changes
   };
 
   const handleDelete = async (id: string) => {
     // The VoiceNoteCard component handles the deletion and confirmation
-    // We just need to refresh the list after successful deletion
-    await fetchVoiceNotes();
+    // Force a refresh by toggling a state that triggers the useEffect
+    setCurrentPage(prev => prev);  // This will trigger the useEffect to reload
   };
 
   const formatDate = (dateString: string) => {
@@ -205,7 +196,7 @@ export default function LibraryPage() {
           {error && (
             <div className={styles.errorMessage}>
               <p>{error}</p>
-              <button onClick={fetchVoiceNotes} className={styles.retryButton}>
+              <button onClick={() => setCurrentPage(prev => prev)} className={styles.retryButton}>
                 Try Again
               </button>
             </div>

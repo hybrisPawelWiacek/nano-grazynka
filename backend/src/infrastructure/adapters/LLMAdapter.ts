@@ -58,6 +58,7 @@ export class LLMAdapter implements SummarizationService {
         ],
         max_tokens: maxTokens,
         temperature,
+        // Always enforce JSON format
         response_format: { type: 'json_object' },
       }),
     });
@@ -68,9 +69,12 @@ export class LLMAdapter implements SummarizationService {
     }
 
     const result = await response.json();
-    const content = JSON.parse(result.choices[0].message.content);
+    const messageContent = result.choices[0].message.content;
     
-    return this.parseResult(content);
+    // Parse the JSON response
+    const content = JSON.parse(messageContent);
+    const parsedResult = this.parseResult(content, !!options?.prompt);
+    return parsedResult;
   }
 
   private async summarizeWithOpenRouter(
@@ -113,6 +117,7 @@ export class LLMAdapter implements SummarizationService {
         ],
         max_tokens: maxTokens,
         temperature,
+        // Always enforce JSON format
         response_format: { type: 'json_object' },
       }),
     });
@@ -123,15 +128,18 @@ export class LLMAdapter implements SummarizationService {
     }
 
     const result = await response.json();
-    const content = JSON.parse(result.choices[0].message.content);
+    const messageContent = result.choices[0].message.content;
     
-    return this.parseResult(content);
+    // Parse the JSON response
+    const content = JSON.parse(messageContent);
+    const parsedResult = this.parseResult(content, !!options?.prompt);
+    return parsedResult;
   }
 
   private getSystemPrompt(language: Language, customPrompt?: string): string {
     if (customPrompt) {
-      // For custom prompts, only enforce JSON format
-      return "You are a transcript summarization assistant. Always respond with valid JSON.";
+      // For custom prompts, enforce JSON but allow flexible structure
+      return "You are a helpful assistant analyzing transcripts. Respond with a JSON object. For simple responses, you can use: {\"summary\": \"your response here\"}. For detailed responses, you can include additional fields like keyPoints and actionItems.";
     }
 
     const prompts = ConfigLoader.get('summarization.prompts');
@@ -157,7 +165,7 @@ export class LLMAdapter implements SummarizationService {
     Ensure the content is professional and well-structured.`;
   }
 
-  private parseResult(content: any): SummarizationResult {
+  private parseResult(content: any, isCustomPrompt?: boolean): SummarizationResult {
     const extractArray = (field: any): string[] => {
       if (Array.isArray(field)) {
         return field.filter(item => typeof item === 'string');
@@ -168,6 +176,47 @@ export class LLMAdapter implements SummarizationService {
       return [];
     };
 
+    // For custom prompts, be flexible with the response format
+    if (isCustomPrompt) {
+      // If it's just a string, use it as the summary
+      if (typeof content === 'string' && content.trim().length > 0) {
+        return {
+          summary: content,
+          keyPoints: [],
+          actionItems: [],
+        };
+      }
+      
+      // If it has a summary field, use it, otherwise use the whole response as text
+      let summaryText = content.summary || 
+                        content.text || 
+                        content.response || 
+                        content.result ||
+                        '';
+      
+      // If still empty and content is an object, stringify it
+      if (!summaryText && typeof content === 'object') {
+        summaryText = JSON.stringify(content, null, 2);
+      }
+      
+      // If still empty, convert to string
+      if (!summaryText) {
+        summaryText = String(content || '');
+      }
+      
+      // Ensure we have something, even if it's a fallback message
+      if (!summaryText || summaryText.trim().length === 0) {
+        summaryText = 'Unable to generate summary with the provided custom instructions.';
+      }
+      
+      return {
+        summary: summaryText,
+        keyPoints: extractArray(content.key_points || content.keyPoints || content.points || []),
+        actionItems: extractArray(content.action_items || content.actionItems || content.actions || content.todos || []),
+      };
+    }
+    
+    // For default prompts, use the standard structure
     return {
       summary: content.summary || '',
       keyPoints: extractArray(content.key_points || content.keyPoints || []),
