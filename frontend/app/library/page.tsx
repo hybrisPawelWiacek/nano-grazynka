@@ -8,6 +8,10 @@ import { VoiceNote, ProcessingStatus, Language } from '@/lib/types';
 import { getOrCreateSessionId } from '@/lib/anonymousSession';
 import { useAuth } from '@/contexts/AuthContext';
 import VoiceNoteCard from '@/components/VoiceNoteCard';
+import { toast } from 'sonner';
+import { formatErrorForToast } from '@/lib/error-messages';
+import VoiceNoteSkeleton from '@/components/VoiceNoteSkeleton';
+import Header from '@/components/Header';
 import styles from './page.module.css';
 
 interface SearchFilters {
@@ -85,6 +89,7 @@ export default function LibraryPage() {
         // Don't show error for cancelled requests
         if (!err.cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load voice notes');
+          toast.error(formatErrorForToast(err));
         }
       } finally {
         setLoading(false);
@@ -155,21 +160,7 @@ export default function LibraryPage() {
   return (
     <div className={styles.page}>
       {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <Link href="/" className={styles.logo}>
-            nano-Grazynka
-          </Link>
-          <nav className={styles.nav}>
-            <Link href="/" className={styles.navLink}>
-              Upload
-            </Link>
-            <Link href="/dashboard" className={styles.navLink}>
-              Dashboard
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header currentPage="library" />
 
       {/* Main Content */}
       <main className={styles.main}>
@@ -220,8 +211,10 @@ export default function LibraryPage() {
 
           {/* Loading State */}
           {loading ? (
-            <div className={styles.loadingState}>
-              <div className={styles.spinner}></div>
+            <div className={styles.notesList}>
+              {[...Array(3)].map((_, i) => (
+                <VoiceNoteSkeleton key={i} />
+              ))}
             </div>
           ) : voiceNotes.length === 0 ? (
             /* Empty State */

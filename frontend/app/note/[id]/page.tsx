@@ -8,6 +8,7 @@ import { voiceNotesApi } from '@/lib/api/voiceNotes';
 import { VoiceNote, ProcessingStatus } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
 import ContentSection from '@/components/ContentSection';
+import Header from '@/components/Header';
 import styles from './page.module.css';
 
 const SUMMARY_TEMPLATE = `Focus on:
@@ -203,57 +204,36 @@ export default function VoiceNoteDetailPage() {
   return (
     <div className={styles.page}>
       {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <button onClick={() => router.back()} className={styles.backButton}>
-            <ArrowLeft size={20} />
-            <span>Back</span>
-          </button>
-          
-          <Link href="/" className={styles.logo}>
-            nano-Grazynka
-          </Link>
-          
-          <div className={styles.headerRight}>
-            <nav className={styles.nav}>
-              <Link href="/dashboard" className={styles.navLink}>
-                Dashboard
-              </Link>
-              <Link href="/library" className={styles.navLink}>
-                Library
-              </Link>
-            </nav>
-            
-            <div className={styles.headerActions}>
-            <button 
-              onClick={() => setShowMoreMenu(!showMoreMenu)} 
-              className={styles.moreButton}
-              aria-label="More actions"
-            >
-              <MoreHorizontal size={20} />
-            </button>
-            
-            {showMoreMenu && (
-              <div className={styles.dropdown}>
-                <button onClick={() => handleExport('markdown')} className={styles.dropdownItem}>
-                  <Download size={16} />
-                  Export as Markdown
-                </button>
-                <button onClick={() => handleExport('json')} className={styles.dropdownItem}>
-                  <Download size={16} />
-                  Export as JSON
-                </button>
-                <div className={styles.dropdownDivider} />
-                <button onClick={handleDelete} className={styles.dropdownItem}>
-                  <Trash2 size={16} />
-                  Delete Note
-                </button>
-              </div>
-            )}
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header 
+        currentPage="note"
+        showBackButton={true}
+        onBackClick={() => router.back()}
+        showMoreMenu={true}
+        moreMenuItems={[
+          {
+            icon: <Download size={16} />,
+            label: 'Export as Markdown',
+            onClick: () => handleExport('markdown')
+          },
+          {
+            icon: <Download size={16} />,
+            label: 'Export as JSON',
+            onClick: () => handleExport('json')
+          },
+          {
+            isDivider: true,
+            label: '',
+            onClick: () => {}
+          },
+          {
+            icon: <Trash2 size={16} />,
+            label: 'Delete Note',
+            onClick: handleDelete,
+            isDanger: true
+          }
+        ]}
+        onMoreMenuToggle={setShowMoreMenu}
+      />
 
       {/* Main Content */}
       <main className={styles.main}>

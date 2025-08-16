@@ -7,6 +7,9 @@ import Link from 'next/link';
 import ConversionModal from '@/components/ConversionModal';
 import AdvancedOptions from '@/components/AdvancedOptions';
 import { getOrCreateSessionId, getUsageCount, getRemainingUsage } from '@/lib/anonymousSession';
+import { toast } from 'sonner';
+import { formatErrorForDisplay, formatErrorForToast } from '@/lib/error-messages';
+import Header from '@/components/Header';
 import styles from './page.module.css';
 
 interface ProcessingStatus {
@@ -172,10 +175,11 @@ export default function HomePage() {
       }
     } else if (isAnonymous && anonymousUsageCount >= 5 && status.stage === 'idle') {
       // Check anonymous usage limit
+      const { title, message } = formatErrorForDisplay({ message: 'usage limit' });
       setStatus({
         stage: 'error',
         progress: 0,
-        message: `You've used all 5 free transcriptions. Create an account to continue!`
+        message
       });
     }
   }, [user, isAnonymous, anonymousUsageCount]);
@@ -186,21 +190,25 @@ export default function HomePage() {
       // Validate file type
       const allowedTypes = ['audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/x-wav', 'audio/webm', 'audio/ogg'];
       if (!allowedTypes.includes(selectedFile.type)) {
+        const { title, message } = formatErrorForDisplay({ message: 'unsupported format' });
         setStatus({
           stage: 'error',
           progress: 0,
-          message: 'Invalid file type. Please upload an audio file (MP3, M4A, WAV, etc.)'
+          message
         });
+        toast.error(formatErrorForToast({ message: 'unsupported format' }));
         return;
       }
       
       // Validate file size (100MB limit)
       if (selectedFile.size > 100 * 1024 * 1024) {
+        const { title, message } = formatErrorForDisplay({ message: 'file too large' });
         setStatus({
           stage: 'error',
           progress: 0,
-          message: 'File too large. Maximum size is 100MB.'
+          message
         });
+        toast.error(formatErrorForToast({ message: 'file too large' }));
         return;
       }
       
@@ -398,11 +406,13 @@ export default function HomePage() {
       setTimeout(pollForCompletion, 2000);
 
     } catch (error: any) {
+      const { title, message } = formatErrorForDisplay(error);
       setStatus({
         stage: 'error',
         progress: 0,
-        message: error.message || 'An error occurred during processing'
+        message
       });
+      toast.error(formatErrorForToast(error));
     }
   };
 
@@ -418,9 +428,9 @@ export default function HomePage() {
   return (
     <div className={styles.page}>
       {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.logo}>nano-Grażynka</h1>
+      <Header 
+        currentPage="home"
+        customRightContent={
           <nav className={styles.nav}>
             {/* Anonymous User Info */}
             {isAnonymous && !user && (
@@ -475,8 +485,8 @@ export default function HomePage() {
               </>
             )}
           </nav>
-        </div>
-      </header>
+        }
+      />
 
       {/* Main Content */}
       <main className={styles.main}>

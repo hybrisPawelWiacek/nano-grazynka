@@ -7,42 +7,12 @@
   background: linear-gradient(to bottom, #ffffff 0%, #f5f5f7 100%);
 }
 
-/* Header */
-.header {
-  position: sticky;
-  top: 0;
-  z-index: var(--z-dropdown);
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--color-border-subtle);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
-}
-
-.headerContent {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-4) var(--space-6);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.logo {
-  font-size: var(--text-2xl);
-  font-weight: var(--font-bold);
-  background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-  letter-spacing: -0.02em;
-}
+/* Navigation - keep only styles for custom nav content */
 
 .nav {
   display: flex;
   align-items: center;
-  gap: var(--space-6);
+  gap: var(--space-4);
   margin-left: auto;
 }
 
@@ -50,15 +20,18 @@
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   color: var(--color-success);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1) var(--space-3);
   background-color: rgba(52, 199, 89, 0.1);
   border-radius: var(--radius-full);
+  white-space: nowrap;
 }
 
 .usageHint {
   font-size: var(--text-xs);
   color: var(--color-text-secondary);
   font-style: italic;
+  margin-left: var(--space-2);
+  white-space: nowrap;
 }
 
 .navLink {
@@ -69,6 +42,7 @@
   transition: color var(--transition-fast);
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
+  white-space: nowrap;
 }
 
 .navLink:hover {
@@ -97,6 +71,7 @@
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
   color: var(--color-text-secondary);
+  white-space: nowrap;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
@@ -666,13 +641,6 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .headerContent {
-    padding: var(--space-3) var(--space-4);
-  }
-
-  .logo {
-    font-size: var(--text-xl);
-  }
 
   .nav {
     gap: var(--space-3);
@@ -730,15 +698,6 @@
 
 /* Small mobile adjustments */
 @media (max-width: 480px) {
-  .header {
-    position: relative;
-  }
-
-  .headerContent {
-    flex-direction: column;
-    gap: var(--space-3);
-    align-items: flex-start;
-  }
 
   .nav {
     width: 100%;

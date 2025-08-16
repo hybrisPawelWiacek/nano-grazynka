@@ -10,8 +10,8 @@
   padding: 0 var(--space-6);
 }
 
-/* Header */
-.header {
+/* Settings page specific header */
+.settingsHeader {
   background-color: var(--color-surface-elevated);
   box-shadow: var(--shadow-sm);
   border-radius: var(--radius-lg);
@@ -19,7 +19,7 @@
   margin-bottom: var(--space-6);
 }
 
-.headerContent {
+.settingsHeaderContent {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -387,7 +387,7 @@
     padding: 0 var(--space-4);
   }
   
-  .headerContent {
+  .settingsHeaderContent {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);

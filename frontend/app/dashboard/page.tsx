@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Header from '@/components/Header';
 import styles from './page.module.css';
 
 interface DashboardStats {
@@ -134,21 +135,7 @@ export default function DashboardPage() {
   return (
     <div className={styles.page}>
       {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <Link href="/" className={styles.logo}>
-            nano-Grazynka
-          </Link>
-          <nav className={styles.nav}>
-            <Link href="/" className={styles.navLink}>
-              Upload
-            </Link>
-            <Link href="/library" className={styles.navLink}>
-              Library
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header currentPage="dashboard" />
 
       {/* Main Content */}
       <main className={styles.main}>

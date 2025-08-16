@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Cookies from 'js-cookie';
-// import { toast } from 'sonner';  // TODO: Install sonner for toast notifications
+import { toast } from 'sonner';
 import { 
   getOrCreateSessionId, 
   getUsageCount, 
@@ -104,8 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const result = await migrateAnonymousSession(sessionToMigrate, data.user.id);
         if (result.migrated > 0) {
-          console.log(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
-          // TODO: toast.success(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
+          toast.success(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
         }
       } catch (error) {
         console.error('Migration failed:', error);
@@ -146,8 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const result = await migrateAnonymousSession(sessionToMigrate, data.user.id);
         if (result.migrated > 0) {
-          console.log(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
-          // TODO: toast.success(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
+          toast.success(`Successfully transferred ${result.migrated} note${result.migrated > 1 ? 's' : ''} to your account`);
         }
       } catch (error) {
         console.error('Migration failed:', error);

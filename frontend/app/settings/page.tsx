@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Header from '@/components/Header';
 import styles from './page.module.css';
 
 interface UserSettings {
@@ -177,20 +178,22 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.wrapper}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <h1 className={styles.headerTitle}>Account Settings</h1>
-            <Link
-              href="/dashboard"
-              className={styles.backLink}
-            >
-              ← Back to Dashboard
-            </Link>
+    <div className={styles.page}>
+      {/* Header */}
+      <Header 
+        currentPage="settings"
+        showBackButton={true}
+        onBackClick={() => router.push('/dashboard')}
+        backButtonText="Dashboard"
+      />
+      
+      <div className={styles.container}>
+        <div className={styles.wrapper}>
+          {/* Page Title */}
+          <div className={styles.titleSection}>
+            <h1 className={styles.title}>Account Settings</h1>
+            <p className={styles.subtitle}>Manage your account preferences and security</p>
           </div>
-        </div>
 
         {message && (
           <div className={`${styles.message} ${
