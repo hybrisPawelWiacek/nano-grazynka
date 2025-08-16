@@ -286,6 +286,65 @@
 - Smart categorization of notes
 - Batch operations for multiple notes
 
+## Current Development Phase
+**Multi-Model Transcription Enhancement**: 70% Complete
+- ✅ Backend infrastructure (Gemini integration, base64 encoding)
+- ✅ Basic frontend toggle (model selection exists)
+- ⏳ Template UI implementation (30% remaining)
+- ⏳ Token counter visualization
+- ⏳ Cost estimator display
+
+**Reference**: [Documentation Update Plan](./imp_docs/planning/DOCUMENTATION_UPDATE_PLAN_2025_08_15.md)
+
+## Development Roadmap
+
+### Phase 1: Complete Multi-Model Transcription (1 week)
+**Priority**: HIGH | **Status**: In Progress (70% complete)
+- [ ] Implement template selector UI for Gemini
+- [ ] Add token counter with visual feedback
+- [ ] Create cost estimator component
+- [ ] Add template placeholder forms
+- [ ] Complete E2E testing
+
+### Phase 2: Dashboard & Settings Implementation (1 week)
+**Priority**: HIGH | **Status**: Not Started (0% complete)
+- [ ] Build real dashboard with usage stats
+- [ ] Implement settings page with preferences
+- [ ] Add user profile management
+- [ ] Create subscription management UI
+- [ ] Add payment history view
+
+### Phase 3: Quick Wins & Polish (3 days)
+**Priority**: MEDIUM | **Status**: Ready to Start
+- [ ] Add toast notifications system
+- [ ] Implement YAML prompt configuration
+- [ ] Fix header UI alignment issues
+- [ ] Add loading skeletons everywhere
+- [ ] Improve error messages
+
+### Phase 4: Reprocessing History (1 week)
+**Priority**: MEDIUM | **Status**: Specified in PRD
+- [ ] Design version history UI
+- [ ] Implement reprocessing backend logic
+- [ ] Add version comparison view
+- [ ] Create rollback functionality
+- [ ] Add audit trail
+
+### Phase 5: Enable Observability (2 days)
+**Priority**: LOW | **Status**: 40% Complete (disabled)
+- [ ] Enable LangSmith provider (change hardcoded false)
+- [ ] Enable OpenLLMetry provider
+- [ ] Add configuration UI
+- [ ] Create monitoring dashboard
+- [ ] Test with real data
+
+### Post-MVP Features
+- Audio Playback in detail view
+- Complete password reset flow with email
+- User preference system
+- Export all data functionality
+- Delete account option
+
 ### Archived Plans
 - ✅ [ANONYMOUS_MIGRATION_ENDPOINT_PLAN_2025_08_15.md](./imp_docs/archive/ANONYMOUS_MIGRATION_ENDPOINT_PLAN_2025_08_15.md) - COMPLETE
 - ✅ [AI_GENERATED_NAMES_PLAN_2025_08_14.md](./imp_docs/archive/AI_GENERATED_NAMES_PLAN_2025_08_14.md) - COMPLETE
@@ -295,4 +354,4 @@
 
 ---
 *Last Updated: 2025-08-15 UTC*
-*Context: MVP complete with all planned features. AI-generated names, duration display, and bug fixes delivered. System is production-ready.*
+*Context: MVP core features complete. Multi-model transcription partially implemented (70%). Dashboard and settings need full implementation. System functional but missing some planned enhancements.*

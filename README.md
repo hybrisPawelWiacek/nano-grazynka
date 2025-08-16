@@ -109,14 +109,31 @@ nano-grazynka/
 - ✅ Fixed intermittent library loading errors
 - ✅ Fixed anonymous session authentication
 
-## 🏷️ MVP Limitations
+## 🏷️ Key Features
 
-This is an MVP with the following features:
-- Multi-user support with JWT authentication
-- Anonymous usage (5 free transcriptions)
-- SQLite database (suitable for MVP)
-- Basic error handling
-- No rate limiting
+### Anonymous Usage
+- **No signup required** - Start transcribing immediately
+- **5 free transcriptions** - No credit card needed
+- **Session persistence** - Your work is saved locally
+- **Easy conversion** - Sign up later and keep your work
+
+### Authentication & User Management
+- **JWT authentication** - Secure token-based auth
+- **User tiers** - Free, Pro, Business plans
+- **Credit system** - Monthly usage limits (5/50/200)
+- **Rate limiting** - 10/60/120 requests per minute by tier
+
+### Multi-Model Transcription
+- **Model selection** - Choose between GPT-4o and Gemini 2.0 Flash
+- **Template system** - Pre-built prompts for common scenarios
+- **Token counter** - Visual feedback for prompt limits
+- **Cost estimator** - Real-time pricing comparison
+
+### Credit System & Monetization
+- **Monthly credits** - Automatic reset on 1st of month
+- **Usage tracking** - Monitor your transcription usage
+- **Payment ready** - Stripe integration prepared
+- **Tier benefits** - Higher limits for paid users
 
 ## 🛠️ Development
 

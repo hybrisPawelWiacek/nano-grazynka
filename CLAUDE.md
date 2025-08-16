@@ -38,6 +38,29 @@ As the main agent, I will:
 - **Ambiguous situations**: I'll clarify with you
 - **Error fixes**: I'll explain the issue and proposed solution before fixing
 
+## Critical Documentation Distinction (IMPORTANT)
+
+### Understanding PRD vs PROJECT_STATUS
+
+**PRD_ACTUAL.md** = Complete specification document that includes:
+- ✅ Features that were implemented (marked with checkmarks)
+- 🎯 Features ready for implementation (planned but not built)
+- ⏳ Features specified but never worked on
+- Contains section "Requirements Not Yet Implemented" listing unbuilt features
+
+**PROJECT_STATUS.md** = Actual work completed:
+- Only features that were ACTUALLY implemented
+- Real progress tracking
+- Latest bug fixes and improvements
+- If something is in PROJECT_STATUS as complete, it's done
+- If something is ONLY in PRD but NOT in PROJECT_STATUS, it's likely unbuilt
+
+**Key Rule**: When evaluating what needs to be done:
+1. Check if feature appears in PROJECT_STATUS.md - if yes, it's implemented
+2. Check PRD_ACTUAL.md section "Requirements Not Yet Implemented" - these are unbuilt
+3. Features marked "Ready for Implementation" in PRD = planned but not started
+4. Don't assume something is built just because it's in the PRD with details
+
 ## Quick Navigation
 
 ### 📚 Documentation Map
@@ -82,7 +105,7 @@ Documentation for AI agents, requirements, and development process.
 ##### MCP & AI Playbooks
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
-| [MCP Playbook](./imp_docs/playbook/MCP_PLAYBOOK.md) | MCP server playbook | Detailed MCP usage examples |
+| [MCP Playbook](./MCP_PLAYBOOK.md) | MCP server playbook | Detailed MCP usage examples |
 
 ##### Planning Documents (Ephemeral)
 | Document | Purpose | When to Use |
@@ -109,25 +132,7 @@ Documentation for AI agents, requirements, and development process.
 
 ## Working with This Codebase
 
-### Core Philosophy
-- **MVP First**: Build only what's in the PRD, nothing more
-- **Simplicity**: Choose boring technology that works
-- **DDD**: Maintain clean architecture boundaries
-- **No Premature Optimization**: Solve today's problems, not tomorrow's
-
-### Collaboration with Paweł (Product Manager)
-- Strong technical understanding but delegates implementation
-- Values simplicity and pragmatic solutions
-- Expects autonomous technology decisions within requirements
-- Appreciates best practices without over-engineering
-
-### Decision Making Framework
-When making choices, ask:
-1. Is it required by the PRD?
-2. Is it the simplest solution that works?
-3. Does it follow established patterns?
-4. Will it scale to MVP needs (not beyond)?
-5. Is it maintainable and clear?
+For collaboration guidelines and decision making framework, see [PAIR_PROGRAMMING.md](./PAIR_PROGRAMMING.md)
 
 ## Project Structure Verification (MANDATORY)
 
@@ -346,7 +351,7 @@ tests/
 3. Memory: Store test scenarios that failed/passed
 ```
 
-**For detailed patterns and examples → See [MCP Playbook](./imp_docs/playbook/MCP_PLAYBOOK.md)**
+**For detailed patterns and examples → See [MCP Playbook](./MCP_PLAYBOOK.md)**
 
 ## Memory Management System
 

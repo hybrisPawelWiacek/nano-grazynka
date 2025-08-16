@@ -1,19 +1,22 @@
 # Documentation Structure
-**Last Updated**: August 15, 2025
-**Version**: 1.0
+**Last Updated**: August 16, 2025
+**Version**: 1.1
 
 ## Overview
 This document explains the organization of documentation in the nano-Grazynka project.
 
 ## Documentation Split
 
-The project uses a two-directory structure to separate concerns:
+The project uses a three-directory structure to separate concerns:
 
 ### `docs/` - Project Documentation
 Contains technical documentation for the codebase and system design. This is the documentation developers need to understand and work with the actual code.
 
 ### `imp_docs/` - AI Process & Implementation Documentation  
-Contains documentation for AI agents, requirements tracking, and development process. This includes planning documents, test results, and AI-specific playbooks.
+Contains documentation for AI agents, requirements tracking, and development process. This includes planning documents and test results.
+
+### `collaboration/` - AI Collaboration & MCP Documentation
+Contains AI agent collaboration guides, MCP playbooks, and pair programming guidelines for working with AI assistants.
 
 ## Document Categories
 
@@ -53,8 +56,6 @@ Ephemeral planning documents for features currently being implemented:
 - Active planning documents for ongoing work
 - Move to `imp_docs/archive/` when implementation is complete
 
-#### Playbooks (`imp_docs/playbook/`)
-- **MCP_PLAYBOOK.md** - MCP server usage patterns and examples
 
 #### Prompts (`imp_docs/prompts/`)
 - **CONTEXT_RESET_PROMPT.md** - Context reset prompts for AI agents
@@ -64,6 +65,11 @@ Completed planning documents and deprecated documentation:
 - Historical documents preserved for reference
 - Completed implementation plans
 - Deprecated requirements
+
+### Collaboration Documentation (`collaboration/`)
+AI collaboration and MCP integration documentation:
+- **MCP_PLAYBOOK.md** - MCP server usage patterns and examples (moved from imp_docs/playbook/)
+- **PAIR_PROGRAMMING.md** - Guidelines for pair programming with AI agents
 
 ### Canonical Documents (Root Level)
 These are the primary source of truth and should be kept up-to-date:
@@ -77,10 +83,11 @@ These are the primary source of truth and should be kept up-to-date:
 1. **Canonical documents** (CLAUDE.md, PROJECT_STATUS.md, README.md, DOCUMENTATION_STRUCTURE.md) must always be in root
 2. **Project documentation** stays in `docs/` - technical, codebase-related
 3. **AI process documentation** goes in `imp_docs/` - requirements, testing, planning
-4. **Requirements** are human-managed and should rarely change
-5. **Planning documents** are ephemeral and created for specific tasks
-6. **No duplicate documents** - single source of truth principle
-7. **Archive old versions** in `imp_docs/archive/` instead of deleting them
+4. **Collaboration documentation** goes in `collaboration/` - MCP guides, pair programming
+5. **Requirements** are human-managed and should rarely change
+6. **Planning documents** are ephemeral and created for specific tasks
+7. **No duplicate documents** - single source of truth principle
+8. **Archive old versions** in `imp_docs/archive/` instead of deleting them
 
 ## Finding Information
 
@@ -93,7 +100,8 @@ These are the primary source of truth and should be kept up-to-date:
 | Feature requirements | imp_docs/requirements/PRD_ACTUAL.md |
 | Test results | imp_docs/testing/TEST_RESULTS_2025_08_13.md |
 | Test plan | imp_docs/testing/TEST_PLAN.md |
-| MCP usage patterns | imp_docs/playbook/MCP_PLAYBOOK.md |
+| MCP usage patterns | collaboration/MCP_PLAYBOOK.md |
+| Pair programming guidelines | collaboration/PAIR_PROGRAMMING.md |
 | How to use the codebase | CLAUDE.md (root) |
 | Specific task plans | imp_docs/planning/*.md |
 | Development setup | docs/development/DEVELOPMENT.md |
@@ -106,6 +114,10 @@ nano-grazynka/
 ├── PROJECT_STATUS.md            # Project status tracker (canonical)
 ├── README.md                    # Quick start guide (canonical)
 ├── DOCUMENTATION_STRUCTURE.md   # Documentation organization guide (canonical)
+│
+├── collaboration/               # AI Collaboration & MCP Documentation
+│   ├── MCP_PLAYBOOK.md        # MCP server usage patterns
+│   └── PAIR_PROGRAMMING.md    # Pair programming guidelines
 │
 ├── docs/                        # Project Documentation
 │   ├── api/                    # API specifications
@@ -129,8 +141,6 @@ nano-grazynka/
     │   └── TEST_RESULTS_2025_08_13.md
     ├── planning/               # Active planning documents
     │   └── FIX_PLAN_2025_08_13.md
-    ├── playbook/               # MCP playbook & patterns
-    │   └── MCP_PLAYBOOK.md
     ├── prompts/                # Context reset prompts
     │   └── CONTEXT_RESET_PROMPT.md
     └── archive/                # Completed/archived plans
@@ -141,4 +151,4 @@ nano-grazynka/
 
 ---
 Created: August 12, 2025
-Updated: August 13, 2025 - Restructured to separate project docs from AI process docs
+Updated: August 16, 2025 - Added collaboration/ folder for MCP and pair programming documentation
