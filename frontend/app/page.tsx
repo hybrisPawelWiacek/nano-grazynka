@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConversionModal from '@/components/ConversionModal';
 import AdvancedOptions from '@/components/AdvancedOptions';
+import ProjectSelector from '@/components/ProjectSelector';
+import EntityPills from '@/components/EntityPills';
 import { getOrCreateSessionId, getUsageCount, getRemainingUsage } from '@/lib/anonymousSession';
 import { toast } from 'sonner';
 import { formatErrorForDisplay, formatErrorForToast } from '@/lib/error-messages';
@@ -134,6 +136,7 @@ export default function HomePage() {
   const [whisperPrompt, setWhisperPrompt] = useState('');
   const [showConversionModal, setShowConversionModal] = useState(false);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   
   // Multi-model transcription state with localStorage persistence
   const [selectedModel, setSelectedModel] = useState<string>(() => {
@@ -264,6 +267,11 @@ export default function HomePage() {
     // Add sessionId for anonymous users
     if (isAnonymous && sessionId) {
       formData.append('sessionId', sessionId);
+    }
+    
+    // Add projectId if selected
+    if (selectedProjectId) {
+      formData.append('projectId', selectedProjectId);
     }
 
     try {
@@ -559,6 +567,23 @@ export default function HomePage() {
           {/* Upload Form */}
           {(status.stage === 'idle' || status.stage === 'error') && (
             <div className={styles.uploadForm}>
+              {/* Project Selection */}
+              {user && (
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>
+                    Project Context (Optional)
+                  </label>
+                  <ProjectSelector
+                    onProjectSelect={setSelectedProjectId}
+                    selectedProjectId={selectedProjectId}
+                  />
+                  <EntityPills
+                    projectId={selectedProjectId}
+                    className={styles.entityPills}
+                  />
+                </div>
+              )}
+              
               {/* File Upload */}
               <div className={styles.formGroup}>
                 <label className={styles.label}>

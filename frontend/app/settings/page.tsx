@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import EntityManager from '@/components/EntityManager';
 import styles from './page.module.css';
 
 interface UserSettings {
@@ -313,6 +314,11 @@ export default function SettingsPage() {
           >
             {saving ? 'Saving...' : 'Save Preferences'}
           </button>
+        </div>
+
+        {/* Entity Management */}
+        <div className={styles.section}>
+          <EntityManager userId={user?.id} />
         </div>
 
         {/* Change Password */}
