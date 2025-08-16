@@ -98,9 +98,12 @@ Documentation for AI agents, requirements, and development process.
 ##### Testing
 | Document | Purpose | When to Use |
 |----------|---------|-------------|
-| [Test Plan](./imp_docs/testing/TEST_PLAN.md) | Test planning & strategy | Test execution planning |
+| [Test Plan](./imp_docs/testing/TEST_PLAN.md) | Test strategy & scenarios (WHAT) | Test execution planning |
+| [Anonymous Happy Path](./imp_docs/testing/PLAYWRIGHT_ANONYMOUS_HAPPY_PATH.md) | Anonymous user test flow (HOW) | Execute anonymous tests |
+| [Logged-In Happy Path](./imp_docs/testing/PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md) | Logged-in user test flow (HOW) | Execute logged-in tests |
+| [Playwright MCP Playbook](./collaboration/PLAYWRIGHT_MCP_PLAYBOOK.md) | Generic MCP tool reference | Tool syntax & debugging |
 | [Test Results](./imp_docs/testing/TEST_RESULTS_2025_08_13.md) | Latest test results | Review test outcomes |
-| [Test Suite](./tests/README.md) | Test organization & usage | Running tests |
+| [Test Suite](./tests/README.md) | Test scripts & data | Running test scripts |
 
 ##### MCP & AI Playbooks
 | Document | Purpose | When to Use |
@@ -568,6 +571,29 @@ docker compose logs -f
 - **Location**: `/frontend/app/page.tsx` line 101+
 - **Fix Required**: Add sessionId to all API calls
 - **Test**: Run `node tests/scripts/test-anonymous-upload.js` to verify
+
+## Test Documentation Structure
+
+When executing tests, follow this clear hierarchy:
+
+### 1. Strategy Layer - WHAT to test
+- **[TEST_PLAN.md](./imp_docs/testing/TEST_PLAN.md)** - Master test plan with all suites, test IDs, and expected results
+- Defines what needs to be tested but not how to execute it
+
+### 2. Implementation Layer - HOW to test
+- **[PLAYWRIGHT_ANONYMOUS_HAPPY_PATH.md](./imp_docs/testing/PLAYWRIGHT_ANONYMOUS_HAPPY_PATH.md)** - Specific MCP commands for anonymous user testing
+- **[PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md](./imp_docs/testing/PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md)** - Specific MCP commands for logged-in user testing
+- Contains exact MCP tool calls and test data specific to nano-grazynka
+
+### 3. Reference Layer - TOOL reference
+- **[PLAYWRIGHT_MCP_PLAYBOOK.md](./collaboration/PLAYWRIGHT_MCP_PLAYBOOK.md)** - Generic MCP tool syntax, patterns, and troubleshooting
+- Project-independent reference that can be used across any project
+- Contains best practices and common patterns for Playwright MCP tools
+
+### Test Execution Flow
+1. **Check TEST_PLAN.md** → Understand WHAT to test (Test IDs, scenarios)
+2. **Follow PLAYWRIGHT_*_HAPPY_PATH.md** → Get specific test steps with exact MCP commands
+3. **Reference PLAYWRIGHT_MCP_PLAYBOOK.md** → Look up tool syntax, debug issues, find patterns
 
 ## Where to Find What
 

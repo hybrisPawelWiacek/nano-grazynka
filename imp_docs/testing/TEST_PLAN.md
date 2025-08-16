@@ -75,6 +75,7 @@ All browser automation MUST use MCP tools directly.
 
 #### 4A: Anonymous User Happy Path (10 min)
 **Reference**: [PLAYWRIGHT_ANONYMOUS_HAPPY_PATH.md](./PLAYWRIGHT_ANONYMOUS_HAPPY_PATH.md)
+**MCP Tool Reference**: [Playwright MCP Playbook](../../collaboration/PLAYWRIGHT_MCP_PLAYBOOK.md)
 
 | Test ID | Test Case | Steps | Validation |
 |---------|-----------|-------|------------|
@@ -87,6 +88,7 @@ All browser automation MUST use MCP tools directly.
 
 #### 4B: Logged-In User Happy Path (10 min)
 **Reference**: [PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md](./PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md)
+**MCP Tool Reference**: [Playwright MCP Playbook](../../collaboration/PLAYWRIGHT_MCP_PLAYBOOK.md)
 
 | Test ID | Test Case | Steps | Validation |
 |---------|-----------|-------|------------|

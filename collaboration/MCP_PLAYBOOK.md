@@ -364,3 +364,9 @@ Need to remember?
 ```
 
 Remember: This is an MVP. Use MCP servers to accelerate development, not to over-engineer. Focus on shipping working features that match the PRD requirements.
+
+## Related Documentation
+
+- **[Playwright MCP Playbook](./PLAYWRIGHT_MCP_PLAYBOOK.md)** - Generic E2E testing patterns using Playwright MCP tools
+- **[Test Plan](../imp_docs/testing/TEST_PLAN.md)** - Project-specific test strategy and scenarios
+- **[AI Development Playbook](./AI_DEVELOPMENT_PLAYBOOK.md)** - General AI development patterns

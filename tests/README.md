@@ -272,7 +272,9 @@ mcp__playwright__browser_wait_for
 
 - [Test Plan](../imp_docs/testing/TEST_PLAN.md) - Overall test strategy
 - [Test Alignment Plan](../imp_docs/planning/TEST_ALIGNMENT_PLAN.md) - MCP migration plan
-- [MCP Test Guide](./MCP_TEST_GUIDE.md) - Detailed MCP patterns and examples
+- [Playwright MCP Playbook](../collaboration/PLAYWRIGHT_MCP_PLAYBOOK.md) - Generic MCP patterns and tool reference
+- [Anonymous Happy Path](../imp_docs/testing/PLAYWRIGHT_ANONYMOUS_HAPPY_PATH.md) - Anonymous user test implementation
+- [Logged-In Happy Path](../imp_docs/testing/PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md) - Authenticated user test implementation
 - [Test Results](../imp_docs/testing/TEST_RESULTS_2025_08_13.md) - Latest execution report
 
 ## Contributing
@@ -287,7 +289,7 @@ When adding new MCP tests:
 ## Support
 
 For MCP testing questions:
-- Review [MCP Test Guide](./MCP_TEST_GUIDE.md)
+- Review [Playwright MCP Playbook](../collaboration/PLAYWRIGHT_MCP_PLAYBOOK.md)
 - Check example patterns in existing test files
 - Reference Playwright MCP documentation
 

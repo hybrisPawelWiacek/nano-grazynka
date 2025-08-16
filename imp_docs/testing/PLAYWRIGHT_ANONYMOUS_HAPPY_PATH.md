@@ -3,6 +3,8 @@
 ## Overview
 This document provides a step-by-step guide for testing the complete anonymous user flow using Playwright MCP. This "happy path" test verifies that anonymous users can successfully upload, process, view, and manage voice notes without authentication issues.
 
+**For MCP tool reference and troubleshooting, see [Playwright MCP Playbook](../../collaboration/PLAYWRIGHT_MCP_PLAYBOOK.md)**
+
 ## Test File Location
 - **Test Audio File**: `/Users/pawelwiacek/Documents/ai_agents_dev/nano-grazynka_CC/tests/test-data/zabka.m4a`
 - **Application URL**: `http://localhost:3100`
