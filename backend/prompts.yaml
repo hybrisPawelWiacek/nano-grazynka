@@ -1,0 +1,155 @@
+# YAML Prompt System Configuration
+# All AI prompts externalized for easy maintenance and hot-reload capability
+# Supports variable interpolation with {{placeholder}} syntax
+
+transcription:
+  gpt4o:
+    default: |
+      You are a professional audio transcriber. Transcribe the following audio accurately in the detected language.
+      Preserve all spoken words exactly as heard. Include timestamps for long audio.
+      {{entities.compressed}}
+    
+    whisper: |
+      Transcribe this audio with high accuracy using Whisper model capabilities.
+      Maintain the original language and preserve all details including filler words and pauses.
+      Context: {{project.name}} - {{project.description}}
+    
+    compressed: |
+      Provide a concise transcription focusing on key information.
+      Language context: {{entities.compressed}}
+  
+  gemini:
+    default: |
+      You are a professional audio transcriber. Transcribe the following audio accurately in the detected language.
+      Preserve all spoken words exactly as heard. Include timestamps for long audio.
+      {{entities.detailed}}
+    
+    detailed: |
+      Provide a comprehensive transcription with the following requirements:
+      1. Include all spoken words verbatim
+      2. Add timestamps at regular intervals (every 30 seconds)
+      3. Note any non-verbal sounds or pauses
+      4. Preserve original language
+      Context: {{entities.detailed}}
+
+summarization:
+  default: |
+    Analyze the following transcription and provide:
+    1. **Summary**: A 2-3 sentence overview capturing the essence
+    2. **Key Points**: Main topics and ideas as bullet points
+    3. **Action Items**: Any tasks, follow-ups, or commitments mentioned
+    
+    Format the response in clear, structured sections.
+    Maintain the original language of the transcription.
+    {{entities.relevant}}
+  
+  with_custom: |
+    {{user.customPrompt}}
+    
+    Now analyze the following transcription based on the above custom requirements.
+    Ensure your response addresses all specified points.
+    {{entities.relevant}}
+  
+  action_items: |
+    Extract and list all action items, tasks, and follow-ups from this transcription.
+    Present them as a prioritized bullet list with:
+    - Clear action description
+    - Any mentioned deadlines or timeframes
+    - Responsible parties if mentioned
+    
+    Maintain the original language of the transcription.
+  
+  templates:
+    meeting: |
+      Analyze this meeting transcription and provide structured meeting notes:
+      1. **Meeting Purpose**: Brief statement of why the meeting was held
+      2. **Participants**: List of mentioned participants or roles
+      3. **Key Decisions**: Important decisions made during the meeting
+      4. **Discussion Points**: Main topics discussed with brief summaries
+      5. **Action Items**: Tasks assigned with owners and deadlines
+      6. **Next Steps**: Planned follow-ups or future meetings
+      
+      Format as professional meeting minutes.
+      {{entities.relevant}}
+    
+    technical: |
+      Extract technical details from this transcription:
+      1. **Technical Concepts**: Technologies, frameworks, or tools mentioned
+      2. **Architecture Decisions**: System design choices discussed
+      3. **Implementation Details**: Specific technical approaches or solutions
+      4. **Issues & Bugs**: Problems mentioned and proposed solutions
+      5. **Technical Action Items**: Development tasks or technical investigations needed
+      
+      Focus on technical accuracy and completeness.
+      {{entities.technical}}
+    
+    personal: |
+      Summarize this personal note focusing on:
+      1. **Main Thoughts**: Core ideas or reflections
+      2. **Emotions/Feelings**: Any emotional context if present
+      3. **Personal Goals**: Mentioned objectives or aspirations
+      4. **Reminders**: Things to remember or follow up on
+      
+      Keep the tone personal and reflective.
+    
+    brainstorm: |
+      Organize this brainstorming session:
+      1. **Central Theme**: The main topic or problem being explored
+      2. **Ideas Generated**: List all ideas mentioned, grouped by theme
+      3. **Promising Concepts**: Highlight the most interesting or viable ideas
+      4. **Questions Raised**: Open questions or areas needing research
+      5. **Next Actions**: Concrete steps to pursue ideas further
+      
+      Preserve the creative and exploratory nature of the content.
+
+titleGeneration:
+  default: |
+    Given this voice note transcription, generate:
+    1. A 3-4 word descriptive title
+    2. A 10-15 word summary of the main topic
+    3. Any specific date mentioned in the content (or null if none)
+    
+    Respond ONLY in JSON format:
+    {
+      "title": "...",
+      "description": "...",
+      "date": "YYYY-MM-DD or null"
+    }
+    
+    Focus on clarity and relevance.
+    {{entities.key}}
+  
+  templates:
+    brief: |
+      Generate a brief 3-4 word title for this transcription.
+      Make it descriptive and memorable.
+      Return only the title text, no formatting.
+    
+    detailed: |
+      Create comprehensive metadata for this transcription:
+      {
+        "title": "Descriptive 3-5 word title",
+        "description": "10-20 word summary",
+        "category": "meeting|personal|technical|other",
+        "tags": ["tag1", "tag2", "tag3"],
+        "priority": "high|medium|low",
+        "date": "YYYY-MM-DD or null"
+      }
+
+# Global templates that can be referenced from anywhere
+templates:
+  error_context: |
+    An error occurred while processing your request.
+    Context: {{project.name}}
+    Please try again or contact support if the issue persists.
+  
+  language_instruction: |
+    Maintain the original language throughout your response.
+    Detected entities: {{entities.relevant}}
+  
+  quality_instruction: |
+    Ensure high quality output with:
+    - Accuracy in facts and details
+    - Clear structure and formatting
+    - Appropriate tone for the context
+    - Complete coverage of requirements

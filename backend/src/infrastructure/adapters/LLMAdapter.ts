@@ -1,8 +1,14 @@
 import { SummarizationService, SummarizationResult } from '../../domain/services/SummarizationService';
 import { Language } from '../../domain/value-objects/Language';
 import { ConfigLoader } from '../../config/loader';
+import { PromptLoader } from '../config/PromptLoader';
 
 export class LLMAdapter implements SummarizationService {
+  private promptLoader: PromptLoader;
+
+  constructor(promptLoader?: PromptLoader) {
+    this.promptLoader = promptLoader || PromptLoader.getInstance();
+  }
 
   async summarize(
     text: string,
@@ -137,17 +143,30 @@ export class LLMAdapter implements SummarizationService {
   }
 
   private getSystemPrompt(language: Language, isCustomPrompt: boolean = false): string {
-    // For custom prompts, allow flexible JSON structure
+    // For custom prompts, use the with_custom template
     if (isCustomPrompt) {
+      // For now, return flexible JSON instruction since we don't have the actual custom prompt here
       return "You are a helpful assistant analyzing transcripts. Respond with a JSON object. For simple responses, you can use: {\"summary\": \"your response here\"}. For detailed responses, you can include additional fields like keyPoints and actionItems.";
     }
     
-    // For default prompts, use the rigid structure
-    const prompts = ConfigLoader.get('summarization.prompts');
-    const basePrompt = prompts.summary || 'Summarize the following transcript concisely, capturing key points and main ideas.';
+    // Use PromptLoader to get the default summarization prompt
+    const prompt = this.promptLoader.getPrompt(
+      'summarization.default',
+      {
+        entities: { 
+          relevant: '',
+          compressed: '',
+          detailed: ''
+        },
+        project: { 
+          name: 'nano-Grazynka',
+          description: 'Voice note transcription and summarization utility'
+        }
+      }
+    );
     
     // Add JSON format instruction with Markdown formatting
-    return `${basePrompt}
+    return `${prompt}
     
     Format your response using Markdown for better readability:
     - Use **bold** for emphasis on important points
@@ -163,7 +182,7 @@ export class LLMAdapter implements SummarizationService {
       "action_items": ["- [ ] Action item 1 with owner if mentioned", "- [ ] Action item 2 with deadline if specified"]
     }
     
-    Ensure the content is professional and well-structured.`;
+    Maintain the language: ${language.getValue() || 'English'}`;
   }
 
   private parseResult(content: any, isCustomPrompt?: boolean): SummarizationResult {

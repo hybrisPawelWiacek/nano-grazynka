@@ -2,8 +2,14 @@ import fs from 'fs';
 import { TranscriptionService, TranscriptionResult } from '../../domain/services/TranscriptionService';
 import { Language } from '../../domain/value-objects/Language';
 import { ConfigLoader } from '../../config/loader';
+import { PromptLoader } from '../config/PromptLoader';
 
 export class WhisperAdapter implements TranscriptionService {
+  private promptLoader: PromptLoader;
+
+  constructor(promptLoader?: PromptLoader) {
+    this.promptLoader = promptLoader || PromptLoader.getInstance();
+  }
 
   async transcribe(
     audioFilePath: string,
@@ -272,11 +278,20 @@ export class WhisperAdapter implements TranscriptionService {
                      fileName.endsWith('.ogg') ? 'audio/ogg' :
                      fileName.endsWith('.flac') ? 'audio/flac' : 'audio/mp4';
     
-    // Construct default system prompt if not provided
-    const defaultSystemPrompt = `You are a professional audio transcriber. Transcribe the following audio accurately in ${language.getValue() || 'English'}. 
-    Preserve all spoken words exactly as heard. Include timestamps for long audio.
-    If you hear technical terms, proper nouns, or acronyms, transcribe them correctly.
-    Format the transcription clearly with proper punctuation.`;
+    // Get system prompt from PromptLoader
+    const defaultSystemPrompt = this.promptLoader.getPrompt(
+      'transcription.gemini.default',
+      {
+        entities: { 
+          compressed: options?.prompt || '',
+          detailed: '' 
+        },
+        project: { 
+          name: 'nano-Grazynka',
+          description: 'Voice note transcription utility'
+        }
+      }
+    );
     
     // Debug: Log audio file size
     console.log(`[Gemini] Processing audio file: ${fileName}, size: ${fileBuffer.length} bytes, mime: ${mimeType}`);

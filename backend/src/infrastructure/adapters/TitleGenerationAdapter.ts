@@ -1,12 +1,15 @@
 import { TitleGenerationService, TitleGenerationResult, TitleGenerationError } from '../../domain/services/TitleGenerationService';
 import OpenAI from 'openai';
+import { PromptLoader } from '../config/PromptLoader';
 
 export class TitleGenerationAdapter implements TitleGenerationService {
   private openai?: OpenAI;
   private config: any;
+  private promptLoader: PromptLoader;
 
-  constructor(config: any) {
+  constructor(config: any, promptLoader?: PromptLoader) {
     this.config = config;
+    this.promptLoader = promptLoader || PromptLoader.getInstance();
     
     // Initialize based on provider
     if (config.titleGeneration?.provider === 'openai') {
@@ -127,27 +130,28 @@ export class TitleGenerationAdapter implements TitleGenerationService {
   }
 
   private buildPrompt(transcription: string): string {
-    const basePrompt = this.config.titleGeneration?.prompt || 
-      `Given this voice note transcription, generate:
-      1. A 3-4 word descriptive title
-      2. A 10-15 word summary of the main topic
-      3. Any specific date mentioned in the content (or null if none)
-      
-      Respond ONLY in JSON format:
+    // Get prompt from PromptLoader
+    const basePrompt = this.promptLoader.getPrompt(
+      'titleGeneration.default',
       {
-        "title": "...",
-        "description": "...",
-        "date": "YYYY-MM-DD or null"
+        entities: { 
+          key: '',
+          compressed: '',
+          relevant: ''
+        },
+        project: {
+          name: 'nano-Grazynka',
+          description: 'Voice note transcription and summarization utility'
+        }
       }
-      
-      Transcription:`;
+    );
 
     // Truncate transcription if too long (keep first 2000 chars for context)
     const truncatedTranscription = transcription.length > 2000 
       ? transcription.substring(0, 2000) + '...'
       : transcription;
 
-    return `${basePrompt}\n${truncatedTranscription}`;
+    return `${basePrompt}\n\nTranscription:\n${truncatedTranscription}`;
   }
 
   private parseResponse(content: string): TitleGenerationResult {

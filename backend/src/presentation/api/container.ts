@@ -24,11 +24,14 @@ import {
   MigrateAnonymousToUserUseCase
 } from '../../application/use-cases';
 
+import { PromptLoader } from '../../infrastructure/config/PromptLoader';
+
 export class Container {
   private static instance: Container;
   private config: Config;
   private prisma: PrismaClient;
   private observability: CompositeObservabilityProvider;
+  private promptLoader: PromptLoader;
   
   private voiceNoteRepository: VoiceNoteRepositoryImpl;
   private userRepository: UserRepositoryImpl;
@@ -45,6 +48,9 @@ export class Container {
     
     this.prisma = DatabaseClient.getInstance();
     
+    // Initialize PromptLoader as singleton
+    this.promptLoader = PromptLoader.getInstance();
+    
     this.observability = new CompositeObservabilityProvider([
       new LangSmithObservabilityProvider(this.config),
       new OpenLLMetryObservabilityProvider(this.config)
@@ -54,9 +60,10 @@ export class Container {
     this.userRepository = new UserRepositoryImpl(this.prisma);
     this.eventStore = new EventStoreImpl(this.prisma);
     
-    this.transcriptionService = new WhisperAdapter();
-    this.summarizationService = new LLMAdapter();
-    this.titleGenerationService = new TitleGenerationAdapter(this.config);
+    // Pass PromptLoader to adapters
+    this.transcriptionService = new WhisperAdapter(this.promptLoader);
+    this.summarizationService = new LLMAdapter(this.promptLoader);
+    this.titleGenerationService = new TitleGenerationAdapter(this.config, this.promptLoader);
     this.storageService = new LocalStorageAdapter();
     this.audioMetadataExtractor = new AudioMetadataExtractor();
     
@@ -79,6 +86,10 @@ export class Container {
   
   getConfig(): Config {
     return this.config;
+  }
+  
+  getPromptLoader(): PromptLoader {
+    return this.promptLoader;
   }
   
   getPrisma(): PrismaClient {
