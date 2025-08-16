@@ -24,12 +24,27 @@ import {
   MigrateAnonymousToUserUseCase
 } from '../../application/use-cases';
 
+// Entity use cases
+import { CreateEntityUseCase } from '../../application/use-cases/entities/CreateEntityUseCase';
+import { UpdateEntityUseCase } from '../../application/use-cases/entities/UpdateEntityUseCase';
+import { DeleteEntityUseCase } from '../../application/use-cases/entities/DeleteEntityUseCase';
+import { ListEntitiesUseCase } from '../../application/use-cases/entities/ListEntitiesUseCase';
+
+// Project use cases
+import { CreateProjectUseCase } from '../../application/use-cases/projects/CreateProjectUseCase';
+import { UpdateProjectUseCase } from '../../application/use-cases/projects/UpdateProjectUseCase';
+import { DeleteProjectUseCase } from '../../application/use-cases/projects/DeleteProjectUseCase';
+import { ListProjectsUseCase } from '../../application/use-cases/projects/ListProjectsUseCase';
+import { ManageProjectEntitiesUseCase } from '../../application/use-cases/projects/ManageProjectEntitiesUseCase';
+
 import { PromptLoader } from '../../infrastructure/config/PromptLoader';
 import { EntityRepository } from '../../infrastructure/persistence/EntityRepository';
 import { ProjectRepository } from '../../infrastructure/persistence/ProjectRepository';
+import { EntityUsageRepository } from '../../infrastructure/persistence/EntityUsageRepository';
 import { EntityContextBuilder } from '../../application/services/EntityContextBuilder';
 import { IEntityRepository } from '../../domain/repositories/IEntityRepository';
 import { IProjectRepository } from '../../domain/repositories/IProjectRepository';
+import { IEntityUsageRepository } from '../../domain/repositories/IEntityUsageRepository';
 
 export class Container {
   private static instance: Container;
@@ -43,6 +58,7 @@ export class Container {
   private eventStore: EventStoreImpl;
   private entityRepository: IEntityRepository;
   private projectRepository: IProjectRepository;
+  private entityUsageRepository: IEntityUsageRepository;
   private entityContextBuilder: EntityContextBuilder;
   private transcriptionService: WhisperAdapter;
   private summarizationService: LLMAdapter;
@@ -71,6 +87,7 @@ export class Container {
     // Initialize Entity and Project repositories
     this.entityRepository = new EntityRepository(this.prisma);
     this.projectRepository = new ProjectRepository(this.prisma);
+    this.entityUsageRepository = new EntityUsageRepository(this.prisma);
     
     // Initialize EntityContextBuilder
     this.entityContextBuilder = new EntityContextBuilder(
@@ -91,7 +108,10 @@ export class Container {
       this.titleGenerationService,
       this.voiceNoteRepository,
       this.eventStore,
-      this.config  // Pass the ConfigLoader instance
+      this.config,  // Pass the ConfigLoader instance
+      this.entityContextBuilder,
+      this.projectRepository,
+      this.entityUsageRepository
     );
   }
   
@@ -136,6 +156,10 @@ export class Container {
   
   getEntityContextBuilder(): EntityContextBuilder {
     return this.entityContextBuilder;
+  }
+  
+  getEntityUsageRepository(): IEntityUsageRepository {
+    return this.entityUsageRepository;
   }
   
   getUploadVoiceNoteUseCase(): UploadVoiceNoteUseCase {
@@ -188,6 +212,44 @@ export class Container {
     return new MigrateAnonymousToUserUseCase(
       this.prisma
     );
+  }
+
+  // Entity use case getters
+  getCreateEntityUseCase(): CreateEntityUseCase {
+    return new CreateEntityUseCase(this.entityRepository);
+  }
+
+  getUpdateEntityUseCase(): UpdateEntityUseCase {
+    return new UpdateEntityUseCase(this.entityRepository);
+  }
+
+  getDeleteEntityUseCase(): DeleteEntityUseCase {
+    return new DeleteEntityUseCase(this.entityRepository);
+  }
+
+  getListEntitiesUseCase(): ListEntitiesUseCase {
+    return new ListEntitiesUseCase(this.entityRepository);
+  }
+
+  // Project use case getters
+  getCreateProjectUseCase(): CreateProjectUseCase {
+    return new CreateProjectUseCase(this.projectRepository);
+  }
+
+  getUpdateProjectUseCase(): UpdateProjectUseCase {
+    return new UpdateProjectUseCase(this.projectRepository);
+  }
+
+  getDeleteProjectUseCase(): DeleteProjectUseCase {
+    return new DeleteProjectUseCase(this.projectRepository);
+  }
+
+  getListProjectsUseCase(): ListProjectsUseCase {
+    return new ListProjectsUseCase(this.projectRepository);
+  }
+
+  getManageProjectEntitiesUseCase(): ManageProjectEntitiesUseCase {
+    return new ManageProjectEntitiesUseCase(this.projectRepository, this.entityRepository);
   }
   
   async shutdown(): Promise<void> {

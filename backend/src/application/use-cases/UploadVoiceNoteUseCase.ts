@@ -12,6 +12,7 @@ import * as path from 'path';
 export interface UploadVoiceNoteInput {
   userId?: string;  // Made optional for anonymous users
   sessionId?: string;  // For anonymous users
+  projectId?: string;  // Optional project ID for entity context
   file: {
     buffer: Buffer;
     originalName: string;
@@ -31,6 +32,7 @@ export interface UploadVoiceNoteOutput {
   voiceNoteId: string;
   title: string;
   status: string;
+  projectId?: string;
 }
 
 export class UploadVoiceNoteUseCase extends UseCase<
@@ -109,7 +111,8 @@ export class UploadVoiceNoteUseCase extends UseCase<
         whisperPrompt: input.whisperPrompt,
         transcriptionModel: input.transcriptionModel,
         geminiSystemPrompt: input.geminiSystemPrompt,
-        geminiUserPrompt: input.geminiUserPrompt
+        geminiUserPrompt: input.geminiUserPrompt,
+        projectId: input.projectId
       });
 
       // Save to repository
@@ -129,7 +132,8 @@ export class UploadVoiceNoteUseCase extends UseCase<
         data: {
           voiceNoteId: voiceNote.getId().getValue(),
           title: voiceNote.getTitle(),
-          status: voiceNote.getStatus().getValue()
+          status: voiceNote.getStatus().getValue(),
+          projectId: input.projectId
         }
       };
     } catch (error) {

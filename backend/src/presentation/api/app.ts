@@ -10,6 +10,8 @@ import { voiceNoteRoutes } from './routes/voiceNotes';
 import authRoutes from './routes/auth';
 import paymentsRoutes from './routes/payments';
 import { anonymousRoutes } from './routes/anonymous';
+import { entityRoutes } from './routes/entities';
+import { projectRoutes } from './routes/projects';
 
 export async function createApp(): Promise<FastifyInstance> {
   const container = Container.getInstance();
@@ -95,6 +97,8 @@ export async function createApp(): Promise<FastifyInstance> {
   await fastify.register(voiceNoteRoutes);
   await fastify.register(paymentsRoutes);
   await fastify.register(anonymousRoutes);
+  await fastify.register(entityRoutes);
+  await fastify.register(projectRoutes);
 
   fastify.get('/', async (request, reply) => {
     return {

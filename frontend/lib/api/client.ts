@@ -3,6 +3,15 @@
 import { config } from '../config';
 import type { ApiError } from '../types';
 
+// Rate limit tracking
+interface RateLimitInfo {
+  limit: number;
+  remaining: number;
+  resetTime: string;
+}
+
+let currentRateLimit: RateLimitInfo | null = null;
+
 export class ApiClient {
   public baseUrl: string;
   private timeout: number;
@@ -12,7 +21,25 @@ export class ApiClient {
     this.timeout = timeout || config.api.timeout;
   }
 
+  // Get current rate limit status
+  static getRateLimitStatus(): RateLimitInfo | null {
+    return currentRateLimit;
+  }
+
   private async handleResponse<T>(response: Response): Promise<T> {
+    // Track rate limit headers
+    const limitHeader = response.headers.get('X-RateLimit-Limit');
+    const remainingHeader = response.headers.get('X-RateLimit-Remaining');
+    const resetHeader = response.headers.get('X-RateLimit-Reset');
+    
+    if (limitHeader && remainingHeader && resetHeader) {
+      currentRateLimit = {
+        limit: parseInt(limitHeader, 10),
+        remaining: parseInt(remainingHeader, 10),
+        resetTime: resetHeader
+      };
+    }
+
     if (!response.ok) {
       let error: ApiError;
       try {
@@ -24,6 +51,15 @@ export class ApiClient {
           message: `Request failed with status ${response.status}`,
         };
       }
+      
+      // Add retry-after header for 429 responses
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        if (retryAfter) {
+          (error as any).retryAfter = parseInt(retryAfter, 10);
+        }
+      }
+      
       throw error;
     }
 

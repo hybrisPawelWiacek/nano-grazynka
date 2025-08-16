@@ -52,10 +52,11 @@ describe('Summary', () => {
       }).toThrow('Summary text cannot be empty');
     });
 
-    it('should throw error for empty key points', () => {
-      expect(() => {
-        Summary.create('Summary text', [], [], Language.EN);
-      }).toThrow('Key points cannot be empty');
+    it('should allow empty key points and action items', () => {
+      // MVP allows empty keyPoints and actionItems
+      const summary = Summary.create('Summary text', [], [], Language.EN);
+      expect(summary.getKeyPoints()).toEqual([]);
+      expect(summary.getActionItems()).toEqual([]);
     });
   });
 

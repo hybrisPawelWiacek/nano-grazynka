@@ -2,12 +2,14 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { UserEntity } from '../../domain/entities/User';
 import { AuthService } from '../../domain/services/AuthService';
 import { JwtService } from '../../infrastructure/auth/JwtService';
+import { PasswordService } from '../../infrastructure/auth/PasswordService';
 import bcrypt from 'bcrypt';
+import { createId } from '@paralleldrive/cuid2';
 
 describe('Authentication Unit Tests', () => {
   let authService: AuthService;
   let mockUserRepository: any;
-  let mockSessionRepository: any;
+  let passwordService: PasswordService;
   let jwtService: JwtService;
 
   beforeEach(() => {
@@ -19,15 +21,9 @@ describe('Authentication Unit Tests', () => {
       findById: jest.fn()
     };
 
-    mockSessionRepository = {
-      create: jest.fn(),
-      findByToken: jest.fn(),
-      delete: jest.fn(),
-      deleteUserSessions: jest.fn()
-    };
-
+    passwordService = new PasswordService();
     jwtService = new JwtService();
-    authService = new AuthService(mockUserRepository, mockSessionRepository);
+    authService = new AuthService(mockUserRepository, passwordService, jwtService);
   });
 
   describe('User Registration', () => {
@@ -47,9 +43,9 @@ describe('Authentication Unit Tests', () => {
 
       const result = await authService.register(email, password);
 
-      expect(result.success).toBe(true);
-      expect(result.data?.user.email).toBe(email);
-      expect(result.data?.user.tier).toBe('free');
+      expect(result.user.email).toBe(email);
+      expect(result.user.tier).toBe('free');
+      expect(result.token).toBeDefined();
       expect(mockUserRepository.create).toHaveBeenCalled();
     });
 
@@ -61,10 +57,7 @@ describe('Authentication Unit Tests', () => {
         UserEntity.create({ email, tier: 'free', creditsUsed: 0, creditsResetDate: new Date() })
       );
 
-      const result = await authService.register(email, password);
-
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('already exists');
+      await expect(authService.register(email, password)).rejects.toThrow('already exists');
       expect(mockUserRepository.create).not.toHaveBeenCalled();
     });
 
@@ -72,10 +65,9 @@ describe('Authentication Unit Tests', () => {
       const email = 'test@example.com';
       const weakPassword = '123';
 
-      const result = await authService.register(email, weakPassword);
+      mockUserRepository.findByEmail.mockResolvedValue(null);
 
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('password');
+      await expect(authService.register(email, weakPassword)).rejects.toThrow('Password must be at least 8 characters');
     });
   });
 
@@ -86,7 +78,7 @@ describe('Authentication Unit Tests', () => {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const mockUser = UserEntity.fromPersistence({
-        id: 'user123',
+        id: createId(),
         email,
         passwordHash: hashedPassword,
         tier: 'free',
@@ -97,19 +89,12 @@ describe('Authentication Unit Tests', () => {
       });
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
-      mockSessionRepository.create.mockResolvedValue({
-        id: 'session123',
-        userId: 'user123',
-        token: 'mock-token',
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      });
+      mockUserRepository.update.mockResolvedValue(mockUser.updateLastLogin());
 
       const result = await authService.login(email, password);
 
-      expect(result.success).toBe(true);
-      expect(result.data?.user.email).toBe(email);
-      expect(result.data?.token).toBeDefined();
-      expect(mockSessionRepository.create).toHaveBeenCalled();
+      expect(result.user.email).toBe(email);
+      expect(result.token).toBeDefined();
     });
 
     it('should fail login with incorrect password', async () => {
@@ -118,7 +103,7 @@ describe('Authentication Unit Tests', () => {
       const hashedPassword = await bcrypt.hash('CorrectPassword', 10);
 
       const mockUser = UserEntity.fromPersistence({
-        id: 'user123',
+        id: createId(),
         email,
         passwordHash: hashedPassword,
         tier: 'free',
@@ -130,22 +115,19 @@ describe('Authentication Unit Tests', () => {
 
       mockUserRepository.findByEmail.mockResolvedValue(mockUser);
 
-      const result = await authService.login(email, password);
-
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid');
-      expect(mockSessionRepository.create).not.toHaveBeenCalled();
+      await expect(authService.login(email, password)).rejects.toThrow('Invalid email or password');
+      expect(mockUserRepository.update).not.toHaveBeenCalled();
     });
   });
 
   describe('JWT Service', () => {
     it('should generate and verify JWT tokens', () => {
-      const payload = { userId: 'user123', email: 'test@example.com' };
+      const payload = { userId: createId(), email: 'test@example.com', tier: 'free' };
       
-      const token = jwtService.generateToken(payload);
+      const token = jwtService.sign(payload);
       expect(token).toBeDefined();
       
-      const decoded = jwtService.verifyToken(token);
+      const decoded = jwtService.verify(token);
       expect(decoded.userId).toBe(payload.userId);
       expect(decoded.email).toBe(payload.email);
     });
@@ -153,7 +135,7 @@ describe('Authentication Unit Tests', () => {
     it('should reject invalid tokens', () => {
       const invalidToken = 'invalid.token.here';
       
-      expect(() => jwtService.verifyToken(invalidToken)).toThrow();
+      expect(() => jwtService.verify(invalidToken)).toThrow();
     });
   });
 
@@ -168,10 +150,12 @@ describe('Authentication Unit Tests', () => {
 
       expect(user.hasCreditsAvailable).toBe(true);
       expect(user.creditLimit).toBe(5);
+      expect(user.remainingCredits).toBe(2);
 
       // Use up remaining credits
-      user.creditsUsed = 5;
-      expect(user.hasCreditsAvailable).toBe(false);
+      const updatedUser = user.incrementCreditsUsed().incrementCreditsUsed();
+      expect(updatedUser.hasCreditsAvailable).toBe(false);
+      expect(updatedUser.creditsUsed).toBe(5);
     });
 
     it('should handle tier-based credit limits', () => {
@@ -197,8 +181,8 @@ describe('Authentication Unit Tests', () => {
       });
 
       expect(freeUser.creditLimit).toBe(5);
-      expect(proUser.creditLimit).toBe(50);
-      expect(businessUser.creditLimit).toBe(200);
+      expect(proUser.creditLimit).toBe(999999);
+      expect(businessUser.creditLimit).toBe(999999);
     });
 
     it('should check if credits need reset', () => {
@@ -212,7 +196,7 @@ describe('Authentication Unit Tests', () => {
         creditsResetDate: lastMonth
       });
 
-      expect(user.needsCreditReset()).toBe(true);
+      expect(user.shouldResetCredits()).toBe(true);
 
       const recentUser = UserEntity.create({
         email: 'test2@example.com',
@@ -221,7 +205,7 @@ describe('Authentication Unit Tests', () => {
         creditsResetDate: new Date()
       });
 
-      expect(recentUser.needsCreditReset()).toBe(false);
+      expect(recentUser.shouldResetCredits()).toBe(false);
     });
   });
 });

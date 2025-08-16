@@ -1,4 +1,4 @@
-import { Entity, CreateEntityDTO, UpdateEntityDTO } from '../models/Entity';
+import { Entity, CreateEntityDTO, UpdateEntityDTO } from '../entities/Entity';
 
 export interface IEntityRepository {
   create(entity: CreateEntityDTO): Promise<Entity>;

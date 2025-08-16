@@ -32,9 +32,25 @@ export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ProcessingStatus | ''>('');
   const [retryCount, setRetryCount] = useState(0);
+  const [rateLimitRetryTime, setRateLimitRetryTime] = useState<number | null>(null);
+  const [retryCountdown, setRetryCountdown] = useState<number>(0);
 
   const itemsPerPage = 10;
   const maxRetries = 3;
+
+  // Countdown timer for rate limit retry
+  useEffect(() => {
+    if (retryCountdown > 0) {
+      const timer = setTimeout(() => {
+        setRetryCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (retryCountdown === 0 && rateLimitRetryTime) {
+      // Countdown finished, auto-retry
+      setRateLimitRetryTime(null);
+      setCurrentPage(prev => prev); // Trigger reload
+    }
+  }, [retryCountdown, rateLimitRetryTime]);
 
   useEffect(() => {
     let abortFunction: (() => void) | null = null;
@@ -88,8 +104,17 @@ export default function LibraryPage() {
       } catch (err: any) {
         // Don't show error for cancelled requests
         if (!err.cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load voice notes');
-          toast.error(formatErrorForToast(err));
+          // Check for rate limit error (429)
+          if (err.status === 429 || err.message?.includes('429') || err.message?.includes('rate limit')) {
+            const retryAfter = err.retryAfter || 60; // Default to 60 seconds if not provided
+            setRateLimitRetryTime(Date.now() + (retryAfter * 1000));
+            setRetryCountdown(retryAfter);
+            setError(`Rate limit reached. Retrying in ${retryAfter} seconds...`);
+            // Don't show toast for rate limit, we'll show countdown instead
+          } else {
+            setError(err instanceof Error ? err.message : 'Failed to load voice notes');
+            toast.error(formatErrorForToast(err));
+          }
         }
       } finally {
         setLoading(false);
@@ -202,9 +227,23 @@ export default function LibraryPage() {
           {/* Error State */}
           {error && (
             <div className={styles.errorMessage}>
-              <p>{error}</p>
-              <button onClick={() => setCurrentPage(prev => prev)} className={styles.retryButton}>
-                Try Again
+              <p>
+                {retryCountdown > 0 
+                  ? `Rate limit reached. Retrying in ${retryCountdown} seconds...`
+                  : error}
+              </p>
+              <button 
+                onClick={() => {
+                  // Clear rate limit state if manually retrying
+                  setRateLimitRetryTime(null);
+                  setRetryCountdown(0);
+                  setError(null);
+                  setCurrentPage(prev => prev);
+                }} 
+                className={styles.retryButton}
+                disabled={retryCountdown > 0}
+              >
+                {retryCountdown > 0 ? `Wait ${retryCountdown}s` : 'Try Again'}
               </button>
             </div>
           )}

@@ -3,7 +3,37 @@
 **Status**: Production Ready - Feature Complete
 **Progress**: 100% - MVP features complete with AI enhancements
 
+## ✅ Test Strategy Alignment Complete (2025-08-16)
+**Status**: FULLY IMPLEMENTED ✅  
+**Plan**: [TEST_ALIGNMENT_PLAN.md](./imp_docs/archive/TEST_ALIGNMENT_PLAN.md) - ARCHIVED  
+**Result**: All E2E tests migrated to Playwright MCP server approach  
+
+**Achievements**:
+- ✅ Archived all npm-based Playwright tests to `tests/e2e/archive/npm-based/`
+- ✅ Created 6 MCP test scripts covering all test scenarios
+- ✅ Implemented master test runner `run-all-mcp-tests.js`
+- ✅ Created comprehensive MCP_TEST_GUIDE.md documentation
+- ✅ Tests now executable through Claude MCP without external dependencies
+- ✅ Unified testing strategy aligned with TEST_PLAN.md mandate  
+
 ### Latest Updates
+
+#### ✅ Rate Limiting & Usage Counter Fixes (2025-08-16)
+**Fixed Critical Issues for Anonymous Users**:
+- ✅ **Fixed**: Anonymous users experiencing 401/429 errors in Library after uploads
+  - Increased anonymous rate limit from 5 to 20 requests/minute
+  - Excluded status polling endpoints from rate limiting
+  - Added smart rate limit handling in frontend with retry logic
+  - Added countdown timer and auto-retry mechanism in Library page
+- ✅ **Fixed**: Free uses counter showing incorrect values
+  - Added backend synchronization for usage counts on AuthContext mount
+  - localStorage now updates only after backend confirmation
+  - Added automatic refresh on component mount
+  - Fixed usage count drift between frontend and backend
+- ✅ **Improved**: Rate limit awareness across the application
+  - API client now tracks X-RateLimit headers
+  - Frontend adjusts polling frequency when approaching limits
+  - User-friendly messages with retry countdowns on rate limit errors
 
 #### ✅ YAML Prompt System Bug Fixed (2025-08-16)
 **Critical Bug Resolution**:
@@ -378,6 +408,7 @@
 - Delete account option
 
 ### Archived Plans
+- ✅ [TEST_ALIGNMENT_PLAN.md](./imp_docs/archive/TEST_ALIGNMENT_PLAN.md) - COMPLETE (2025-08-16)
 - ✅ [YAML_PROMPT_SYSTEM_PLAN.md](./imp_docs/archive/YAML_PROMPT_SYSTEM_PLAN.md) - COMPLETE (2025-08-16)
 - ✅ [ANONYMOUS_MIGRATION_ENDPOINT_PLAN_2025_08_15.md](./imp_docs/archive/ANONYMOUS_MIGRATION_ENDPOINT_PLAN_2025_08_15.md) - COMPLETE
 - ✅ [AI_GENERATED_NAMES_PLAN_2025_08_14.md](./imp_docs/archive/AI_GENERATED_NAMES_PLAN_2025_08_14.md) - COMPLETE

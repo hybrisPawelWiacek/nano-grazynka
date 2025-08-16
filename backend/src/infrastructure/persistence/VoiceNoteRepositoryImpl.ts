@@ -14,18 +14,20 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
     const data = this.toDatabase(voiceNote);
     
     await this.prisma.$transaction(async (tx) => {
-      // Separate userId from other fields for Prisma relations
-      const { userId, ...voiceNoteFields } = data;
+      // Separate userId and projectId from other fields for Prisma relations
+      const { userId, projectId, ...voiceNoteFields } = data;
       
       // Build the create/update data with proper relation handling
       const createData = {
         ...voiceNoteFields,
-        ...(userId ? { user: { connect: { id: userId } } } : {})
+        ...(userId ? { user: { connect: { id: userId } } } : {}),
+        ...(projectId ? { project: { connect: { id: projectId } } } : {})
       };
       
       const updateData = {
         ...voiceNoteFields,
-        ...(userId ? { user: { connect: { id: userId } } } : {})
+        ...(userId ? { user: { connect: { id: userId } } } : {}),
+        ...(projectId ? { project: { connect: { id: projectId } } } : {})
       };
       
       await tx.voiceNote.upsert({
@@ -271,6 +273,7 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       id: voiceNote.getId().toString(),
       userId: voiceNote.getUserId() || null,  // Handle optional userId
       sessionId: voiceNote.getSessionId() || null,  // Add sessionId field
+      projectId: voiceNote.getProjectId() || null,  // Add projectId field for Entity Project System
       title: voiceNote.getTitle(),
       originalFilePath: voiceNote.getOriginalFilePath(),
       fileSize: voiceNote.getFileSize(),
@@ -311,6 +314,7 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       JSON.parse(data.tags || '[]'),
       data.userId,
       data.sessionId,  // Add sessionId parameter
+      data.projectId || undefined,  // Add projectId parameter for Entity Project System
       data.duration || undefined,  // Add duration parameter
       data.errorMessage || undefined,
       data.userPrompt || undefined,  // Add userPrompt parameter

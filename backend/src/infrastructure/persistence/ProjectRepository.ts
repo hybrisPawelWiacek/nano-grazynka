@@ -1,4 +1,4 @@
-import { Project, CreateProjectDTO, UpdateProjectDTO } from '../../domain/models/Project';
+import { Project, CreateProjectDTO, UpdateProjectDTO } from '../../domain/entities/Project';
 import { IProjectRepository } from '../../domain/repositories/IProjectRepository';
 import { PrismaClient } from '@prisma/client';
 

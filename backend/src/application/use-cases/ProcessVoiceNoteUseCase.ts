@@ -9,6 +9,7 @@ export interface ProcessVoiceNoteInput {
   voiceNoteId: string;
   language?: string;
   userPrompt?: string;
+  projectId?: string;
 }
 
 export interface ProcessVoiceNoteOutput {
@@ -53,7 +54,8 @@ export class ProcessVoiceNoteUseCase extends UseCase<
       // Process the voice note
       const processedVoiceNote = await this.processingOrchestrator.processVoiceNote(
         voiceNote,
-        input.language ? Language.fromString(input.language) : undefined
+        input.language ? Language.fromString(input.language) : undefined,
+        input.projectId
       );
 
       // Check if processing was successful

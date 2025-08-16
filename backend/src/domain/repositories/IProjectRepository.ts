@@ -1,4 +1,4 @@
-import { Project, CreateProjectDTO, UpdateProjectDTO } from '../models/Project';
+import { Project, CreateProjectDTO, UpdateProjectDTO } from '../entities/Project';
 
 export interface IProjectRepository {
   create(project: CreateProjectDTO): Promise<Project>;

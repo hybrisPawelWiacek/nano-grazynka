@@ -9,6 +9,9 @@ import { TranscriptionService } from '../../domain/services/TranscriptionService
 import { SummarizationService } from '../../domain/services/SummarizationService';
 import { TitleGenerationService } from '../../domain/services/TitleGenerationService';
 import { Config } from '../../config/schema';
+import { EntityContextBuilder } from './EntityContextBuilder';
+import { IProjectRepository } from '../../domain/repositories/IProjectRepository';
+import { IEntityUsageRepository, EntityUsageRecord } from '../../domain/repositories/IEntityUsageRepository';
 import {
   VoiceNoteProcessingStartedEvent,
   VoiceNoteTranscribedEvent,
@@ -28,12 +31,16 @@ export class ProcessingOrchestrator {
     private titleGenerationService: TitleGenerationService,
     private voiceNoteRepository: VoiceNoteRepository,
     private eventStore: EventStore,
-    private config: Config
+    private config: Config,
+    private entityContextBuilder: EntityContextBuilder,
+    private projectRepository: IProjectRepository,
+    private entityUsageRepository: IEntityUsageRepository
   ) {}
 
   async processVoiceNote(
     voiceNote: VoiceNote,
-    language?: Language
+    language?: Language,
+    projectId?: string
   ): Promise<VoiceNote> {
     try {
       // Start processing
@@ -45,8 +52,16 @@ export class ProcessingOrchestrator {
       );
       await this.eventStore.append(startedEvent);
 
-      // Transcription
-      const transcriptionResult = await this.performTranscription(voiceNote, language);
+      // Associate voice note with project if projectId provided
+      if (projectId) {
+        const project = await this.projectRepository.findById(projectId);
+        if (project && project.userId === voiceNote.getUserId()) {
+          await this.projectRepository.addNote(projectId, voiceNote.getId().toString());
+        }
+      }
+
+      // Transcription with entity context
+      const transcriptionResult = await this.performTranscription(voiceNote, language, projectId);
       if (!transcriptionResult.success) {
         return await this.handleProcessingFailure(
           voiceNote,
@@ -145,7 +160,8 @@ export class ProcessingOrchestrator {
     systemPrompt?: string,
     userPrompt?: string,
     _model?: string,
-    _language?: Language
+    _language?: Language,
+    projectId?: string
   ): Promise<VoiceNote> {
     try {
       // Must have transcription to generate/regenerate summary
@@ -165,12 +181,21 @@ export class ProcessingOrchestrator {
         await this.voiceNoteRepository.save(voiceNote);
       }
 
+      // Associate voice note with project if projectId provided and not already associated
+      if (projectId && isInitialGeneration) {
+        const project = await this.projectRepository.findById(projectId);
+        if (project && project.userId === voiceNote.getUserId()) {
+          await this.projectRepository.addNote(projectId, voiceNote.getId().toString());
+        }
+      }
+
       // Generate or regenerate summarization with prompts
       const summaryResult = await this.performSummarization(
         voiceNote,
         transcription,
         systemPrompt,
-        userPrompt
+        userPrompt,
+        projectId
       );
 
       if (!summaryResult.success) {
@@ -236,42 +261,85 @@ export class ProcessingOrchestrator {
 
   private async performTranscription(
     voiceNote: VoiceNote,
-    language?: Language
+    language?: Language,
+    projectId?: string
   ): Promise<{ success: boolean; transcription?: Transcription; error?: Error }> {
     try {
       const model = voiceNote.getTranscriptionModel() || 'gpt-4o-transcribe';
       let transcriptionResult;
       
+      // Generate entity context if projectId is provided
+      let entityContext: string | undefined;
+      let projectEntities: Array<{ id: string; name: string }> = [];
+      if (projectId) {
+        const contextResult = await this.entityContextBuilder.buildContext(
+          projectId,
+          voiceNote.getUserId()!,
+          model
+        );
+        
+        if (contextResult.success && contextResult.context) {
+          entityContext = contextResult.context;
+          // Store entities for usage tracking
+          if (contextResult.entities) {
+            projectEntities = contextResult.entities.map(e => ({ id: e.id, name: e.name }));
+          }
+          console.log('[ProcessingOrchestrator] Generated entity context for transcription:', {
+            projectId,
+            contextLength: entityContext.length,
+            model,
+            entityCount: projectEntities.length
+          });
+        }
+      }
+      
       if (model === 'gpt-4o-transcribe') {
-        // Use existing OpenAI flow with whisper prompt
+        // Use existing OpenAI flow with whisper prompt + entity context
         const whisperPrompt = voiceNote.getWhisperPrompt();
+        const combinedPrompt = entityContext 
+          ? `${entityContext}\n\n${whisperPrompt || ''}`
+          : whisperPrompt;
+          
         transcriptionResult = await this.transcriptionService.transcribe(
           voiceNote.getOriginalFilePath(),
           language || voiceNote.getLanguage(),
-          whisperPrompt ? { prompt: whisperPrompt } : undefined
+          combinedPrompt ? { prompt: combinedPrompt } : undefined
         );
       } else if (model === 'google/gemini-2.0-flash-001') {
-        // Use Gemini flow with extended prompts
+        // Use Gemini flow with extended prompts + entity context
         console.log('[ProcessingOrchestrator] Using Gemini model:', model);
-        console.log('[ProcessingOrchestrator] System prompt:', voiceNote.getGeminiSystemPrompt());
-        console.log('[ProcessingOrchestrator] User prompt:', voiceNote.getGeminiUserPrompt());
+        
+        const systemPrompt = voiceNote.getGeminiSystemPrompt();
+        const userPrompt = voiceNote.getGeminiUserPrompt();
+        
+        // Append entity context to system prompt for Gemini
+        const enhancedSystemPrompt = entityContext
+          ? `${systemPrompt}\n\n${entityContext}`
+          : systemPrompt;
+        
+        console.log('[ProcessingOrchestrator] Enhanced system prompt with entities:', enhancedSystemPrompt);
+        console.log('[ProcessingOrchestrator] User prompt:', userPrompt);
         
         transcriptionResult = await this.transcriptionService.transcribe(
           voiceNote.getOriginalFilePath(),
           language || voiceNote.getLanguage(),
           {
             model: 'google/gemini-2.0-flash-001',
-            systemPrompt: voiceNote.getGeminiSystemPrompt(),
-            prompt: voiceNote.getGeminiUserPrompt()
+            systemPrompt: enhancedSystemPrompt,
+            prompt: userPrompt
           }
         );
       } else {
         // Fallback to default GPT-4o flow
         const whisperPrompt = voiceNote.getWhisperPrompt();
+        const combinedPrompt = entityContext 
+          ? `${entityContext}\n\n${whisperPrompt || ''}`
+          : whisperPrompt;
+          
         transcriptionResult = await this.transcriptionService.transcribe(
           voiceNote.getOriginalFilePath(),
           language || voiceNote.getLanguage(),
-          whisperPrompt ? { prompt: whisperPrompt } : undefined
+          combinedPrompt ? { prompt: combinedPrompt } : undefined
         );
       }
 
@@ -282,6 +350,31 @@ export class ProcessingOrchestrator {
         transcriptionResult.confidence || 1.0
       );
 
+      // Track entity usage if entities were used
+      if (projectId && projectEntities.length > 0) {
+        try {
+          for (const entity of projectEntities) {
+            await this.entityUsageRepository.trackUsage([{
+              entityId: entity.id,
+              projectId: projectId,
+              voiceNoteId: voiceNote.getId().toString(),
+              usageType: 'transcription',
+              userId: voiceNote.getUserId()!,
+              wasUsed: true,
+              wasCorrected: false
+            }]);
+          }
+          console.log('[ProcessingOrchestrator] Tracked entity usage for transcription:', {
+            projectId,
+            entityCount: projectEntities.length,
+            voiceNoteId: voiceNote.getId().toString()
+          });
+        } catch (error) {
+          // Don't fail transcription if usage tracking fails
+          console.error('[ProcessingOrchestrator] Failed to track entity usage:', error);
+        }
+      }
+
       return { success: true, transcription };
     } catch (error) {
       return { success: false, error: error as Error };
@@ -289,13 +382,44 @@ export class ProcessingOrchestrator {
   }
 
   private async performSummarization(
-    _voiceNote: VoiceNote,
+    voiceNote: VoiceNote,
     transcription: Transcription,
     systemPrompt?: string,
-    userPrompt?: string
+    userPrompt?: string,
+    projectId?: string
   ): Promise<{ success: boolean; summary?: Summary; error?: Error }> {
     try {
       const language = transcription.getLanguage();
+      
+      // Generate entity context if projectId is provided
+      let entityContext: string | undefined;
+      let projectEntities: Array<{ id: string; name: string }> = [];
+      if (projectId) {
+        // For summarization, we use GPT-4o model context
+        const contextResult = await this.entityContextBuilder.buildContext(
+          projectId,
+          voiceNote.getUserId()!,
+          'gpt-4o-transcribe'
+        );
+        
+        if (contextResult.success && contextResult.context) {
+          entityContext = contextResult.context;
+          // Store entities for usage tracking
+          if (contextResult.entities) {
+            projectEntities = contextResult.entities.map(e => ({ id: e.id, name: e.name }));
+          }
+          console.log('[ProcessingOrchestrator] Generated entity context for summarization:', {
+            projectId,
+            contextLength: entityContext.length,
+            entityCount: projectEntities.length
+          });
+        }
+      }
+      
+      // Combine entity context with user prompt
+      const enhancedUserPrompt = entityContext
+        ? `${entityContext}\n\n${userPrompt || ''}`
+        : userPrompt;
       
       // For two-pass transcription: use custom prompts if provided
       // The systemPrompt parameter allows customization of the system instruction
@@ -307,7 +431,7 @@ export class ProcessingOrchestrator {
         transcription.getText(),
         language,
         {
-          prompt: userPrompt || systemPrompt || undefined,
+          prompt: enhancedUserPrompt || systemPrompt || undefined,
           maxTokens: 2000,
           temperature: 0.7
         }
@@ -319,6 +443,31 @@ export class ProcessingOrchestrator {
         result.actionItems,
         language
       );
+
+      // Track entity usage if entities were used for summarization
+      if (projectId && projectEntities.length > 0) {
+        try {
+          for (const entity of projectEntities) {
+            await this.entityUsageRepository.trackUsage([{
+              entityId: entity.id,
+              projectId: projectId,
+              voiceNoteId: voiceNote.getId().toString(),
+              usageType: 'summarization',
+              userId: voiceNote.getUserId()!,
+              wasUsed: true,
+              wasCorrected: false
+            }]);
+          }
+          console.log('[ProcessingOrchestrator] Tracked entity usage for summarization:', {
+            projectId,
+            entityCount: projectEntities.length,
+            voiceNoteId: voiceNote.getId().toString()
+          });
+        } catch (error) {
+          // Don't fail summarization if usage tracking fails
+          console.error('[ProcessingOrchestrator] Failed to track entity usage:', error);
+        }
+      }
 
       return { success: true, summary };
     } catch (error) {

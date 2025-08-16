@@ -179,6 +179,7 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
         transcriptionModel: fields.transcriptionModel,  // Model selection
         geminiSystemPrompt: fields.geminiSystemPrompt,  // Gemini system prompt
         geminiUserPrompt: fields.geminiUserPrompt,  // Gemini user context
+        projectId: fields.projectId,  // Optional project ID for entity context
         tags: fields.tags ? fields.tags.split(',') : undefined,
         userId: user?.id,  // Optional for authenticated users
         sessionId: !user ? sessionId : undefined,  // Only for anonymous users
@@ -249,7 +250,8 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     const useCase = container.getProcessVoiceNoteUseCase();
     const result = await useCase.execute({
       voiceNoteId: request.params.id,
-      language: request.body?.language
+      language: request.body?.language,
+      projectId: request.body?.projectId
     });
 
     if (!result.success) {
@@ -369,9 +371,9 @@ export async function voiceNoteRoutes(fastify: FastifyInstance) {
     }
   );
 
-  // Get voice note by ID (optional auth with rate limiting for anonymous users)
+  // Get voice note by ID (no rate limiting for polling)
   fastify.get('/api/voice-notes/:id', 
-    { preHandler: [optionalAuthMiddleware, rateLimitMiddleware] },
+    { preHandler: [optionalAuthMiddleware] },
     async (request: any, reply: any) => {
     const useCase = container.getGetVoiceNoteUseCase();
     const result = await useCase.execute({

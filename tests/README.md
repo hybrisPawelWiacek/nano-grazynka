@@ -1,278 +1,296 @@
 # nano-Grazynka Test Suite
 
-## 🚨 CRITICAL: Use Playwright MCP Server for ALL E2E Testing
+## 🚨 CRITICAL: MCP-Only Testing Approach
 
-**MANDATORY REQUIREMENTS:**
-- ✅ **USE**: Playwright MCP server tools (`mcp__playwright__*`)
-- ❌ **DO NOT**: Install npm Playwright packages (`@playwright/test`)
-- ❌ **DO NOT**: Run `npm install playwright` or `npx playwright`
-- ❌ **DO NOT**: Create .spec.js files that require('@playwright/test')
+**As of August 16, 2025, ALL E2E tests use Playwright MCP Server exclusively.**
 
-**The Playwright MCP server is already running in Docker and provides all browser automation through MCP tools.**
+### ✅ USE ONLY
+- **Playwright MCP server tools** (`mcp__playwright__*`)
+- **MCP test scripts** in `tests/scripts/*-mcp.js`
+- **Claude with MCP enabled** for test execution
+
+### ❌ DO NOT USE (ARCHIVED)
+- npm Playwright packages (`@playwright/test`)
+- npm install playwright commands
+- .spec.js files (moved to `tests/e2e/archive/npm-based/`)
 
 ## Overview
-Comprehensive test suite for the nano-Grazynka voice transcription application using Playwright MCP for E2E testing.
+Comprehensive test suite for nano-Grazynka voice transcription application using MCP-based testing approach.
 
 ## Quick Start
 
-### Run All Tests
-```bash
-cd tests/scripts
-./run-all-tests.sh
+### Run All MCP Tests Through Claude
+```javascript
+// In Claude with MCP enabled:
+node tests/scripts/run-all-mcp-tests.js
+
+// This will show execution plan for all 56 test scenarios
+// across 6 test files
 ```
 
 ### Run Specific Test Suites
 
-#### Smoke Tests (Quick validation)
-```bash
-curl http://localhost:3101/health
-node ../test-anonymous-upload.js
+#### Core Tests (Priority 1)
+```javascript
+// Run these first - essential functionality
+- test-anonymous-flow-mcp.js (7 scenarios)
+- test-main-flow-mcp.js (10 scenarios)
 ```
 
-#### E2E Tests (Playwright MCP)
-```yaml
-# NO npm install needed! Use MCP tools directly:
-mcp__playwright__browser_navigate(url: "http://localhost:3100")
-mcp__playwright__browser_click(element: "Upload button")
-mcp__playwright__browser_file_upload(paths: ["test-data/zabka.m4a"])
-mcp__playwright__browser_wait_for(time: 5)
-mcp__playwright__browser_snapshot()
+#### Advanced Tests (Priority 2)
+```javascript
+// Extended functionality
+- test-library-flow-mcp.js (11 scenarios)
+- test-multi-model-mcp.js (11 scenarios)
 ```
 
-#### Integration Tests
-```bash
-cd tests
-npm run test:integration
+#### Extended Tests (Priority 3)
+```javascript
+// Nice-to-have features
+- test-two-pass-mcp.js (8 scenarios)
+- test-logged-in-flow-mcp.js (9 scenarios)
 ```
 
 ## Test Structure
 
 ```
 tests/
-├── e2e/                    # End-to-end tests
-├── integration/            # Integration tests  
-├── performance/            # Performance tests
-├── python/                 # Python test scripts
-│   ├── backend-api-test.py
-│   ├── edge-cases-test.py
-│   ├── integration-test.py
-│   └── performance-test.py
-├── scripts/                # Active test scripts
-│   ├── run-all-tests.sh
-│   ├── test-endpoints.sh
-│   ├── test-anonymous-upload.js
-│   ├── test-anonymous-limit.js
-│   └── test-reprocess.js
-├── test-data/              # Test audio files
-│   ├── zabka.m4a
-│   ├── test-audio.mp3
-│   └── test-file.txt
-├── debug-archive/          # Archived debug scripts (reference only)
-└── unit/                   # Unit tests
-    ├── backend/
-    └── frontend/
+├── scripts/                    # Active MCP test scripts
+│   ├── run-all-mcp-tests.js   # Master test runner
+│   ├── test-anonymous-flow-mcp.js
+│   ├── test-main-flow-mcp.js
+│   ├── test-library-flow-mcp.js
+│   ├── test-multi-model-mcp.js
+│   ├── test-two-pass-mcp.js
+│   └── test-logged-in-flow-mcp.js
+├── e2e/
+│   └── archive/               # Archived npm-based tests
+│       └── npm-based/         # Old .spec.js files (reference only)
+├── test-data/                 # Test audio files
+│   ├── zabka.m4a             # Polish sample
+│   ├── test-audio.mp3        # English sample
+│   └── test-file.txt         # Invalid file for error testing
+├── integration/               # Integration tests  
+├── python/                    # Python test scripts
+└── debug-archive/             # Archived debug scripts
 ```
 
-## Maintenance
+## MCP Test Execution Guide
 
-### Automated Cleanup
-Run the cleanup script to remove old test data:
+### Prerequisites
+1. **Application running**: `docker compose up`
+2. **Playwright MCP enabled**: In Claude settings
+3. **Test data available**: Files in `tests/test-data/`
+
+### Running Tests with Claude
+
+#### Step 1: Open Master Runner
 ```bash
-./scripts/cleanup-test-data.sh
+node tests/scripts/run-all-mcp-tests.js
 ```
 
-This script will:
-- Remove uploads older than 7 days
-- Clean old database WAL files
-- Remove test results older than 30 days
+#### Step 2: Execute Test Scenarios
+Each test file contains a `testScenarios` object with MCP tool sequences:
 
-### Python Tests
-Python test scripts are located in `tests/python/`:
-- `backend-api-test.py` - Backend API testing
-- `integration-test.py` - Integration testing
-- `performance-test.py` - Performance testing
-- `edge-cases-test.py` - Edge case testing
-
-Run Python tests:
-```bash
-cd tests/python
-python3 backend-api-test.py
-python3 integration-test.py
+```javascript
+// Example from test-anonymous-flow-mcp.js
+testScenarios: {
+  setup: {
+    description: "Navigate to homepage",
+    tools: [
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_evaluate"
+    ]
+  },
+  sessionGeneration: {
+    description: "Verify session ID created",
+    tools: ["mcp__playwright__browser_evaluate"]
+  }
+  // ... more scenarios
+}
 ```
+
+#### Step 3: Document Results
+Track each scenario result:
+- ✅ **PASS**: Feature works as expected
+- ⚠️ **PARTIAL**: Some steps fail
+- ❌ **FAIL**: Critical functionality broken
+- ⏭️ **SKIP**: Blocked by earlier failure
+
+## MCP Tool Reference
+
+### Common MCP Tools for Testing
+
+| Tool | Purpose | Example |
+|------|---------|---------|
+| `browser_navigate` | Navigate to URL | `{ url: "http://localhost:3100" }` |
+| `browser_click` | Click element | `{ element: "button", ref: "..." }` |
+| `browser_file_upload` | Upload file | `{ paths: ["/path/to/file"] }` |
+| `browser_evaluate` | Run JS in browser | `{ function: "() => localStorage.getItem('key')" }` |
+| `browser_wait_for` | Wait for condition | `{ text: "Processing complete" }` |
+| `browser_snapshot` | Capture state | Get accessibility tree |
+| `browser_type` | Enter text | `{ element: "input", text: "value" }` |
+| `browser_select_option` | Select dropdown | `{ element: "select", values: ["option"] }` |
 
 ## Test Categories
 
-### 1. Smoke Tests (L1)
-Quick validation that system is operational:
-- Backend health check
-- Frontend loads
-- Database connection
-- Basic upload
+### 1. Anonymous User Tests
+**File**: `test-anonymous-flow-mcp.js`
+- Session generation and persistence
+- Free uses counter (5/5)
+- Upload limits enforcement
+- Session tracking across pages
 
-### 2. API Tests (L2)
-Direct API endpoint testing:
-- Upload endpoints
-- Processing endpoints
-- Authentication
-- Error handling
-
-### 3. E2E Tests (L3)
-Full user journey testing with **Playwright MCP Server**:
-- Anonymous user flow (tested and working ✅)
-- File upload via UI (fixed authentication ✅)
-- Status tracking (now working with optionalAuth ✅)
+### 2. Main Flow Tests
+**File**: `test-main-flow-mcp.js`
+- Complete upload to transcription
+- Language selection (Polish/English)
+- Summary generation
+- Custom prompt handling
 - Error scenarios
 
-### 4. Integration Tests (L4)
-Cross-component testing:
-- Upload to transcription flow
-- Database operations
-- Session management
+### 3. Library Tests
+**File**: `test-library-flow-mcp.js`
+- View all notes
+- Search functionality
+- Filter by language
+- Sort by date
+- Delete notes
+- Reprocess transcriptions
 
-## Test Setup
+### 4. Multi-Model Tests
+**File**: `test-multi-model-mcp.js`
+- GPT-4o selection
+- Gemini 2.0 Flash selection
+- Template variables for Gemini
+- Entity/Project context
+- Token limit handling
 
-### Using Playwright MCP (NO INSTALLATION NEEDED)
-```yaml
-# Playwright MCP is already running!
-# Access it through MCP tools:
-- mcp__playwright__browser_navigate
-- mcp__playwright__browser_click
-- mcp__playwright__browser_type
-- mcp__playwright__browser_file_upload
-- mcp__playwright__browser_snapshot
-- mcp__playwright__browser_wait_for
+### 5. Two-Pass Tests
+**File**: `test-two-pass-mcp.js`
+- Advanced options toggle
+- Initial whisper prompt
+- Correction prompt
+- Model-specific prompts
 
-# NO npm install required!
-# NO npx playwright install required!
-```
-
-## Fixed Issues ✅
-
-### ✅ FIXED - Anonymous Session Management
-1. **Solution Applied**:
-   - Changed backend to use `optionalAuthMiddleware`
-   - GET `/api/voice-notes/:id` now supports anonymous
-   - POST `/api/voice-notes/:id/process` supports anonymous
-   - Tested with Playwright MCP - working!
-
-### 🟡 Major
-- No user-friendly error messages for auth failures
-- Console errors exposed to users
-
-### 🟢 Minor
-- Dev tools badge showing issues
-- React DevTools warnings
-
-## Test Coverage Status
-
-| Category | Coverage | Status |
-|----------|----------|--------|
-| Health Endpoints | ✅ 100% | Working |
-| Anonymous Upload | ✅ 100% | Fixed & Working |
-| File Processing | ✅ 80% | API works |
-| UI Components | ❌ 30% | Needs auth fix |
-| Error Handling | ✅ 70% | Good coverage |
-| Performance | ⏸️ 0% | Not tested |
-
-## Running Legacy Tests
-
-### Python Tests (being migrated to JS)
-```bash
-python3 backend_api_test.py      # Backend API tests
-python3 integration_test.py      # Integration scenarios
-python3 performance_test.py      # Performance benchmarks
-python3 edge_cases_test.py       # Edge case handling
-```
+### 6. Authentication Tests
+**File**: `test-logged-in-flow-mcp.js`
+- User registration
+- Login flow
+- Credits tracking
+- Dashboard access
+- Logout functionality
 
 ## Test Data
 
 ### Available Test Files
-- `test-data/zabka.m4a` - Polish audio sample (451KB)
-- `test-data/test-audio.mp3` - English audio sample (11 bytes)
+```
+tests/test-data/
+├── zabka.m4a           # Polish audio (451KB) - main test file
+├── test-audio.mp3      # English sample
+└── test-file.txt       # Invalid file for error testing
+```
 
-### Creating Additional Test Data
+### File Paths for MCP Tests
+```javascript
+const TEST_FILES = {
+  polish: '/Users/pawelwiacek/Documents/ai_agents_dev/nano-grazynka_CC/tests/test-data/zabka.m4a',
+  english: '/Users/pawelwiacek/Documents/ai_agents_dev/nano-grazynka_CC/tests/test-data/test-audio.mp3',
+  invalid: '/Users/pawelwiacek/Documents/ai_agents_dev/nano-grazynka_CC/tests/test-data/test-file.txt'
+};
+```
+
+## Maintenance
+
+### Cleanup Old Test Data
 ```bash
-# Large file for stress testing
-ffmpeg -f lavfi -i anoisesrc=d=60:c=pink -t 60 test-data/large-file.m4a
-
-# Corrupted file for error testing
-echo "not audio" > test-data/corrupt.m4a
+./scripts/cleanup-test-data.sh
 ```
 
-## Docker Testing
-
-### Running Tests in Container
+### Check Test Coverage
 ```bash
-# Backend unit tests
-docker exec nano-grazynka_cc-backend-1 npm test
+# View all test scenarios
+node tests/scripts/run-all-mcp-tests.js
 
-# Database queries
-docker exec nano-grazynka_cc-backend-1 npx prisma studio
-
-# Check logs
-docker compose logs -f backend
+# Total: 56 scenarios across 6 files
 ```
 
-## CI/CD Integration (Future)
+## Migration from npm Playwright
 
-```yaml
-# .github/workflows/test.yml
-name: Test Suite
-on: [push, pull_request]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Start services
-        run: docker compose up -d
-      - name: Run tests
-        run: |
-          cd tests
-          npm install
-          npm run test:all
-      - name: Upload results
-        uses: actions/upload-artifact@v2
-        with:
-          name: test-results
-          path: tests/test-results/
+### What Changed
+- **Before**: npm-based Playwright with .spec.js files
+- **After**: MCP-based approach with documented scenarios
+
+### Archived Files
+All npm-based tests are archived in `tests/e2e/archive/npm-based/`:
+- `anonymous-flow.spec.js`
+- `main-flow.spec.js`
+- `library-flow.spec.js`
+- `multi-model-transcription.spec.js`
+- `two-pass-transcription.spec.js`
+- `playwright.config.js`
+
+### Rollback (if needed)
+```bash
+# Restore npm-based tests
+cp -r tests/e2e/archive/npm-based/*.spec.js tests/e2e/
+cp tests/e2e/archive/npm-based/playwright.config.js tests/e2e/
 ```
-
-## Test Results & Documentation
-
-- [Test Results](../imp_docs/testing/TEST_RESULTS_2025_08_13.md) - Latest execution report
-- [Test Plan](../imp_docs/testing/TEST_PLAN.md) - Comprehensive test strategy
-
-## Contributing
-
-When adding new tests:
-1. Place in appropriate category folder (e2e/, integration/, etc.)
-2. Follow naming: `*.spec.js` for E2E, `*.test.js` for unit/integration
-3. Update this README with new test info
-4. Run full suite before committing: `./scripts/run-all-tests.sh`
 
 ## Troubleshooting
 
 ### Common Issues
 
-**401 Errors**: Anonymous session not working
-- Check `x-session-id` header is sent
-- Verify localStorage has `anonymousSessionId`
-
-**E2E Testing**: 
-```text
-USE PLAYWRIGHT MCP SERVER!
-Do NOT install npm playwright packages.
-Access through mcp__playwright__* tools.
-```
-
-**Docker Not Running**:
-```bash
-docker compose up -d
-```
-
-**Tests Timeout**: Increase timeout in config
+**Session Errors**
 ```javascript
-// playwright.config.js
-timeout: 120000 // 2 minutes
+// Check session in browser
+mcp__playwright__browser_evaluate
+  function: () => localStorage.getItem('anonymousSessionId')
 ```
+
+**Upload Failures**
+```javascript
+// Verify file path exists
+ls -la /path/to/test/file
+```
+
+**401 Errors**
+```javascript
+// Check headers in network requests
+mcp__playwright__browser_network_requests
+// Look for x-session-id header
+```
+
+**Timeouts**
+```javascript
+// Increase wait times for AI processing
+mcp__playwright__browser_wait_for
+  time: 10  // Increase from 5 to 10 seconds
+```
+
+## Test Results & Documentation
+
+- [Test Plan](../imp_docs/testing/TEST_PLAN.md) - Overall test strategy
+- [Test Alignment Plan](../imp_docs/planning/TEST_ALIGNMENT_PLAN.md) - MCP migration plan
+- [MCP Test Guide](./MCP_TEST_GUIDE.md) - Detailed MCP patterns and examples
+- [Test Results](../imp_docs/testing/TEST_RESULTS_2025_08_13.md) - Latest execution report
+
+## Contributing
+
+When adding new MCP tests:
+1. Create test file: `test-[feature]-mcp.js`
+2. Follow existing pattern with `testScenarios` object
+3. Include MCP tool sequences
+4. Add to master runner: `run-all-mcp-tests.js`
+5. Update this README
+
+## Support
+
+For MCP testing questions:
+- Review [MCP Test Guide](./MCP_TEST_GUIDE.md)
+- Check example patterns in existing test files
+- Reference Playwright MCP documentation
+
+---
+**Last Updated**: August 16, 2025
+**Migration Status**: ✅ Complete - All E2E tests now use MCP approach

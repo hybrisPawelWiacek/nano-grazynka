@@ -8,6 +8,7 @@ export interface ReprocessVoiceNoteInput {
   voiceNoteId: string;
   userPrompt?: string;  // Changed from newUserPrompt to match what's sent from API
   systemPromptVariables?: Record<string, string>;
+  projectId?: string;  // Optional project ID for entity context
 }
 
 export interface ReprocessVoiceNoteOutput {
@@ -68,7 +69,8 @@ export class ReprocessVoiceNoteUseCase extends UseCase<
         undefined,  // systemPrompt
         input.userPrompt,  // userPrompt (optional)
         undefined,  // model
-        undefined   // language
+        undefined,  // language
+        input.projectId  // projectId (optional)
       );
 
       // The reprocessVoiceNote returns a VoiceNote, not a result object

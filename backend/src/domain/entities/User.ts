@@ -4,7 +4,7 @@ export const UserTier = z.enum(['free', 'pro', 'business']);
 export type UserTier = z.infer<typeof UserTier>;
 
 export const UserSchema = z.object({
-  id: z.string().cuid().optional(),
+  id: z.string().optional(),  // Remove cuid validation for now - accept any string ID
   email: z.string().email(),
   passwordHash: z.string().optional(),
   tier: UserTier.default('free'),

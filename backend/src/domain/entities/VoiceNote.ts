@@ -38,6 +38,7 @@ export class VoiceNote {
   private geminiUserPrompt?: string;  // User prompt for Gemini
   private refinedText?: string;  // Refined transcription text
   private refinementPrompt?: string;  // Prompt used for refinement
+  private projectId?: string;  // Entity Project System
   // AI-generated metadata fields
   private aiGeneratedTitle?: string;
   private briefDescription?: string;
@@ -64,6 +65,7 @@ export class VoiceNote {
     geminiUserPrompt?: string,  // Gemini user prompt
     refinedText?: string,  // Refined transcription
     refinementPrompt?: string,  // Refinement prompt
+    projectId?: string,  // Entity Project System
     aiGeneratedTitle?: string,  // AI-generated title
     briefDescription?: string,  // AI-generated brief description
     derivedDate?: Date,  // Date extracted from content
@@ -92,6 +94,7 @@ export class VoiceNote {
     this.geminiUserPrompt = geminiUserPrompt;
     this.refinedText = refinedText;
     this.refinementPrompt = refinementPrompt;
+    this.projectId = projectId;
     this.aiGeneratedTitle = aiGeneratedTitle;
     this.briefDescription = briefDescription;
     this.derivedDate = derivedDate;
@@ -116,6 +119,7 @@ export class VoiceNote {
     geminiSystemPrompt?: string;
     geminiUserPrompt?: string;
     refinementPrompt?: string;
+    projectId?: string;  // Entity Project System
   }): VoiceNote {
     const voiceNote = new VoiceNote(
       VoiceNoteId.generate(),
@@ -137,6 +141,10 @@ export class VoiceNote {
       params.geminiUserPrompt,
       undefined,  // refinedText
       params.refinementPrompt,
+      params.projectId,  // projectId
+      undefined,  // aiGeneratedTitle - will use default
+      undefined,  // briefDescription - will use default
+      undefined,  // derivedDate - will use default
       undefined,  // createdAt - will use default
       undefined,  // updatedAt - will use default
       undefined   // version - will use default
@@ -174,6 +182,7 @@ export class VoiceNote {
     geminiUserPrompt?: string,  // Gemini user prompt
     refinedText?: string,  // Refined transcription
     refinementPrompt?: string,  // Refinement prompt
+    projectId?: string,  // Entity Project System
     aiGeneratedTitle?: string,  // AI-generated title
     briefDescription?: string,  // AI-generated brief description
     derivedDate?: Date,  // Date extracted from content
@@ -201,6 +210,7 @@ export class VoiceNote {
       geminiUserPrompt,
       refinedText,
       refinementPrompt,
+      projectId,
       aiGeneratedTitle,
       briefDescription,
       derivedDate,
@@ -249,6 +259,10 @@ export class VoiceNote {
 
   getRefinementPrompt(): string | undefined {
     return this.refinementPrompt;
+  }
+
+  getProjectId(): string | undefined {
+    return this.projectId;
   }
 
   getAIGeneratedTitle(): string | undefined {

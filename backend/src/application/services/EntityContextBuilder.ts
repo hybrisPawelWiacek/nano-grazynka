@@ -1,6 +1,6 @@
 import { IEntityRepository } from '../../domain/repositories/IEntityRepository';
 import { IProjectRepository } from '../../domain/repositories/IProjectRepository';
-import { Entity, EntityContext, GroupedEntities } from '../../domain/models/Entity';
+import { Entity, EntityContext, GroupedEntities } from '../../domain/entities/Entity';
 
 export type ModelType = 'gpt4o' | 'gemini';
 

@@ -1,4 +1,4 @@
-import { Entity, CreateEntityDTO, UpdateEntityDTO, EntityType } from '../../domain/models/Entity';
+import { Entity, CreateEntityDTO, UpdateEntityDTO, EntityType } from '../../domain/entities/Entity';
 import { IEntityRepository } from '../../domain/repositories/IEntityRepository';
 import { PrismaClient } from '@prisma/client';
 

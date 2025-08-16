@@ -52,6 +52,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Always set the session ID from localStorage
       setAnonymousSessionId(sessionId);
       setAnonymousUsageCount(getUsageCount());
+      
+      // Sync with backend for accurate usage count
+      if (sessionId) {
+        getAnonymousUsage(sessionId)
+          .then(usage => {
+            setAnonymousUsageCount(usage.usageCount);
+            localStorage.setItem('anonymousUsageCount', String(usage.usageCount));
+          })
+          .catch(error => {
+            console.error('Failed to sync usage count:', error);
+            // Keep localStorage value as fallback
+          });
+      }
     }
     // Then check auth status
     checkAuth();

@@ -24,7 +24,7 @@ export function createRateLimitMiddleware() {
         // This gives each anonymous session its own rate limit bucket
         const sessionId = request.headers['x-session-id'] as string;
         const identifier = sessionId || 'anonymous-no-session';
-        return applyRateLimit(request, reply, identifier, 5);
+        return applyRateLimit(request, reply, identifier, 20);
       }
 
       const tier = user.tier as keyof typeof RATE_LIMITS;
