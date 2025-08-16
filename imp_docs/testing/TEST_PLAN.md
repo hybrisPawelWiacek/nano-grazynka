@@ -126,6 +126,7 @@ All browser automation MUST use MCP tools directly.
 | I4.5 | Error recovery | Upload → Fail processing → Retry → Success | Playwright MCP + API |
 | I4.6 | Session persistence | Upload → Refresh → Data persists | Playwright MCP |
 | I4.7 | Concurrent users | 2 users upload simultaneously | Playwright MCP + API |
+| I4.8 | Entity-aware transcription | Create project → Add entities → Upload → Verify accuracy | Playwright MCP + API |
 
 ### Suite 6: Performance Tests (15 min)
 **Purpose**: Validate system performance
