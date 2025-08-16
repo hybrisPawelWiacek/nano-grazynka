@@ -24,10 +24,6 @@ export const configSchema = z.object({
     apiUrl: z.string().optional(),
     maxTokens: z.number().default(2000),
     temperature: z.number().min(0).max(2).default(0.7),
-    prompts: z.object({
-      summary: z.string().default('Summarize the following transcript concisely, capturing key points and main ideas.'),
-      actionPoints: z.string().default('Extract actionable items from the following transcript as a bullet list.'),
-    }),
   }),
   observability: z.object({
     langsmith: z.object({

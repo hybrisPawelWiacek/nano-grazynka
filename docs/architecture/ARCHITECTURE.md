@@ -86,6 +86,11 @@ nano-Grazynka is a voice note transcription and summarization system built with 
   - **AudioMetadataExtractor**: Audio file metadata extraction
     - Uses music-metadata library for duration extraction
     - Supports various audio formats (mp3, m4a, wav, etc.)
+  - **PromptLoader**: YAML-based prompt management with variable interpolation and hot-reload
+    - Centralizes all AI prompts in `backend/prompts.yaml`
+    - Supports variable interpolation using lodash templates
+    - Hot-reload in development mode for rapid iteration
+    - See [PROMPTS_GUIDE.md](../development/PROMPTS_GUIDE.md) for details
 - **Key Principle**: Adapters and implementations of domain contracts
 
 #### Presentation Layer
@@ -360,10 +365,11 @@ VoiceNoteReprocessedEvent
 - Model selection (GPT-4o, Gemini 2.0 Flash, Claude, etc.)
 - File size limits
 - Timeout values
-- System prompts
 - Language settings
 - Proof of work difficulty (for rate limiting)
 - Custom prompt regeneration support
+
+**Note**: System prompts have been externalized to `backend/prompts.yaml` with variable interpolation support. See [PROMPTS_GUIDE.md](../development/PROMPTS_GUIDE.md) for details.
 
 ## Monitoring & Observability
 

@@ -215,6 +215,32 @@ All browser automation MUST use MCP tools directly.
 | G12.4 | Cost calculation | Shows 75% savings |
 | G12.5 | Proof of work | Validation succeeds |
 
+### Suite 13: YAML Prompt System Tests (20 min)
+**Purpose**: Validate externalized prompt system with variable interpolation
+
+| Test ID | Test Case | Expected Result |
+|---------|-----------|-----------------|
+| Y13.1 | PromptLoader initialization | Loads prompts.yaml successfully |
+| Y13.2 | YAML parsing and validation | Valid YAML structure parsed correctly |
+| Y13.3 | Variable interpolation - entities | {{entities.*}} placeholders replaced |
+| Y13.4 | Variable interpolation - project | {{project.*}} placeholders replaced |
+| Y13.5 | Variable interpolation - user | {{user.customPrompt}} passed through |
+| Y13.6 | Hot-reload in development | Prompts reload on file change |
+| Y13.7 | Fallback to defaults | Uses hardcoded prompts if YAML missing |
+| Y13.8 | Template resolution | Gemini templates load correctly |
+| Y13.9 | WhisperAdapter integration | Transcription uses prompts.yaml |
+| Y13.10 | LLMAdapter integration | Summarization uses prompts.yaml |
+| Y13.11 | TitleGenerationAdapter integration | Title generation uses prompts.yaml |
+| Y13.12 | Malformed YAML handling | Graceful error on invalid YAML |
+| Y13.13 | Missing variables handling | Empty string for undefined variables |
+| Y13.14 | Nested variable paths | Supports {{entities.people.detailed}} |
+| Y13.15 | End-to-end prompt flow | Upload → Transcribe → Summarize with YAML |
+
+**Test Scripts**: 
+- `tests/unit/PromptLoader.test.ts` - Unit tests for PromptLoader
+- `tests/integration/prompt-system.test.ts` - Integration tests
+- `tests/scripts/test-prompt-interpolation.js` - Variable interpolation tests
+
 ## Test Execution Plan
 
 ### Phase 1: Backend Validation (Day 1)

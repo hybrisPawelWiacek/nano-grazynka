@@ -91,11 +91,6 @@ summarization:
   model: google/gemini-2.5-flash
   maxTokens: 2000
   temperature: 0.7
-  prompts:
-    summary: |
-      Summarize the following transcript...
-    actionPoints: |
-      Extract actionable items...
 
 storage:
   uploadDir: /data/uploads
@@ -161,6 +156,43 @@ export class ConfigLoader {
   }
 }
 ```
+
+## Prompt Configuration (`backend/prompts.yaml`)
+
+As of August 16, 2025, all AI prompts have been externalized to a separate YAML file for better maintainability:
+
+### Structure
+```yaml
+transcription:
+  gpt4o:
+    default: "Transcribe with proper punctuation..."
+  gemini:
+    default: "You are a professional transcriber..."
+    templates:
+      meeting: "Transcribe this meeting..."
+      technical: "Transcribe this technical discussion..."
+      podcast: "Transcribe this podcast..."
+
+summarization:
+  default: "Summarize the following transcript..."
+  with_custom: "{{user.customPrompt}}\n\nTranscript: ..."
+
+titleGeneration:
+  default: "Generate a 3-4 word title..."
+```
+
+### Features
+- **Variable Interpolation**: Supports `{{variable}}` syntax using lodash templates
+- **Hot-Reload**: Automatically reloads prompts in development mode when file changes
+- **Context Injection**: Can inject project context, entities, and user prompts
+- **Singleton Pattern**: Single instance managed by PromptLoader service
+
+### Available Variables
+- `{{project.name}}`, `{{project.description}}` - Project metadata
+- `{{entities.people}}`, `{{entities.companies}}` - Entity information
+- `{{user.customPrompt}}` - User-provided custom prompts
+
+For detailed documentation, see [PROMPTS_GUIDE.md](../development/PROMPTS_GUIDE.md).
 
 ## Docker Integration
 

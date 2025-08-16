@@ -36,6 +36,7 @@ System design and technical architecture:
 #### Development Documentation (`docs/development/`)
 - **DEVELOPMENT.md** - Development setup and debugging
 - **AI_MODELS_SETUP.md** - AI models configuration (OpenRouter/OpenAI)
+- **PROMPTS_GUIDE.md** - YAML Prompt System guide (variable interpolation, hot-reload)
 
 #### Design Documentation (`docs/design/`)
 - **UI_UX_DESIGN.md** - Complete UI/UX design system, principles, and component library

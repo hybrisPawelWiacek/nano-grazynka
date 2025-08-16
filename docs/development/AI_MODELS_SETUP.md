@@ -43,6 +43,8 @@ Pre-built templates available:
 2. **Technical Discussion**: Code mentions, technical terms
 3. **Podcast/Interview**: Q&A format, topic segmentation
 
+> **Note**: All AI prompts are configured in `backend/prompts.yaml`. See [PROMPTS_GUIDE.md](./PROMPTS_GUIDE.md) for details on the YAML Prompt System, variable interpolation, and hot-reload functionality.
+
 ## Configuration Options
 
 ### Option A: Google Gemini API (For Gemini Transcription)
