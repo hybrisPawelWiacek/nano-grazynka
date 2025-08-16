@@ -3,7 +3,7 @@
 **Status**: Ready for Implementation  
 **Priority**: HIGH - Core Value Enhancement  
 **Timeline**: 4-5 days  
-**Dependency**: Requires YAML Prompt System completion
+**Dependency**: ✅ YAML Prompt System (COMPLETED - verified in commits 9f07c4e, f3ebf54)
 
 ## Executive Summary
 
@@ -107,6 +107,28 @@ CREATE TABLE EntityUsage (
 ALTER TABLE VoiceNote ADD COLUMN projectId TEXT;
 ALTER TABLE VoiceNote ADD FOREIGN KEY (projectId) REFERENCES Projects(id);
 ```
+
+## Codebase Integration Points
+
+### YAML Prompt System Integration
+The YAML Prompt System (completed) provides the foundation with:
+- **PromptLoader** (`backend/src/infrastructure/config/PromptLoader.ts`): Already accepts `InterpolationContext` with entities field
+- **prompts.yaml** (`backend/prompts.yaml`): Has placeholders ready:
+  - `{{entities.compressed}}` - For GPT-4o token-limited context
+  - `{{entities.detailed}}` - For Gemini 1M token context
+  - `{{entities.people}}`, `{{entities.technical}}`, `{{entities.companies}}`, `{{entities.products}}`
+  - `{{project.name}}`, `{{project.description}}`
+
+### Existing Infrastructure to Extend
+- **Container** (`backend/src/presentation/api/container.ts`): Add EntityRepository, ProjectRepository, EntityContextBuilder
+- **ProcessingOrchestrator** (`backend/src/application/services/ProcessingOrchestrator.ts`): Currently at lines 33-140 for processVoiceNote method
+- **WhisperAdapter** (`backend/src/infrastructure/adapters/WhisperAdapter.ts`): Receives prompts via PromptLoader
+- **DatabaseClient** (`backend/src/infrastructure/database/DatabaseClient.ts`): Singleton Prisma instance
+
+### Frontend Integration Points
+- **Upload flow** (`frontend/app/page.tsx`): Lines 101+ need projectId in FormData
+- **Settings page** (`frontend/app/settings/page.tsx`): Add EntityManager component
+- **API client** (`frontend/lib/api.ts` or `frontend/lib/api/`): Add entity/project API methods
 
 ## Implementation Plan
 
@@ -609,28 +631,114 @@ test('should use project entities in transcription', async ({ page }) => {
 
 ## Migration Strategy
 
-### Database Migration
-```sql
--- Migration: 001_add_entity_system.sql
-BEGIN TRANSACTION;
+### Database Migration with Prisma
 
--- Create all tables as defined in schema section
-CREATE TABLE Entities (...);
-CREATE TABLE Projects (...);
-CREATE TABLE ProjectEntities (...);
-CREATE TABLE ProjectNotes (...);
-CREATE TABLE EntityUsage (...);
+#### Update Prisma Schema
+```prisma
+// backend/prisma/schema.prisma - Add these models:
 
--- Add projectId to existing VoiceNote
-ALTER TABLE VoiceNote ADD COLUMN projectId TEXT;
+model Entity {
+  id              String    @id @default(cuid())
+  userId          String
+  name            String
+  type            String    // 'person', 'company', 'technical', 'product'
+  value           String
+  aliases         String?   // JSON array
+  description     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectEntities ProjectEntity[]
+  usageLogs       EntityUsage[]
+  
+  @@unique([userId, name, type])
+  @@index([userId])
+}
 
--- Create indexes for performance
-CREATE INDEX idx_entities_user ON Entities(userId);
-CREATE INDEX idx_projects_user ON Projects(userId);
-CREATE INDEX idx_entity_usage_entity ON EntityUsage(entityId);
-CREATE INDEX idx_entity_usage_note ON EntityUsage(voiceNoteId);
+model Project {
+  id              String    @id @default(cuid())
+  userId          String
+  name            String
+  description     String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectEntities ProjectEntity[]
+  projectNotes    ProjectNote[]
+  voiceNotes      VoiceNote[]
+  usageLogs       EntityUsage[]
+  
+  @@unique([userId, name])
+  @@index([userId])
+}
 
-COMMIT;
+model ProjectEntity {
+  projectId       String
+  entityId        String
+  addedAt         DateTime  @default(now())
+  
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  entity          Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  
+  @@id([projectId, entityId])
+}
+
+model ProjectNote {
+  projectId       String
+  voiceNoteId     String
+  addedAt         DateTime  @default(now())
+  
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  voiceNote       VoiceNote @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)
+  
+  @@id([projectId, voiceNoteId])
+}
+
+model EntityUsage {
+  id              String    @id @default(cuid())
+  entityId        String
+  voiceNoteId     String
+  projectId       String?
+  wasUsed         Boolean   @default(false)
+  wasCorrected    Boolean   @default(false)
+  originalText    String?
+  correctedText   String?
+  createdAt       DateTime  @default(now())
+  
+  entity          Entity    @relation(fields: [entityId], references: [id])
+  voiceNote       VoiceNote @relation(fields: [voiceNoteId], references: [id])
+  project         Project?  @relation(fields: [projectId], references: [id])
+  
+  @@index([entityId])
+  @@index([voiceNoteId])
+}
+
+// Update existing VoiceNote model to add:
+model VoiceNote {
+  // ... existing fields ...
+  projectId       String?
+  project         Project?  @relation(fields: [projectId], references: [id])
+  projectNotes    ProjectNote[]
+  entityUsage     EntityUsage[]
+  // ... rest of model ...
+}
+
+// Update User model to add:
+model User {
+  // ... existing fields ...
+  entities        Entity[]
+  projects        Project[]
+  // ... rest of model ...
+}
+```
+
+#### Run Migration
+```bash
+cd backend
+DATABASE_URL="file:../data/nano-grazynka.db" npx prisma migrate dev --name add_entity_project_system
 ```
 
 ### Rollout Plan
