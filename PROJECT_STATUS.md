@@ -296,14 +296,16 @@
 - Batch operations for multiple notes
 
 ## Current Development Phase
-**Multi-Model Transcription Enhancement**: 70% Complete
-- ✅ Backend infrastructure (Gemini integration, base64 encoding)
-- ✅ Basic frontend toggle (model selection exists)
-- ⏳ Template UI implementation (30% remaining)
-- ⏳ Token counter visualization
-- ⏳ Cost estimator display
+**Transcription Accuracy Enhancement via Prompt Engineering**: Planning Phase
+- 📋 Three planned improvements to dramatically boost quality and prepare for launch
+- 🎯 Focus on domain-specific vocabulary, context injection, and MVP completion
 
-**Reference**: [Documentation Update Plan](./imp_docs/planning/DOCUMENTATION_UPDATE_PLAN_2025_08_15.md)
+**Active Planning Documents** (In Execution Order):
+1. [YAML Prompt System Plan](./imp_docs/planning/YAML_PROMPT_SYSTEM_PLAN.md) - Foundation work (3 days)
+2. [Entity-Project System Plan](./imp_docs/planning/ENTITY_PROJECT_SYSTEM_PLAN.md) - Knowledge management (4-5 days)
+3. [MVP Release 1 Plan](./imp_docs/planning/MVP_RELEASE_1_PLAN.md) - Minimal viable launch (5 days) *
+
+**Note**: MVP Release 1 plan to be executed AFTER YAML and Entity systems. Scope may be revised based on learnings from those implementations.
 
 ## Development Roadmap
 
@@ -342,12 +344,12 @@
 - [ ] Add audit trail
 
 ### Phase 5: Enable Observability (2 days)
-**Priority**: LOW | **Status**: 60% Complete ✅
-- [x] Enable LangSmith provider (activated)
-- [x] Enable OpenLLMetry provider (activated)
-- [ ] Add configuration UI
-- [ ] Create monitoring dashboard
-- [ ] Test with real data
+**Priority**: LOW | **Status**: 90% Complete ✅
+- [x] Enable LangSmith provider (activated with API key)
+- [x] Enable OpenLLMetry provider (activated with API key)
+- [x] Integration complete (both providers sending data)
+- [ ] Add configuration UI toggle in settings (30 min task)
+- [ ] Test with production workload
 
 ### Post-MVP Features
 - Audio Playback in detail view
