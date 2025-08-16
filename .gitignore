@@ -49,6 +49,9 @@ backend/coverage/
 backend/prisma/*.db
 backend/prisma/*.db-journal
 
+# Prevent wrong directory navigation
+backend/backend/
+
 # Uploads
 /data/uploads/*
 !/data/uploads/.gitkeep

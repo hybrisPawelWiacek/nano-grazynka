@@ -1,7 +1,37 @@
 # Project Status - nano-Grazynka
-**Last Updated**: August 16, 2025
+**Last Updated**: August 17, 2025
 **Status**: Production Ready - Feature Complete
 **Progress**: 100% - MVP features complete with AI enhancements
+
+## 🚀 Entity Project System - Phase 3 Complete (2025-08-16)
+**Status**: FRONTEND IMPLEMENTED ✅  
+**Plan**: [ENTITY_PROJECT_SYSTEM_PLAN.md](./imp_docs/planning/ENTITY_PROJECT_SYSTEM_PLAN.md)  
+**Timeline**: Phase 3 of 4 complete (Frontend UI)  
+
+**Phase 3 Achievements (Frontend UI)**:
+- ✅ **EntityManager Component**: Full CRUD interface with search, filter, bulk operations
+- ✅ **ProjectSelector Component**: Dropdown with inline project creation  
+- ✅ **EntityPills Component**: Color-coded entity preview (14 max + overflow)
+- ✅ **API Client Methods**: Complete entity/project API integration
+- ✅ **Homepage Integration**: ProjectSelector + EntityPills + projectId in FormData
+- ✅ **Settings Integration**: EntityManager for entity management
+- ✅ **Design Consistency**: Apple HIG with consistent color coding
+
+**Implementation Details**:
+- Entity types color-coded: Person (blue), Company (purple), Technical (orange), Product (green)
+- Modal-based forms for complex operations
+- Responsive design for mobile/tablet/desktop
+- Alias management for alternative names/spellings
+- Bulk selection and deletion capabilities
+
+**Remaining Work**:
+- ⏳ Phase 1: Backend Infrastructure (database, repositories) - NOT STARTED
+- ⏳ Phase 2: API Endpoints & Processing Integration - NOT STARTED  
+- ⏳ Phase 4: Transcription Integration & Testing - NOT STARTED
+- ⏳ E2E tests for entity-aware transcription flow
+- ⏳ Performance validation (<100ms overhead requirement)
+
+**Note**: Frontend components created but require backend implementation from Phases 1-2 to be functional.
 
 ## ✅ Test Strategy Alignment Complete (2025-08-16)
 **Status**: FULLY IMPLEMENTED ✅  
@@ -17,6 +47,38 @@
 - ✅ Unified testing strategy aligned with TEST_PLAN.md mandate  
 
 ### Latest Updates
+
+#### ✅ Database Migration System Fixed (2025-08-17)
+**Permanent Solution to Prisma Path Confusion**:
+- ✅ **Root Cause Discovered**: Prisma has documented bug #27212 with SQLite relative paths
+  - Relative paths fail with "P1003: Database does not exist" even when file exists
+  - Prisma resolves paths from process working directory, not schema location
+  - This caused 4 different databases to be created in various locations
+- ✅ **Three-Layer Defense Solution**:
+  1. **Fixed npm scripts**: Removed escaped quotes, use `$PWD` for absolute paths
+  2. **Directory guards**: Added backend/backend/ navigation prevention to CLAUDE.md
+  3. **Clear documentation**: Documented Prisma bug and working solutions
+- ✅ **Implementation Details**:
+  - Updated backend/package.json with working npm scripts using `DATABASE_URL=file:$PWD/../data/nano-grazynka.db`
+  - All Prisma commands now use npm scripts: `npm run migrate:dev`, `migrate:deploy`, `migrate:status`, etc.
+  - Added comprehensive database rules to CLAUDE.md with forbidden directory patterns
+  - Verified migration tracking with _prisma_migrations table
+- ✅ **Result**: Single source of truth at `./data/nano-grazynka.db`, no more path confusion possible
+
+#### ✅ Database Consolidation Complete (2025-08-16)
+**Fixed Multiple Database Files Issue**:
+- ✅ **Root Cause**: Claude Code's `.claude/settings.local.json` was auto-approving commands with hardcoded DATABASE_URL paths
+- ✅ **Impact**: Created 4 different SQLite databases in various locations
+- ✅ **Solution Implemented**:
+  - Consolidated all databases into single file at `./data/nano-grazynka.db`
+  - Created `scripts/prisma-helper.sh` for automatic path detection
+  - Removed 17 hardcoded DATABASE_URL commands from settings.local.json
+  - Replaced with generic pattern `Bash(DATABASE_URL=* npx prisma*)`
+- ✅ **Prevention Measures**:
+  - Updated CLAUDE.md with critical database rules and warnings
+  - Helper script ensures correct path based on context (Docker/host/backend)
+  - Single source of truth for database location
+- ✅ **Result**: Entity Project System tables successfully applied to correct database
 
 #### ✅ Rate Limiting & Usage Counter Fixes (2025-08-16)
 **Fixed Critical Issues for Anonymous Users**:

@@ -11,7 +11,13 @@
     "test:coverage": "jest --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "migrate:dev": "./validate-directory.sh && DATABASE_URL=file:$PWD/../data/nano-grazynka.db prisma migrate dev",
+    "migrate:deploy": "./validate-directory.sh && DATABASE_URL=file:$PWD/../data/nano-grazynka.db prisma migrate deploy",
+    "migrate:status": "./validate-directory.sh && DATABASE_URL=file:$PWD/../data/nano-grazynka.db prisma migrate status",
+    "migrate:resolve": "./validate-directory.sh && DATABASE_URL=file:$PWD/../data/nano-grazynka.db prisma migrate resolve",
+    "db:push": "./validate-directory.sh && DATABASE_URL=file:$PWD/../data/nano-grazynka.db prisma db push",
+    "db:studio": "./validate-directory.sh && DATABASE_URL=file:$PWD/../data/nano-grazynka.db prisma studio"
   },
   "keywords": [],
   "author": "",
