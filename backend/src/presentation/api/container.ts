@@ -25,6 +25,11 @@ import {
 } from '../../application/use-cases';
 
 import { PromptLoader } from '../../infrastructure/config/PromptLoader';
+import { EntityRepository } from '../../infrastructure/persistence/EntityRepository';
+import { ProjectRepository } from '../../infrastructure/persistence/ProjectRepository';
+import { EntityContextBuilder } from '../../application/services/EntityContextBuilder';
+import { IEntityRepository } from '../../domain/repositories/IEntityRepository';
+import { IProjectRepository } from '../../domain/repositories/IProjectRepository';
 
 export class Container {
   private static instance: Container;
@@ -36,6 +41,9 @@ export class Container {
   private voiceNoteRepository: VoiceNoteRepositoryImpl;
   private userRepository: UserRepositoryImpl;
   private eventStore: EventStoreImpl;
+  private entityRepository: IEntityRepository;
+  private projectRepository: IProjectRepository;
+  private entityContextBuilder: EntityContextBuilder;
   private transcriptionService: WhisperAdapter;
   private summarizationService: LLMAdapter;
   private titleGenerationService: TitleGenerationAdapter;
@@ -59,6 +67,16 @@ export class Container {
     this.voiceNoteRepository = new VoiceNoteRepositoryImpl(this.prisma);
     this.userRepository = new UserRepositoryImpl(this.prisma);
     this.eventStore = new EventStoreImpl(this.prisma);
+    
+    // Initialize Entity and Project repositories
+    this.entityRepository = new EntityRepository(this.prisma);
+    this.projectRepository = new ProjectRepository(this.prisma);
+    
+    // Initialize EntityContextBuilder
+    this.entityContextBuilder = new EntityContextBuilder(
+      this.entityRepository,
+      this.projectRepository
+    );
     
     // Pass PromptLoader to adapters
     this.transcriptionService = new WhisperAdapter(this.promptLoader);
@@ -106,6 +124,18 @@ export class Container {
   
   getUserRepository(): UserRepositoryImpl {
     return this.userRepository;
+  }
+  
+  getEntityRepository(): IEntityRepository {
+    return this.entityRepository;
+  }
+  
+  getProjectRepository(): IProjectRepository {
+    return this.projectRepository;
+  }
+  
+  getEntityContextBuilder(): EntityContextBuilder {
+    return this.entityContextBuilder;
   }
   
   getUploadVoiceNoteUseCase(): UploadVoiceNoteUseCase {

@@ -512,6 +512,16 @@ When encountering issues:
   - **Location on Host**: `./data/nano-grazynka.db`
   - **Query via Prisma**: `docker exec nano-grazynka_cc-backend-1 sh -c 'echo "SELECT * FROM TableName;" | DATABASE_URL="file:/data/nano-grazynka.db" npx prisma db execute --stdin'`
   - **Apply Migrations**: `cd backend && DATABASE_URL="file:../data/nano-grazynka.db" npx prisma migrate deploy`
+  - **Quick Migration Commands**:
+    ```bash
+    # Development (preserves data):
+    ./backend/scripts/dev-migrate.sh push
+    
+    # Create production migration:
+    ./backend/scripts/dev-migrate.sh migrate "add_entity_system"
+    
+    # Full migration guide: docs/development/PRISMA_MIGRATIONS.md
+    ```
 - **Container**: Docker Compose
 - **AI Services**: OpenAI/OpenRouter
 - **Environment**: Single root .env file (NO backend/.env - use only root .env)
