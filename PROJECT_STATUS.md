@@ -3,35 +3,60 @@
 **Status**: Production Ready - Feature Complete
 **Progress**: 100% - MVP features complete with AI enhancements
 
-## 🚀 Entity Project System - Phase 3 Complete (2025-08-16)
-**Status**: FRONTEND IMPLEMENTED ✅  
+## 🧹 Test Suite Consolidation (2025-08-17)
+**Status**: COMPLETE ✅
+- Removed obsolete `backend/src/tests/` directory (old Jest tests with broken imports)
+- Removed unused Jest dependencies from backend/package.json
+- All testing now centralized in `tests/` directory using MCP-based approach
+- Test strategy documented in [TEST_PLAN.md](./imp_docs/testing/TEST_PLAN.md)
+
+## 🚀 Entity Project System - Backend Complete, Frontend Pending (2025-08-17)
+**Status**: BACKEND TESTED & WORKING ✅ | FRONTEND TESTING REQUIRED ⏳  
 **Plan**: [ENTITY_PROJECT_SYSTEM_PLAN.md](./imp_docs/planning/ENTITY_PROJECT_SYSTEM_PLAN.md)  
-**Timeline**: Phase 3 of 4 complete (Frontend UI)  
+**Timeline**: Phases 1-2 complete (Backend), Phase 3 complete (Frontend UI), Phase 4 pending  
 
-**Phase 3 Achievements (Frontend UI)**:
-- ✅ **EntityManager Component**: Full CRUD interface with search, filter, bulk operations
-- ✅ **ProjectSelector Component**: Dropdown with inline project creation  
-- ✅ **EntityPills Component**: Color-coded entity preview (14 max + overflow)
-- ✅ **API Client Methods**: Complete entity/project API integration
-- ✅ **Homepage Integration**: ProjectSelector + EntityPills + projectId in FormData
-- ✅ **Settings Integration**: EntityManager for entity management
-- ✅ **Design Consistency**: Apple HIG with consistent color coding
+**Backend Implementation Complete (Phases 1-2)**:
+- ✅ **Database Schema**: All Entity Project tables migrated successfully
+- ✅ **Entity Repository**: Full CRUD operations with project associations
+- ✅ **Project Repository**: Project management with entity/note associations
+- ✅ **Entity Context Builder**: Token optimization for GPT-4o/Gemini models
+- ✅ **API Endpoints**: All /api/entities and /api/projects routes working
+- ✅ **Authentication Fixed**: Type mismatch resolved (UserRepositoryImpl)
+- ✅ **Use Case Classes**: Fixed constructor issues (removed interface instantiation)
+- ✅ **Repository Methods**: Added missing addEntity/removeEntity methods
 
-**Implementation Details**:
-- Entity types color-coded: Person (blue), Company (purple), Technical (orange), Product (green)
-- Modal-based forms for complex operations
-- Responsive design for mobile/tablet/desktop
-- Alias management for alternative names/spellings
-- Bulk selection and deletion capabilities
+**Test Results (8/10 Passing)**:
+- ✅ User Registration & Authentication
+- ✅ Project Creation
+- ✅ Entity Creation (all 4 types)
+- ✅ Entity-Project Association
+- ✅ Get Project Entities
+- ✅ Upload Voice Note with Project Context
+- ✅ Processing Status Check
+- ✅ Entity Usage Tracking
+- ❌ Voice Note Upload Route (404 - /api/voice-notes/upload not found)
+- ⚠️ Entity Names in Transcription (partial - needs integration)
 
-**Remaining Work**:
-- ⏳ Phase 1: Backend Infrastructure (database, repositories) - NOT STARTED
-- ⏳ Phase 2: API Endpoints & Processing Integration - NOT STARTED  
-- ⏳ Phase 4: Transcription Integration & Testing - NOT STARTED
-- ⏳ E2E tests for entity-aware transcription flow
-- ⏳ Performance validation (<100ms overhead requirement)
+**Frontend Components (Created, Not Tested)**:
+- ✅ **EntityManager Component**: Full CRUD interface ready
+- ✅ **ProjectSelector Component**: Dropdown with inline creation ready
+- ✅ **EntityPills Component**: Color-coded preview ready
+- ✅ **API Client Methods**: Complete integration ready
+- ⏳ **Homepage Integration**: Needs testing with backend
+- ⏳ **Settings Integration**: Needs testing with backend
 
-**Note**: Frontend components created but require backend implementation from Phases 1-2 to be functional.
+**Critical Issue Requiring Immediate Attention**:
+- 🔴 **404 Error**: `/api/voice-notes/upload` route not found
+  - Impact: Blocks voice note uploads with project context
+  - Likely cause: Route not registered or path mismatch
+  - Action needed: Check route registration in backend
+
+**Next Steps to Complete**:
+1. Fix 404 error on voice note upload route
+2. Test frontend EntityManager component with backend
+3. Test ProjectSelector integration in upload flow
+4. Verify entity context injection in transcription
+5. Close ENTITY_PROJECT_SYSTEM_PLAN.md as complete
 
 ## ✅ Test Strategy Alignment Complete (2025-08-16)
 **Status**: FULLY IMPLEMENTED ✅  
