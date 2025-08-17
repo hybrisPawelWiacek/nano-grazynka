@@ -314,7 +314,6 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       JSON.parse(data.tags || '[]'),
       data.userId,
       data.sessionId,  // Add sessionId parameter
-      data.projectId || undefined,  // Add projectId parameter for Entity Project System
       data.duration || undefined,  // Add duration parameter
       data.errorMessage || undefined,
       data.userPrompt || undefined,  // Add userPrompt parameter
@@ -324,6 +323,7 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       data.geminiUserPrompt || undefined,  // Add geminiUserPrompt
       data.refinedText || undefined,  // Add refinedText
       data.refinementPrompt || undefined,  // Add refinementPrompt
+      data.projectId || undefined,  // Add projectId parameter for Entity Project System
       data.aiGeneratedTitle || undefined,  // Add aiGeneratedTitle
       data.briefDescription || undefined,  // Add briefDescription
       data.derivedDate ? new Date(data.derivedDate) : undefined,  // Add derivedDate
@@ -332,26 +332,26 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
       data.version
     );
 
-    if (data.transcriptions && data.transcriptions.length > 0) {
-      const latestTranscription = data.transcriptions[data.transcriptions.length - 1];
+    // Handle one-to-one transcription relationship
+    if (data.transcriptions) {
       const transcription = Transcription.create(
-        latestTranscription.text,
-        Language.fromString(latestTranscription.language),
-        latestTranscription.duration || 1,  // duration is required, use 1 as default
-        latestTranscription.confidence || 0.0,  // confidence defaults to 0.0
-        latestTranscription.timestamp
+        data.transcriptions.text,
+        Language.fromString(data.transcriptions.language),
+        data.transcriptions.duration || 1,  // duration is required, use 1 as default
+        data.transcriptions.confidence || 0.0,  // confidence defaults to 0.0
+        data.transcriptions.timestamp
       );
       voiceNote.addTranscription(transcription);
     }
 
-    if (data.summaries && data.summaries.length > 0) {
-      const latestSummary = data.summaries[data.summaries.length - 1];
+    // Handle one-to-one summary relationship
+    if (data.summaries) {
       const summary = Summary.create(
-        latestSummary.summary,
-        JSON.parse(latestSummary.keyPoints || '[]'),
-        JSON.parse(latestSummary.actionItems || '[]'),
-        Language.fromString(latestSummary.language),
-        latestSummary.timestamp
+        data.summaries.summary,
+        JSON.parse(data.summaries.keyPoints || '[]'),
+        JSON.parse(data.summaries.actionItems || '[]'),
+        Language.fromString(data.summaries.language),
+        data.summaries.timestamp
       );
       voiceNote.addSummary(summary);
     }
