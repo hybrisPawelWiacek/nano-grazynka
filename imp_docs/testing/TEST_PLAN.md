@@ -1,7 +1,7 @@
 # nano-Grazynka Test Plan
 **Last Updated**: August 17, 2025
-**Version**: 4.1
-**Status**: UPDATED - Critical Test Environment Issues Documented
+**Version**: 4.2
+**Status**: UPDATED - Test Infrastructure Improvements & Correct Routes Documented
 
 ## 🚨 CRITICAL TEST ENVIRONMENT SETUP
 
@@ -11,9 +11,18 @@
    - ❌ DON'T: `cd frontend && npm run dev` (runs on wrong port 3000)
 2. **Backend may need restart** after code changes
    - Run: `docker compose restart backend` if routes return 404
+   - Watch for SQLite disk I/O errors - restart backend if they occur
 3. **Correct API endpoints**:
+   - Upload: `POST /api/voice-notes/upload`
+   - Get single: `GET /api/voice-notes/:id`
+   - List: `GET /api/voice-notes?sessionId=xxx`
+   - Delete: `DELETE /api/voice-notes/:id`
    - Migration: `/api/anonymous/migrate` (NOT `/api/auth/migrate-anonymous`)
    - Anonymous usage: `/api/anonymous/usage/:sessionId`
+4. **Frontend routes (IMPORTANT)**:
+   - Note detail: `/note/{id}` (SINGULAR, not `/notes/{id}`)
+   - Library: `/library`
+   - Dashboard: `/dashboard`
 
 ### Known Playwright MCP Limitations
 **File Upload Issue**: Playwright MCP cannot maintain file chooser modal state between tool calls.
@@ -381,6 +390,34 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 - `tests/integration/prompt-system.test.ts` - Integration tests
 - `tests/scripts/test-prompt-interpolation.js` - Variable interpolation tests
 
+## Common Test Issues & Solutions
+
+### Known Issues
+1. **SQLite Disk I/O Errors**
+   - **Symptom**: 500 errors during upload, "disk I/O error" in logs
+   - **Solution**: Restart backend container: `docker compose restart backend`
+   - **Root Cause**: Transient SQLite locking issues in Docker volumes
+
+2. **Session ID Mismatches**
+   - **Symptom**: 403 Forbidden on delete, empty results on list
+   - **Solution**: Ensure same session ID used for upload and subsequent operations
+   - **Prevention**: Use test-utils.js helper functions for consistent sessions
+
+3. **Wrong Route Paths**
+   - **Symptom**: 404 on `/notes/{id}` frontend routes
+   - **Solution**: Use `/note/{id}` (singular) not `/notes/{id}` (plural)
+   - **Prevention**: Reference test-utils.js for correct route patterns
+
+4. **Playwright MCP File Upload**
+   - **Symptom**: Cannot maintain file chooser modal between tool calls
+   - **Solution**: Use API-based uploads for testing file operations
+   - **Prevention**: Hybrid approach - UI navigation with Playwright, uploads with API
+
+5. **Backend Not Reflecting Code Changes**
+   - **Symptom**: Routes return 404 after code updates
+   - **Solution**: `docker compose restart backend`
+   - **Prevention**: Always restart backend after significant changes
+
 ## Test Execution Plan
 
 ### Phase 1: Backend Validation (Day 1)
@@ -485,6 +522,29 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 ```
 
 ## Tools & Scripts
+
+### Test Infrastructure (NEW)
+**Test Utilities** (`tests/scripts/test-utils.js`):
+- Provides consistent session management across tests
+- Corrects frontend routes (`/note/` not `/notes/`)
+- Key functions:
+  - `generateSessionId()` - Creates unique session IDs
+  - `uploadTestFile()` - Handles file uploads with proper session
+  - `listVoiceNotes()` - Lists notes for a session
+  - `deleteVoiceNote()` - Deletes with permission checks
+  - `getVoiceNote()` - Retrieves single note
+
+**Test Runner** (`tests/scripts/run-tests.sh`):
+- Pre-flight environment checks
+- Orchestrates all test suites
+- Generates test reports with pass/fail tracking
+- Usage: `./tests/scripts/run-tests.sh`
+
+**Backend API Test Suite** (`tests/scripts/test-backend-api.js`):
+- Comprehensive API endpoint testing
+- Session isolation validation
+- Proper error handling
+- Usage: `node tests/scripts/test-backend-api.js`
 
 ### Existing Scripts (in /tests)
 - `upload_test.py` - Basic upload test
