@@ -210,20 +210,231 @@ mcp__playwright__browser_snapshot
 // Should see "Credits: X / 5" where X is less than 5 after processing
 ```
 
-### 8. Test Settings Page
+### 8. Test Entity Management in Settings
 ```javascript
 // Navigate to settings
 mcp__playwright__browser_navigate
   url: "http://localhost:3100/settings"
 
-// Verify settings page shows:
+// Verify settings page shows EntityManager component
+mcp__playwright__browser_snapshot
+// Should see:
 // - User email
 // - Account tier (Free)
-// - Option to upgrade
-// - Preferences (if any)
+// - Entity Manager section
+// - Project management options
+
+// Create test entities
+// Add a person entity
+mcp__playwright__browser_type
+  element: "Entity name input"
+  ref: [find input with placeholder "Entity name"]
+  text: "Dario Amodei"
+
+mcp__playwright__browser_select_option
+  element: "Entity type select"
+  ref: [find select for entity type]
+  values: ["person"]
+
+mcp__playwright__browser_type
+  element: "Entity value input"
+  ref: [find input with placeholder "Value (how it should appear)"]
+  text: "Dario Amodei"
+
+mcp__playwright__browser_click
+  element: "Add Entity button"
+  ref: [find button with text "Add Entity"]
+
+// Add a company entity
+mcp__playwright__browser_type
+  element: "Entity name input"
+  ref: [find input with placeholder "Entity name"]
+  text: "Microsoft"
+
+mcp__playwright__browser_select_option
+  element: "Entity type select"
+  ref: [find select for entity type]
+  values: ["company"]
+
+mcp__playwright__browser_type
+  element: "Entity value input"
+  ref: [find input with placeholder "Value (how it should appear)"]
+  text: "Microsoft"
+
+mcp__playwright__browser_click
+  element: "Add Entity button"
+  ref: [find button with text "Add Entity"]
+
+// Add a technical term entity
+mcp__playwright__browser_type
+  element: "Entity name input"
+  ref: [find input with placeholder "Entity name"]
+  text: "Claude API"
+
+mcp__playwright__browser_select_option
+  element: "Entity type select"
+  ref: [find select for entity type]
+  values: ["technical"]
+
+mcp__playwright__browser_type
+  element: "Entity value input"
+  ref: [find input with placeholder "Value (how it should appear)"]
+  text: "Claude API"
+
+mcp__playwright__browser_click
+  element: "Add Entity button"
+  ref: [find button with text "Add Entity"]
+
+// Verify entities appear in list
+mcp__playwright__browser_snapshot
+// Should see all three entities listed with their types
+
+// Test entity deletion
+mcp__playwright__browser_click
+  element: "Delete entity button for Claude API"
+  ref: [find delete button (×) for Claude API entity]
+
+// Verify entity removed
+mcp__playwright__browser_snapshot
+// Claude API should be removed from list
 ```
 
-### 9. Logout and Verify
+### 9. Test Project Management
+```javascript
+// Navigate back to home page to test project selector
+mcp__playwright__browser_navigate
+  url: "http://localhost:3100"
+
+// Open project selector dropdown
+mcp__playwright__browser_click
+  element: "Project selector dropdown"
+  ref: [find select element with project options]
+
+// Select "New Project" option
+mcp__playwright__browser_select_option
+  element: "Project selector"
+  ref: [find select element]
+  values: ["new"]
+
+// Fill new project modal
+mcp__playwright__browser_type
+  element: "Project name input"
+  ref: [find input with placeholder "Project name"]
+  text: "Tech Meeting Notes"
+
+mcp__playwright__browser_type
+  element: "Project description textarea"
+  ref: [find textarea for project description]
+  text: "Weekly technical discussion transcriptions"
+
+// Select entities to add to project
+mcp__playwright__browser_click
+  element: "Dario Amodei checkbox"
+  ref: [find checkbox for Dario Amodei entity]
+
+mcp__playwright__browser_click
+  element: "Microsoft checkbox"
+  ref: [find checkbox for Microsoft entity]
+
+// Save project
+mcp__playwright__browser_click
+  element: "Create Project button"
+  ref: [find button with text "Create Project"]
+
+// Verify project created and selected
+mcp__playwright__browser_snapshot
+// Should see:
+// - "Tech Meeting Notes" selected in dropdown
+// - Entity pills showing "Dario Amodei" and "Microsoft" below selector
+
+// Create second project for testing
+mcp__playwright__browser_select_option
+  element: "Project selector"
+  ref: [find select element]
+  values: ["new"]
+
+mcp__playwright__browser_type
+  element: "Project name input"
+  ref: [find input with placeholder "Project name"]
+  text: "Polish Business"
+
+mcp__playwright__browser_type
+  element: "Project description textarea"
+  ref: [find textarea for project description]
+  text: "Polish market analysis"
+
+// Don't select any entities for this project
+mcp__playwright__browser_click
+  element: "Create Project button"
+  ref: [find button with text "Create Project"]
+
+// Switch between projects
+mcp__playwright__browser_select_option
+  element: "Project selector"
+  ref: [find select element]
+  values: ["Tech Meeting Notes"]
+
+// Verify entity pills update
+mcp__playwright__browser_snapshot
+// Should see entity pills for "Dario Amodei" and "Microsoft"
+
+mcp__playwright__browser_select_option
+  element: "Project selector"
+  ref: [find select element]
+  values: ["Polish Business"]
+
+// Verify no entity pills for this project
+mcp__playwright__browser_snapshot
+// Should see no entity pills or "No entities" message
+```
+
+### 10. Test Upload with Entity Context
+```javascript
+// Keep "Tech Meeting Notes" project selected
+mcp__playwright__browser_select_option
+  element: "Project selector"
+  ref: [find select element]
+  values: ["Tech Meeting Notes"]
+
+// Verify entity pills are displayed
+mcp__playwright__browser_snapshot
+// Should see "Active entities: 2" with pills for Dario Amodei and Microsoft
+
+// Upload test file with project context
+mcp__playwright__browser_click
+  element: "Upload dropzone area"
+  ref: [find element with "Click to upload or drag and drop"]
+
+mcp__playwright__browser_file_upload
+  paths: ["/Users/pawelwiacek/Documents/ai_agents_dev/nano-grazynka_CC/tests/test-data/zabka.m4a"]
+
+// The file actually contains "Microsoft" in Polish context
+// Entity context should help with accurate transcription
+
+mcp__playwright__browser_click
+  element: "Upload and Process button"
+  ref: [find button with text "Upload and Process"]
+
+// Wait for processing with entity context
+mcp__playwright__browser_wait_for
+  time: 10
+
+// Verify transcription includes correctly transcribed entities
+mcp__playwright__browser_snapshot
+// Should see "Microsoft" correctly transcribed (not "Mikrosoft" or other variations)
+// This demonstrates entity context improving transcription accuracy
+
+// Check entity usage tracking (if visible in UI)
+// Navigate back to settings to see if entity usage stats updated
+mcp__playwright__browser_navigate
+  url: "http://localhost:3100/settings"
+
+// Look for entity usage indicators
+mcp__playwright__browser_snapshot
+// May show usage counts or last used timestamps for entities
+```
+
+### 11. Logout and Verify
 ```javascript
 // Click logout button
 mcp__playwright__browser_click
@@ -255,8 +466,16 @@ mcp__playwright__browser_evaluate
 8. ✅ Library shows user's notes correctly
 9. ✅ Dashboard displays user statistics and credit usage
 10. ✅ Settings page shows account information
-11. ✅ Logout clears authentication data
-12. ✅ Credits tracked and decremented properly
+11. ✅ **Entity Management**: Create, view, and delete entities in Settings
+12. ✅ **Project Creation**: Create multiple projects with descriptions
+13. ✅ **Entity-Project Association**: Link entities to projects
+14. ✅ **Project Switching**: Switch between projects on homepage
+15. ✅ **Entity Pills Display**: Active entities shown below project selector
+16. ✅ **Upload with Context**: ProjectId included in upload FormData
+17. ✅ **Improved Transcription**: "Microsoft" correctly transcribed with entity context
+18. ✅ **Entity Usage Tracking**: Usage stats updated after transcription
+19. ✅ Logout clears authentication data
+20. ✅ Credits tracked and decremented properly
 
 ### Known Issues & Common Failure Points
 1. **User Already Exists**: Using timestamp in email prevents this issue

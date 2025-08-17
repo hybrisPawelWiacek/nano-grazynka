@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from 'fastify';
 import { JwtService } from '../../../infrastructure/auth/JwtService';
-import { UserRepository } from '../../../infrastructure/persistence/UserRepositoryImpl';
+import { UserRepositoryImpl } from '../../../infrastructure/persistence/UserRepositoryImpl';
 import { UserEntity } from '../../../domain/entities/User';
 
 declare module 'fastify' {
@@ -11,7 +11,7 @@ declare module 'fastify' {
 
 export function createAuthenticateMiddleware(
   jwtService: JwtService,
-  userRepository: UserRepository
+  userRepository: UserRepositoryImpl
 ) {
   return async function authenticate(
     request: FastifyRequest,

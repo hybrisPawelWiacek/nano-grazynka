@@ -1,4 +1,3 @@
-import { injectable, inject } from 'tsyringe';
 import { IProjectRepository } from '../../../domain/repositories/IProjectRepository';
 
 interface DeleteProjectInput {
@@ -11,10 +10,9 @@ interface DeleteProjectOutput {
   error?: Error;
 }
 
-@injectable()
 export class DeleteProjectUseCase {
   constructor(
-    @inject('IProjectRepository') private projectRepository: IProjectRepository
+    private projectRepository: IProjectRepository
   ) {}
 
   async execute(input: DeleteProjectInput): Promise<DeleteProjectOutput> {

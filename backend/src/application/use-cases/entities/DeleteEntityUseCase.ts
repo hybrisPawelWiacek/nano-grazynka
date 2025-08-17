@@ -1,4 +1,3 @@
-import { injectable, inject } from 'tsyringe';
 import { IEntityRepository } from '../../../domain/repositories/IEntityRepository';
 
 interface DeleteEntityInput {
@@ -11,10 +10,9 @@ interface DeleteEntityOutput {
   error?: Error;
 }
 
-@injectable()
 export class DeleteEntityUseCase {
   constructor(
-    @inject('IEntityRepository') private entityRepository: IEntityRepository
+    private entityRepository: IEntityRepository
   ) {}
 
   async execute(input: DeleteEntityInput): Promise<DeleteEntityOutput> {

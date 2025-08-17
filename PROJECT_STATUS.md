@@ -1,7 +1,7 @@
 # Project Status - nano-Grazynka
 **Last Updated**: August 17, 2025
-**Status**: Production Ready - Feature Complete
-**Progress**: 100% - MVP features complete with AI enhancements
+**Status**: Production Ready - Feature Complete (Entity System Partially Working)
+**Progress**: 95% - MVP features complete, Entity-Project association incomplete
 
 ## 🧹 Test Suite Consolidation (2025-08-17)
 **Status**: COMPLETE ✅
@@ -10,53 +10,154 @@
 - All testing now centralized in `tests/` directory using MCP-based approach
 - Test strategy documented in [TEST_PLAN.md](./imp_docs/testing/TEST_PLAN.md)
 
-## 🚀 Entity Project System - Backend Complete, Frontend Pending (2025-08-17)
-**Status**: BACKEND TESTED & WORKING ✅ | FRONTEND TESTING REQUIRED ⏳  
+## 🚀 Entity Project System - Partially Working (40% Complete) (2025-08-17)
+**Status**: BACKEND TESTED ✅ | FRONTEND PARTIALLY WORKING ⚠️ | CRITICAL FEATURES MISSING ❌  
 **Plan**: [ENTITY_PROJECT_SYSTEM_PLAN.md](./imp_docs/planning/ENTITY_PROJECT_SYSTEM_PLAN.md)  
-**Timeline**: Phases 1-2 complete (Backend), Phase 3 complete (Frontend UI), Phase 4 pending  
+**Implementation**: ~40% of planned features working, critical entity-project linking missing  
 
-**Backend Implementation Complete (Phases 1-2)**:
-- ✅ **Database Schema**: All Entity Project tables migrated successfully
-- ✅ **Entity Repository**: Full CRUD operations with project associations
-- ✅ **Project Repository**: Project management with entity/note associations
-- ✅ **Entity Context Builder**: Token optimization for GPT-4o/Gemini models
-- ✅ **API Endpoints**: All /api/entities and /api/projects routes working
-- ✅ **Authentication Fixed**: Type mismatch resolved (UserRepositoryImpl)
-- ✅ **Use Case Classes**: Fixed constructor issues (removed interface instantiation)
-- ✅ **Repository Methods**: Added missing addEntity/removeEntity methods
+### ✅ Working Features (What's Actually Functional)
+**Backend Infrastructure**:
+- ✅ Database Schema: All Entity Project tables migrated successfully
+- ✅ Entity API: Full CRUD operations at `/api/entities`
+- ✅ Project API: CRUD operations at `/api/projects`
+- ✅ Authentication: Fixed type mismatches in UserRepositoryImpl
 
-**Test Results (8/10 Passing)**:
-- ✅ User Registration & Authentication
-- ✅ Project Creation
-- ✅ Entity Creation (all 4 types)
-- ✅ Entity-Project Association
-- ✅ Get Project Entities
-- ✅ Upload Voice Note with Project Context
-- ✅ Processing Status Check
-- ✅ Entity Usage Tracking
-- ❌ Voice Note Upload Route (404 - /api/voice-notes/upload not found)
-- ⚠️ Entity Names in Transcription (partial - needs integration)
+**Frontend Components**:
+- ✅ EntityManager: Can create, view, delete entities (Person, Company, Technical types)
+- ✅ Project Creation: Inline project creation from homepage dropdown
+- ✅ Project Selection: Dropdown selector works on homepage
+- ✅ Upload Integration: Files upload with selected projectId in FormData
 
-**Frontend Components (Created, Not Tested)**:
-- ✅ **EntityManager Component**: Full CRUD interface ready
-- ✅ **ProjectSelector Component**: Dropdown with inline creation ready
-- ✅ **EntityPills Component**: Color-coded preview ready
-- ✅ **API Client Methods**: Complete integration ready
-- ⏳ **Homepage Integration**: Needs testing with backend
-- ⏳ **Settings Integration**: Needs testing with backend
+**Test Results (Backend API Tests - 16/16 Passing)**:
+- ✅ Entity CRUD operations working
+- ✅ Project CRUD operations working
+- ✅ Entity-Project associations (API level only)
+- ✅ Upload with project context (backend accepts projectId)
+- ✅ Entity names appearing in transcriptions (Microsoft correctly transcribed)
 
-**Critical Issue Requiring Immediate Attention**:
-- 🔴 **404 Error**: `/api/voice-notes/upload` route not found
-  - Impact: Blocks voice note uploads with project context
-  - Likely cause: Route not registered or path mismatch
-  - Action needed: Check route registration in backend
+### ❌ Missing Critical Features (Must Implement)
+**Entity-Project Association UI** (PRIMARY BLOCKER):
+- ❌ No UI to link entities to projects after creation
+- ❌ No entity selection checkboxes during project creation
+- ❌ No way to add/remove entities from existing projects
+- ❌ Settings page missing project management section
 
-**Next Steps to Complete**:
-1. Fix 404 error on voice note upload route
-2. Test frontend EntityManager component with backend
-3. Test ProjectSelector integration in upload flow
-4. Verify entity context injection in transcription
-5. Close ENTITY_PROJECT_SYSTEM_PLAN.md as complete
+**Entity Context Visibility**:
+- ❌ Entity pills not displayed below project selector
+- ❌ No indication of active entities when project selected
+- ❌ No entity count or preview on homepage
+- ❌ No visual feedback that entities are being used
+
+**Entity Context Application**:
+- ⚠️ Unclear if entity context is actually injected into prompts
+- ❌ No EntityContextBuilder service found in container
+- ❌ ProcessingOrchestrator not loading entity context
+- ❌ PromptLoader not receiving entity interpolation data
+
+### 🎨 UI/UX Issues (Poor User Experience)
+**Entity Management**:
+- 🔴 EntityManager buried in Settings page (hard to find)
+- 🔴 No search/filter for entities
+- 🔴 No bulk operations (delete multiple, import/export)
+- 🔴 No entity type icons or visual differentiation
+- 🔴 No usage statistics or last-used indicators
+
+**Project Management**:
+- 🔴 Project creation only through dropdown (not intuitive)
+- 🔴 No dedicated project management page
+- 🔴 Can't edit project details after creation
+- 🔴 Can't delete projects
+- 🔴 No project statistics (notes count, entities count)
+
+**Integration Flow**:
+- 🔴 Entity-project relationship not obvious to users
+- 🔴 No onboarding or explanation of entity system benefits
+- 🔴 No examples or templates for common entity sets
+- 🔴 No indication that entities improve transcription accuracy
+
+### 📋 Outstanding Development Tasks
+
+#### Phase 1: Complete Core Functionality (2-3 days)
+**Backend Completion**:
+- [ ] Implement EntityContextBuilder service
+- [ ] Wire EntityContextBuilder into container.ts
+- [ ] Update ProcessingOrchestrator to load entity context
+- [ ] Pass entity context to PromptLoader interpolation
+- [ ] Add entity context to WhisperAdapter prompts
+- [ ] Implement entity usage tracking after transcription
+
+**Frontend Entity-Project Linking**:
+- [ ] Add entity selection to project creation modal
+- [ ] Create entity management UI within project view
+- [ ] Implement add/remove entities from projects
+- [ ] Add entity pills component below project selector
+- [ ] Show active entity count and preview
+
+#### Phase 2: UI/UX Improvements (2-3 days)
+**Redesign Entity Management**:
+- [ ] Move entities to dedicated top-level page
+- [ ] Add search and filter functionality
+- [ ] Implement entity type icons and colors
+- [ ] Add bulk operations (select all, delete multiple)
+- [ ] Show usage statistics per entity
+- [ ] Add entity import/export (CSV/JSON)
+
+**Enhance Project Management**:
+- [ ] Create dedicated Projects page
+- [ ] Add project edit/delete functionality
+- [ ] Show project statistics dashboard
+- [ ] Display recent notes per project
+- [ ] Add project templates (Meeting, Research, etc.)
+- [ ] Implement project archiving
+
+**Improve User Onboarding**:
+- [ ] Add entity system tutorial/walkthrough
+- [ ] Create example entity sets (Tech Terms, Team Members)
+- [ ] Show "before/after" transcription examples
+- [ ] Add tooltips explaining entity benefits
+- [ ] Create quick-start templates
+
+#### Phase 3: Polish & Optimization (1-2 days)
+**Visual Enhancements**:
+- [ ] Design entity pill component with type colors
+- [ ] Add smooth animations for entity operations
+- [ ] Implement drag-and-drop for entity organization
+- [ ] Create entity suggestion UI during typing
+- [ ] Add entity highlighting in transcriptions
+
+**Performance & UX**:
+- [ ] Implement entity caching for fast loading
+- [ ] Add optimistic UI updates
+- [ ] Implement undo/redo for entity operations
+- [ ] Add keyboard shortcuts for power users
+- [ ] Create entity quick-add from transcription
+
+### 🚨 Critical Path to MVP
+1. **MUST HAVE** (Week 1):
+   - Entity-project linking UI
+   - Entity context injection into prompts
+   - Entity pills display
+   - Basic project management
+
+2. **SHOULD HAVE** (Week 2):
+   - Dedicated entity/project pages
+   - Search and filter
+   - Usage statistics
+   - Onboarding flow
+
+3. **NICE TO HAVE** (Future):
+   - Templates and examples
+   - Import/export
+   - Drag-and-drop
+   - Keyboard shortcuts
+
+### 📊 Current Implementation Status
+- **Backend API**: 90% complete (missing context injection)
+- **Frontend UI**: 40% complete (missing critical linking features)
+- **User Experience**: 20% (poor discoverability and usability)
+- **Overall System**: 40% functional (foundation exists, critical features missing)
+
+**Bottom Line**: The entity system foundation is built but not connected. Without entity-project linking UI and context injection, the system cannot deliver its core value proposition of improving transcription accuracy through domain-specific vocabulary.
 
 ## ✅ Test Strategy Alignment Complete (2025-08-16)
 **Status**: FULLY IMPLEMENTED ✅  

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,23 +7,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User management models
 model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  passwordHash      String
-  tier              String    @default("free") // free, pro, business
-  creditsUsed       Int       @default(0)
-  creditsResetDate  DateTime  @default(now())
-  createdAt         DateTime  @default(now())
-  lastLoginAt       DateTime?
-  
-  voiceNotes        VoiceNote[]
-  sessions          Session[]
-  usageLogs         UsageLog[]
-  entities          Entity[]
-  projects          Project[]
-  
+  id               String      @id @default(cuid())
+  email            String      @unique
+  passwordHash     String
+  tier             String      @default("free")
+  creditsUsed      Int         @default(0)
+  creditsResetDate DateTime    @default(now())
+  createdAt        DateTime    @default(now())
+  lastLoginAt      DateTime?
+  entities         Entity[]
+  projects         Project[]
+  sessions         Session[]
+  usageLogs        UsageLog[]
+  voiceNotes       VoiceNote[]
+
   @@index([email])
   @@index([tier])
 }
@@ -37,9 +32,8 @@ model Session {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-  
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([token])
   @@index([userId])
 }
@@ -47,57 +41,48 @@ model Session {
 model UsageLog {
   id        String   @id @default(cuid())
   userId    String
-  action    String   // upload, process, export, reprocess
+  action    String
   timestamp DateTime @default(now())
-  metadata  String?  // JSON for additional data
-  
+  metadata  String?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId, timestamp])
 }
 
 model VoiceNote {
-  id               String   @id @default(cuid())
-  userId           String?  // Made optional for anonymous users
-  sessionId        String?  // For anonymous users
-  title            String
-  originalFilePath String
-  fileSize         Int
-  mimeType         String
-  language         String
-  status           String
-  tags             String   @default("[]") // JSON array
-  userPrompt       String?  // Custom user instructions for summarization
-  whisperPrompt    String?  // Custom prompt for Whisper transcription
-  
-  // Multi-model transcription fields
-  transcriptionModel    String?     @default("gpt-4o-transcribe")  // Model selection
-  geminiSystemPrompt    String?     // System instructions for Gemini
-  geminiUserPrompt      String?     // User context for Gemini (1M tokens)
-  refinedText           String?     // After LLM refinement (optional)
-  refinementPrompt      String?     // Context used for refinement
-  
-  // AI-generated metadata fields
-  aiGeneratedTitle      String?     // AI-generated 3-4 word title
-  briefDescription      String?     // AI-generated 10-15 word summary
-  derivedDate           DateTime?   // Date extracted from content
-  duration              Float?      // Audio duration in seconds
-  
-  // Entity Project System fields
-  projectId        String?
-  
-  errorMessage     String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  version          Int      @default(1)
-
-  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project          Project? @relation(fields: [projectId], references: [id])
-  transcriptions   Transcription[]
-  summaries        Summary[]
-  events           Event[]
-  projectNotes     ProjectNote[]
-  entityUsage      EntityUsage[]
+  id                 String         @id @default(cuid())
+  userId             String?
+  sessionId          String?
+  title              String
+  originalFilePath   String
+  fileSize           Int
+  mimeType           String
+  language           String
+  status             String
+  tags               String         @default("[]")
+  userPrompt         String?
+  whisperPrompt      String?
+  transcriptionModel String?        @default("gpt-4o-transcribe")
+  geminiSystemPrompt String?
+  geminiUserPrompt   String?
+  refinedText        String?
+  refinementPrompt   String?
+  aiGeneratedTitle   String?
+  briefDescription   String?
+  derivedDate        DateTime?
+  duration           Float?
+  projectId          String?
+  errorMessage       String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  version            Int            @default(1)
+  entityUsage        EntityUsage[]
+  events             Event[]
+  projectNotes       ProjectNote[]
+  summaries          Summary?
+  transcriptions     Transcription?
+  project            Project?       @relation(fields: [projectId], references: [id])
+  user               User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
   @@index([userId, createdAt])
@@ -107,140 +92,130 @@ model VoiceNote {
 }
 
 model Transcription {
-  id              String   @id @default(cuid())
-  voiceNoteId     String   @unique
-  text            String
-  language        String
-  duration        Float
-  confidence      Float    @default(0.0)
-  wordCount       Int      @default(0)
-  timestamp       DateTime @default(now())
-
-  voiceNote       VoiceNote @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)
-  summaries       Summary[]
+  id          String    @id @default(cuid())
+  voiceNoteId String    @unique
+  text        String
+  language    String
+  duration    Float
+  confidence  Float     @default(0.0)
+  wordCount   Int       @default(0)
+  timestamp   DateTime  @default(now())
+  summaries   Summary[]
+  voiceNote   VoiceNote @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)
 
   @@index([voiceNoteId])
 }
 
 model Summary {
-  id              String   @id @default(cuid())
-  voiceNoteId     String   @unique
+  id              String        @id @default(cuid())
+  voiceNoteId     String        @unique
   transcriptionId String
   summary         String
-  keyPoints       String   // JSON array
-  actionItems     String   // JSON array
+  keyPoints       String
+  actionItems     String
   language        String
-  timestamp       DateTime @default(now())
-
-  voiceNote       VoiceNote @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)
+  timestamp       DateTime      @default(now())
   transcription   Transcription @relation(fields: [transcriptionId], references: [id], onDelete: Cascade)
+  voiceNote       VoiceNote     @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)
 
   @@index([voiceNoteId])
   @@index([transcriptionId])
 }
 
 model Event {
-  id          String   @id @default(cuid())
-  eventId     String   @unique
+  id          String    @id @default(cuid())
+  eventId     String    @unique
   aggregateId String
   eventType   String
-  payload     String   // JSON
-  occurredAt  DateTime @default(now())
-
-  voiceNote   VoiceNote? @relation(fields: [aggregateId], references: [id], onDelete: Cascade)
+  payload     String
+  occurredAt  DateTime  @default(now())
+  voiceNote   VoiceNote @relation(fields: [aggregateId], references: [id], onDelete: Cascade)
 
   @@index([aggregateId])
   @@index([occurredAt])
 }
 
-// Anonymous session tracking
 model AnonymousSession {
-  id          String   @id @default(cuid())
-  sessionId   String   @unique
-  usageCount  Int      @default(0)
-  createdAt   DateTime @default(now())
-  lastUsedAt  DateTime @default(now())
-  
+  id         String   @id @default(cuid())
+  sessionId  String   @unique
+  usageCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
   @@index([sessionId])
   @@index([createdAt])
 }
 
-// Entity Project System models
 model Entity {
-  id              String    @id @default(cuid())
+  id              String          @id @default(cuid())
   userId          String
   name            String
-  type            String    // 'person', 'company', 'technical', 'product'
+  type            String
   value           String
-  aliases         String?   // JSON array
+  aliases         String?
   description     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectEntities ProjectEntity[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   usageLogs       EntityUsage[]
-  
+  projectEntities ProjectEntity[]
+
   @@unique([userId, name, type])
   @@index([userId])
 }
 
 model Project {
-  id              String    @id @default(cuid())
+  id              String          @id @default(cuid())
   userId          String
   name            String
   description     String?
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  usageLogs       EntityUsage[]
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   projectEntities ProjectEntity[]
   projectNotes    ProjectNote[]
   voiceNotes      VoiceNote[]
-  usageLogs       EntityUsage[]
-  
+
   @@unique([userId, name])
   @@index([userId])
 }
 
 model ProjectEntity {
-  projectId       String
-  entityId        String
-  addedAt         DateTime  @default(now())
-  
-  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  entity          Entity    @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  
+  projectId String
+  entityId  String
+  addedAt   DateTime @default(now())
+  entity    Entity   @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
   @@id([projectId, entityId])
 }
 
 model ProjectNote {
-  projectId       String
-  voiceNoteId     String
-  addedAt         DateTime  @default(now())
-  
-  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  voiceNote       VoiceNote @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)
-  
+  projectId   String
+  voiceNoteId String
+  addedAt     DateTime  @default(now())
+  voiceNote   VoiceNote @relation(fields: [voiceNoteId], references: [id], onDelete: Cascade)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
   @@id([projectId, voiceNoteId])
 }
 
 model EntityUsage {
-  id              String    @id @default(cuid())
-  entityId        String
-  voiceNoteId     String
-  projectId       String?
-  wasUsed         Boolean   @default(false)
-  wasCorrected    Boolean   @default(false)
-  originalText    String?
-  correctedText   String?
-  createdAt       DateTime  @default(now())
-  
-  entity          Entity    @relation(fields: [entityId], references: [id])
-  voiceNote       VoiceNote @relation(fields: [voiceNoteId], references: [id])
-  project         Project?  @relation(fields: [projectId], references: [id])
-  
+  id            String    @id @default(cuid())
+  entityId      String
+  voiceNoteId   String
+  projectId     String?
+  wasUsed       Boolean   @default(false)
+  wasCorrected  Boolean   @default(false)
+  originalText  String?
+  correctedText String?
+  createdAt     DateTime  @default(now())
+  project       Project?  @relation(fields: [projectId], references: [id])
+  voiceNote     VoiceNote @relation(fields: [voiceNoteId], references: [id])
+  entity        Entity    @relation(fields: [entityId], references: [id])
+
   @@index([entityId])
   @@index([voiceNoteId])
 }

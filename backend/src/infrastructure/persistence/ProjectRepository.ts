@@ -62,6 +62,26 @@ export class ProjectRepository implements IProjectRepository {
     return result ? this.mapToProject(result) : null;
   }
 
+  async addEntity(projectId: string, entityId: string): Promise<void> {
+    await this.db.projectEntity.create({
+      data: {
+        projectId,
+        entityId
+      }
+    });
+  }
+
+  async removeEntity(projectId: string, entityId: string): Promise<void> {
+    await this.db.projectEntity.delete({
+      where: {
+        projectId_entityId: {
+          projectId,
+          entityId
+        }
+      }
+    });
+  }
+
   async addVoiceNote(projectId: string, voiceNoteId: string): Promise<void> {
     await this.db.projectNote.create({
       data: {

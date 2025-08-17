@@ -1,4 +1,3 @@
-import { injectable, inject } from 'tsyringe';
 import { IProjectRepository } from '../../../domain/repositories/IProjectRepository';
 import { Project } from '../../../domain/entities/Project';
 
@@ -18,10 +17,9 @@ interface UpdateProjectOutput {
   error?: Error;
 }
 
-@injectable()
 export class UpdateProjectUseCase {
   constructor(
-    @inject('IProjectRepository') private projectRepository: IProjectRepository
+    private projectRepository: IProjectRepository
   ) {}
 
   async execute(input: UpdateProjectInput): Promise<UpdateProjectOutput> {

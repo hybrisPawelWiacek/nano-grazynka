@@ -111,7 +111,8 @@ export class Container {
       this.config,  // Pass the ConfigLoader instance
       this.entityContextBuilder,
       this.projectRepository,
-      this.entityUsageRepository
+      this.entityUsageRepository,
+      this.entityRepository
     );
   }
   

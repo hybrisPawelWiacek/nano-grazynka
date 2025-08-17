@@ -79,13 +79,13 @@ export class VoiceNote {
     this.title = title;
     this.originalFilePath = originalFilePath;
     this.fileSize = fileSize;
-    this.duration = duration;
     this.mimeType = mimeType;
     this.language = language;
     this.status = status;
     this.tags = tags;
     this.userId = userId;
     this.sessionId = sessionId;
+    this.duration = duration;
     this.errorMessage = errorMessage;
     this.userPrompt = userPrompt;
     this.whisperPrompt = whisperPrompt;

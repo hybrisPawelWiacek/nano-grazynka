@@ -1,7 +1,25 @@
 # nano-Grazynka Test Plan
-**Last Updated**: August 15, 2025
-**Version**: 4.0
-**Status**: UPDATED - AI Features & Bug Fix Tests Added
+**Last Updated**: August 17, 2025
+**Version**: 4.1
+**Status**: UPDATED - Critical Test Environment Issues Documented
+
+## 🚨 CRITICAL TEST ENVIRONMENT SETUP
+
+### Pre-Test Checklist (MANDATORY)
+1. **Frontend MUST run via Docker** - NOT `npm run dev`
+   - ✅ Use: `docker compose up frontend` (maps to port 3100)
+   - ❌ DON'T: `cd frontend && npm run dev` (runs on wrong port 3000)
+2. **Backend may need restart** after code changes
+   - Run: `docker compose restart backend` if routes return 404
+3. **Correct API endpoints**:
+   - Migration: `/api/anonymous/migrate` (NOT `/api/auth/migrate-anonymous`)
+   - Anonymous usage: `/api/anonymous/usage/:sessionId`
+
+### Known Playwright MCP Limitations
+**File Upload Issue**: Playwright MCP cannot maintain file chooser modal state between tool calls.
+- **Workaround**: Use API-based testing for file uploads
+- **UI Testing**: Use Playwright MCP for navigation, buttons, forms (not file uploads)
+- **Hybrid Approach**: Navigate with Playwright, upload with API calls
 
 ## 🚨 CRITICAL: Use Playwright MCP Server for ALL E2E Testing
 
@@ -12,7 +30,7 @@
 - ❌ **DO NOT**: Create test files with `require('@playwright/test')`
 
 The Playwright MCP server is already configured in the Docker environment.
-All browser automation MUST use MCP tools directly.
+All browser automation MUST use MCP tools directly (except file uploads - use API).
 
 ## Test Strategy Overview
 
@@ -114,6 +132,20 @@ All browser automation MUST use MCP tools directly.
 | F4C.9 | Empty state | 1. View empty library | "No notes yet" message |
 | F4C.10 | Anonymous limit | 1. Upload 5 files<br>2. Try 6th upload | Shows upgrade modal |
 
+#### 4D: Entity-Enhanced User Flow (15 min)
+**Purpose**: Complete user journey with entity system from setup to improved transcription
+
+| Test ID | Test Case | Steps | Validation |
+|---------|-----------|-------|------------|
+| F4D.1 | Initial entity setup | 1. Login<br>2. Navigate to Settings<br>3. Create 5 entities | Entities saved and displayed |
+| F4D.2 | Create project with entities | 1. Create "Tech Meeting" project<br>2. Add all entities<br>3. Save | Project created with associations |
+| F4D.3 | Upload without project (baseline) | 1. Navigate to home<br>2. Upload test audio<br>3. Check transcription | Note baseline accuracy |
+| F4D.4 | Upload with project context | 1. Select "Tech Meeting" project<br>2. Verify entity pills<br>3. Upload same audio | Improved accuracy with entities |
+| F4D.5 | Compare transcriptions | 1. Open both notes<br>2. Compare entity names | Entity names correctly transcribed |
+| F4D.6 | Entity usage tracking | 1. Check entity usage stats<br>2. Verify counts | Usage recorded for entities |
+| F4D.7 | Switch projects mid-session | 1. Select different project<br>2. Upload new audio | Context updates correctly |
+| F4D.8 | End-to-end verification | Full flow validation | 30%+ accuracy improvement |
+
 ### Suite 5: Integration Tests (30 min)
 **Purpose**: Test complete user journeys
 
@@ -128,8 +160,8 @@ All browser automation MUST use MCP tools directly.
 | I4.7 | Concurrent users | 2 users upload simultaneously | Playwright MCP + API |
 | I4.8 | Entity-aware transcription | Create project → Add entities → Upload → Verify accuracy | Playwright MCP + API |
 
-### Suite 6: Performance Tests (15 min)
-**Purpose**: Validate system performance
+### Suite 6: Performance Tests (20 min)
+**Purpose**: Validate system performance including Entity System overhead
 
 | Test ID | Test Case | Metric | Target |
 |---------|-----------|--------|--------|
@@ -139,8 +171,111 @@ All browser automation MUST use MCP tools directly.
 | P5.4 | Search response | Complex query | < 500ms |
 | P5.5 | Concurrent uploads | 5 simultaneous | All succeed |
 | P5.6 | Memory usage | After 10 uploads | < 500MB |
+| P5.7 | Entity context building | 100 entities | < 100ms |
+| P5.8 | Project load time | Project with 50 entities | < 200ms |
+| P5.9 | Entity search response | 1000 entities | < 300ms |
+| P5.10 | Transcription with entities | 50 entity context | < 10% overhead |
 
-### Suite 7: Multi-Model Transcription Tests (25 min)
+### Suite 7: Entity Project System Tests (30 min)
+**Purpose**: Validate entity context injection for improved transcription accuracy
+
+#### Test Setup Requirements
+**Database Migration (Optional Verification)**:
+```bash
+# Check if Entity/Project tables already exist:
+sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
+
+# If tables don't exist or you're unsure, run migration:
+cd backend
+DATABASE_URL="file:../data/nano-grazynka.db" npx prisma migrate deploy
+
+# Note: In current deployment, these tables already exist (migration completed 2025-08-17)
+# The migration command is idempotent - safe to run even if tables exist
+```
+
+**Test Data Creation**:
+1. Create test user with authentication
+2. Create project "Test Project"
+3. Create 5 entities:
+   - Microsoft (company) - Actually in audio
+   - Żabka (company) - Polish chain
+   - Claude API (technical)
+   - Dario Amodei (person)
+   - RLHF (technical)
+4. Associate all entities with project
+
+**Audio File**: Use `tests/test-data/zabka.m4a` (contains "Microsoft" mention)
+
+**Models to Test**:
+- `gpt-4o-transcribe` - Token-optimized compression
+- `google/gemini-2.0-flash-001` - Expanded context format
+
+| Test ID | Test Case | Expected Result |
+|---------|-----------|-----------------|
+| EP7.1 | Create project via API | 201 Created, returns project ID |
+| EP7.2 | Create entities (5 types) | 201 Created for each entity |
+| EP7.3 | Associate entities to project | 200 OK, entities linked |
+| EP7.4 | Upload with projectId (GPT-4o) | Entity context injected in prompt |
+| EP7.5 | Verify transcription (GPT-4o) | "Microsoft" correctly transcribed |
+| EP7.6 | Check entity usage tracking | EntityUsage records created |
+| EP7.7 | Upload with projectId (Gemini) | Entity context in expanded format |
+| EP7.8 | Verify transcription (Gemini) | "Microsoft" correctly transcribed |
+| EP7.9 | Token optimization validation | Compressed for GPT-4o, expanded for Gemini |
+| EP7.10 | Entity context without project | Uses user's global entities |
+
+**Test Script**: `tests/scripts/test-entity-project-authenticated.sh`
+**Known Issues**: 
+- SQLite disk I/O errors may require Docker backend restart
+- Entity checks should focus on "Microsoft" (actually in audio)
+- Entity features are only available for authenticated users
+
+#### 7B: Frontend Entity Management Tests (15 min)
+**Purpose**: Validate entity CRUD operations through the UI
+
+| Test ID | Test Case | Tool | Expected Result |
+|---------|-----------|------|-----------------|
+| EP7B.1 | Login and navigate to Settings | Playwright MCP | Settings page loads with EntityManager |
+| EP7B.2 | Create entity via UI | Playwright MCP | Entity appears in list immediately |
+| EP7B.3 | Edit entity name/value | Playwright MCP | Changes saved and displayed |
+| EP7B.4 | Delete entity | Playwright MCP | Entity removed from list |
+| EP7B.5 | Filter entities by type | Playwright MCP | Only selected type shown |
+| EP7B.6 | Search entities | Playwright MCP | Matching entities displayed |
+| EP7B.7 | Create entities of all types | Playwright MCP | Person, company, technical, product work |
+| EP7B.8 | Handle duplicate entity names | Playwright MCP | Error message for duplicates |
+
+#### 7C: Frontend Project Management Tests (15 min)
+**Purpose**: Validate project operations and entity associations
+
+| Test ID | Test Case | Tool | Expected Result |
+|---------|-----------|------|-----------------|
+| EP7C.1 | Open ProjectSelector dropdown | Playwright MCP | Projects list displayed |
+| EP7C.2 | Create new project via modal | Playwright MCP | Project created and selected |
+| EP7C.3 | Switch between projects | Playwright MCP | Selection updates correctly |
+| EP7C.4 | View project entities (pills) | Playwright MCP | Entity pills shown below selector |
+| EP7C.5 | Edit project description | Playwright MCP | Changes saved |
+| EP7C.6 | Delete/archive project | Playwright MCP | Project removed from list |
+| EP7C.7 | Add entities to project | Playwright MCP | Entities associated successfully |
+| EP7C.8 | Remove entities from project | Playwright MCP | Association removed |
+
+#### 7D: Frontend Upload with Entity Context (20 min)
+**Purpose**: Validate entity context improves transcription
+
+| Test ID | Test Case | Tool | Expected Result |
+|---------|-----------|------|-----------------|
+| EP7D.1 | Select project before upload | Playwright MCP | Project selected in dropdown |
+| EP7D.2 | Verify entity pills display | Playwright MCP | Shows "Active entities: X" |
+| EP7D.3 | Upload with project context | Playwright MCP + API | projectId in FormData |
+| EP7D.4 | Verify improved transcription | API verification | "Microsoft" correctly transcribed |
+| EP7D.5 | Check entity usage in UI | Playwright MCP | Usage stats updated |
+| EP7D.6 | Upload without project | Playwright MCP | Uses global entities if available |
+| EP7D.7 | Anonymous user sees no selector | Playwright MCP | ProjectSelector hidden for anonymous |
+| EP7D.8 | Switch project mid-session | Playwright MCP | Context updates for next upload |
+
+**Test Scripts**: 
+- `tests/scripts/test-entity-frontend-flow.sh` - Complete frontend entity testing
+- `tests/e2e/entity-project-system.spec.ts` - Playwright MCP entity tests
+
+### Suite 8: Multi-Model Transcription Tests (25 min)
 **Purpose**: Validate GPT-4o vs Gemini 2.0 Flash transcription paths
 
 | Test ID | Test Case | Model | Expected Result |
@@ -289,6 +424,61 @@ All browser automation MUST use MCP tools directly.
     "id": "test-user-2",
     "name": "Test User Two"
   }
+}
+```
+
+### Entity Test Data
+```json
+{
+  "entities": [
+    {
+      "name": "Microsoft",
+      "type": "company",
+      "value": "Microsoft",
+      "description": "Technology company",
+      "aliases": ["MSFT", "Microsoft Corporation"]
+    },
+    {
+      "name": "Żabka",
+      "type": "company",
+      "value": "Żabka",
+      "description": "Polish convenience store chain",
+      "aliases": ["Zabka", "Żabka Polska"]
+    },
+    {
+      "name": "Claude API",
+      "type": "technical",
+      "value": "Claude API",
+      "description": "Anthropic's AI API",
+      "aliases": ["Claude SDK", "Anthropic API"]
+    },
+    {
+      "name": "Dario Amodei",
+      "type": "person",
+      "value": "Dario Amodei",
+      "description": "CEO of Anthropic",
+      "aliases": ["Dario", "D. Amodei"]
+    },
+    {
+      "name": "RLHF",
+      "type": "technical",
+      "value": "RLHF",
+      "description": "Reinforcement Learning from Human Feedback",
+      "aliases": ["RL from Human Feedback"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Tech Meeting",
+      "description": "Weekly technical discussion project",
+      "entityIds": ["entity1", "entity3", "entity4", "entity5"]
+    },
+    {
+      "name": "Polish Business",
+      "description": "Polish market analysis project",
+      "entityIds": ["entity2"]
+    }
+  ]
 }
 ```
 

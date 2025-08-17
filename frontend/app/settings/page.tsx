@@ -412,7 +412,8 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
+        </div> {/* Close wrapper div */}
       </div>
     </div>
-  );
+  )
 }

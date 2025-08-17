@@ -9,9 +9,11 @@ import { TranscriptionService } from '../../domain/services/TranscriptionService
 import { SummarizationService } from '../../domain/services/SummarizationService';
 import { TitleGenerationService } from '../../domain/services/TitleGenerationService';
 import { Config } from '../../config/schema';
-import { EntityContextBuilder } from './EntityContextBuilder';
+import { EntityContextBuilder, ModelType } from './EntityContextBuilder';
 import { IProjectRepository } from '../../domain/repositories/IProjectRepository';
 import { IEntityUsageRepository, EntityUsageRecord } from '../../domain/repositories/IEntityUsageRepository';
+import { EntityContext } from '../../domain/entities/Entity';
+import { IEntityRepository } from '../../domain/repositories/IEntityRepository';
 import {
   VoiceNoteProcessingStartedEvent,
   VoiceNoteTranscribedEvent,
@@ -34,8 +36,45 @@ export class ProcessingOrchestrator {
     private config: Config,
     private entityContextBuilder: EntityContextBuilder,
     private projectRepository: IProjectRepository,
-    private entityUsageRepository: IEntityUsageRepository
+    private entityUsageRepository: IEntityUsageRepository,
+    private entityRepository: IEntityRepository
   ) {}
+
+  // Helper function to convert model names to simplified types for EntityContextBuilder
+  private getModelType(model: string): 'gpt4o' | 'gemini' {
+    if (model.includes('gemini')) {
+      return 'gemini';
+    }
+    return 'gpt4o'; // Default to gpt4o for all OpenAI models
+  }
+
+  // Helper function to format EntityContext to string
+  private formatEntityContext(context: EntityContext): string {
+    // For GPT-4o, use compressed format
+    if (context.compressed) {
+      return `Known entities: ${context.compressed}`;
+    }
+    
+    // For Gemini, use detailed format
+    const parts: string[] = [];
+    if (context.people) {
+      parts.push(`Team Members: ${context.people}`);
+    }
+    if (context.companies) {
+      parts.push(`Companies: ${context.companies}`);
+    }
+    if (context.technical) {
+      parts.push(`Technical Terms: ${context.technical}`);
+    }
+    if (context.products) {
+      parts.push(`Products: ${context.products}`);
+    }
+    if (context.detailed) {
+      parts.push(context.detailed);
+    }
+    
+    return parts.join('\n');
+  }
 
   async processVoiceNote(
     voiceNote: VoiceNote,
@@ -56,7 +95,7 @@ export class ProcessingOrchestrator {
       if (projectId) {
         const project = await this.projectRepository.findById(projectId);
         if (project && project.userId === voiceNote.getUserId()) {
-          await this.projectRepository.addNote(projectId, voiceNote.getId().toString());
+          await this.projectRepository.addVoiceNote(projectId, voiceNote.getId().toString());
         }
       }
 
@@ -185,7 +224,7 @@ export class ProcessingOrchestrator {
       if (projectId && isInitialGeneration) {
         const project = await this.projectRepository.findById(projectId);
         if (project && project.userId === voiceNote.getUserId()) {
-          await this.projectRepository.addNote(projectId, voiceNote.getId().toString());
+          await this.projectRepository.addVoiceNote(projectId, voiceNote.getId().toString());
         }
       }
 
@@ -272,24 +311,41 @@ export class ProcessingOrchestrator {
       let entityContext: string | undefined;
       let projectEntities: Array<{ id: string; name: string }> = [];
       if (projectId) {
-        const contextResult = await this.entityContextBuilder.buildContext(
-          projectId,
-          voiceNote.getUserId()!,
-          model
-        );
-        
-        if (contextResult.success && contextResult.context) {
-          entityContext = contextResult.context;
-          // Store entities for usage tracking
-          if (contextResult.entities) {
-            projectEntities = contextResult.entities.map(e => ({ id: e.id, name: e.name }));
+        try {
+          // Fix: Use correct parameter order and getModelType helper
+          const modelType = this.getModelType(model);
+          const userId = voiceNote.getUserId();
+          
+          if (!userId) {
+            console.warn('[ProcessingOrchestrator] No user ID for entity context');
+          } else {
+            // Call buildContext with correct parameter order: (userId, projectId, modelType)
+            const contextData = await this.entityContextBuilder.buildContext(
+              userId,
+              projectId,
+              modelType
+            );
+            
+            // Fix: EntityContextBuilder returns EntityContext directly, not wrapped
+            if (contextData) {
+              entityContext = this.formatEntityContext(contextData);
+              
+              // Get entities from repository for usage tracking
+              const entities = await this.entityRepository.findByProject(projectId);
+              projectEntities = entities.map(e => ({ id: e.id, name: e.name }));
+              
+              console.log('[ProcessingOrchestrator] Generated entity context for transcription:', {
+                projectId,
+                contextLength: entityContext.length,
+                model,
+                modelType,
+                entityCount: projectEntities.length
+              });
+            }
           }
-          console.log('[ProcessingOrchestrator] Generated entity context for transcription:', {
-            projectId,
-            contextLength: entityContext.length,
-            model,
-            entityCount: projectEntities.length
-          });
+        } catch (error) {
+          console.error('[ProcessingOrchestrator] Failed to generate entity context:', error);
+          // Continue without entity context
         }
       }
       
@@ -395,24 +451,39 @@ export class ProcessingOrchestrator {
       let entityContext: string | undefined;
       let projectEntities: Array<{ id: string; name: string }> = [];
       if (projectId) {
-        // For summarization, we use GPT-4o model context
-        const contextResult = await this.entityContextBuilder.buildContext(
-          projectId,
-          voiceNote.getUserId()!,
-          'gpt-4o-transcribe'
-        );
-        
-        if (contextResult.success && contextResult.context) {
-          entityContext = contextResult.context;
-          // Store entities for usage tracking
-          if (contextResult.entities) {
-            projectEntities = contextResult.entities.map(e => ({ id: e.id, name: e.name }));
+        try {
+          // For summarization, we use GPT-4o model context
+          const modelType = 'gpt4o' as const;
+          const userId = voiceNote.getUserId();
+          
+          if (!userId) {
+            console.warn('[ProcessingOrchestrator] No user ID for entity context');
+          } else {
+            // Call buildContext with correct parameter order: (userId, projectId, modelType)
+            const contextData = await this.entityContextBuilder.buildContext(
+              userId,
+              projectId,
+              modelType
+            );
+            
+            // Fix: EntityContextBuilder returns EntityContext directly, not wrapped
+            if (contextData) {
+              entityContext = this.formatEntityContext(contextData);
+              
+              // Get entities from repository for usage tracking
+              const entities = await this.entityRepository.findByProject(projectId);
+              projectEntities = entities.map(e => ({ id: e.id, name: e.name }));
+              
+              console.log('[ProcessingOrchestrator] Generated entity context for summarization:', {
+                projectId,
+                contextLength: entityContext.length,
+                entityCount: projectEntities.length
+              });
+            }
           }
-          console.log('[ProcessingOrchestrator] Generated entity context for summarization:', {
-            projectId,
-            contextLength: entityContext.length,
-            entityCount: projectEntities.length
-          });
+        } catch (error) {
+          console.error('[ProcessingOrchestrator] Failed to generate entity context:', error);
+          // Continue without entity context
         }
       }
       

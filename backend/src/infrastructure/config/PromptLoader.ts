@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-import { injectable } from 'inversify';
 import { readFileSync, existsSync, watchFile, unwatchFile } from 'fs';
 import { load } from 'js-yaml';
 import { get, template } from 'lodash';
@@ -43,7 +41,6 @@ interface InterpolationContext {
   };
 }
 
-@injectable()
 export class PromptLoader {
   private static instance: PromptLoader | null = null;
   private prompts: PromptConfig = {};

@@ -1,4 +1,3 @@
-import { injectable, inject } from 'tsyringe';
 import { IEntityRepository } from '../../../domain/repositories/IEntityRepository';
 import { Entity } from '../../../domain/entities/Entity';
 
@@ -25,10 +24,9 @@ interface ListEntitiesOutput {
   error?: Error;
 }
 
-@injectable()
 export class ListEntitiesUseCase {
   constructor(
-    @inject('IEntityRepository') private entityRepository: IEntityRepository
+    private entityRepository: IEntityRepository
   ) {}
 
   async execute(input: ListEntitiesInput): Promise<ListEntitiesOutput> {

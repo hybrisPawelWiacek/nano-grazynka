@@ -3,14 +3,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import styles from './EntityManager.module.css';
 import { 
-  listEntities, 
-  createEntity, 
-  updateEntity, 
-  deleteEntity,
+  entitiesApi,
   type Entity, 
   type EntityType 
 } from '../lib/api/entities';
-import { listProjects, type Project } from '../lib/api/projects';
+import { projectsApi, type Project } from '../lib/api/projects';
 
 interface EntityManagerProps {
   userId?: string;
@@ -68,8 +65,8 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
     setError(null);
     try {
       const [entitiesResponse, projectsResponse] = await Promise.all([
-        listEntities(),
-        listProjects()
+        entitiesApi.listEntities(),
+        projectsApi.listProjects()
       ]);
       setEntities(entitiesResponse.entities);
       setProjects(projectsResponse.projects);
@@ -154,7 +151,7 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
     }
 
     try {
-      await deleteEntity(entityId);
+      await entitiesApi.deleteEntity(entityId);
       setEntities(entities.filter(e => e.id !== entityId));
       setActiveMenu(null);
     } catch (err) {
@@ -170,7 +167,7 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
     try {
       if (editingEntity) {
         // Update existing entity
-        const updated = await updateEntity(editingEntity.id, {
+        const updated = await entitiesApi.updateEntity(editingEntity.id, {
           name: formData.name,
           type: formData.type,
           value: formData.value,
@@ -180,7 +177,7 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
         setEntities(entities.map(e => e.id === editingEntity.id ? updated : e));
       } else {
         // Create new entity
-        const created = await createEntity({
+        const created = await entitiesApi.createEntity({
           name: formData.name,
           type: formData.type,
           value: formData.value,
@@ -231,7 +228,7 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
     }
 
     try {
-      await Promise.all(Array.from(selectedEntities).map(id => deleteEntity(id)));
+      await Promise.all(Array.from(selectedEntities).map(id => entitiesApi.deleteEntity(id)));
       setEntities(entities.filter(e => !selectedEntities.has(e.id)));
       setSelectedEntities(new Set());
     } catch (err) {
