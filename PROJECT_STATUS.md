@@ -3,8 +3,24 @@
 **Status**: Production Ready - Feature Complete (Entity System Partially Working)
 **Progress**: 95% - MVP features complete, Entity-Project association incomplete
 
-## 🧹 Test Suite Consolidation (2025-08-17)
+## 🧹 Test Infrastructure Restoration (2025-08-17)
 **Status**: COMPLETE ✅
+**Plan**: [TEST_INFRASTRUCTURE_FIX_PLAN.md](./imp_docs/archive/TEST_INFRASTRUCTURE_FIX_PLAN.md) - ARCHIVED
+
+### Completed Actions:
+- ✅ Created `tests/scripts/package.json` with all required dependencies (axios, form-data, uuid, dotenv)
+- ✅ Installed npm packages for test infrastructure
+- ✅ Restored 9 critical test scripts from archive:
+  - test-anonymous-upload.js, test-anonymous-limit.js
+  - test-library-flow-mcp.js, test-logged-in-flow-mcp.js
+  - test-entity-aware-transcription-mcp.js, test-multi-model-mcp.js
+  - test-endpoints.sh, check-anonymous-sessions.js, run-all-mcp-tests.js
+- ✅ Created enhanced `test-backend-api.js` with 7 comprehensive test cases
+- ✅ Created new `test-sessions.js` for session isolation testing
+- ✅ Fixed execute permissions on all shell scripts
+- ✅ Updated TEST_PLAN.md with restored infrastructure status
+
+### Previous Work (Earlier Same Day):
 - Removed obsolete `backend/src/tests/` directory (old Jest tests with broken imports)
 - Removed unused Jest dependencies from backend/package.json
 - All testing now centralized in `tests/` directory using MCP-based approach

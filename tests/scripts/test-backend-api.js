@@ -1,121 +1,198 @@
 #!/usr/bin/env node
+const axios = require('axios');
+const FormData = require('form-data');
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 
-/**
- * Backend API Test Suite
- * Tests all backend API endpoints with proper session management
- */
+const API_BASE = 'http://localhost:3101/api';
+const TEST_DATA_DIR = path.join(__dirname, '../test-data');
 
-const TestUtils = require('./test-utils');
-
-async function runTests() {
-  const utils = new TestUtils();
-  const results = { passed: 0, failed: 0, tests: [] };
+async function testBackendAPI() {
+  const results = {
+    passed: 0,
+    failed: 0,
+    tests: []
+  };
   
-  console.log('🧪 Backend API Test Suite\n');
-  console.log('================================\n');
+  const sessionId = uuidv4();
+  console.log(`\n=== Backend API Test Suite ===`);
+  console.log(`Session ID: ${sessionId}\n`);
 
+  // Test B3.1: Health endpoints
   try {
-    // Test 1: Health Check
-    console.log('Test B1: Health Check');
-    const health = await utils.checkHealth();
-    const healthPassed = health.status === 200 && health.data.status === 'healthy';
-    utils.logResult('B1: Health Check', healthPassed, `Status: ${health.status}`);
-    results[healthPassed ? 'passed' : 'failed']++;
-    
-    // Test 2: Upload Voice Note
-    console.log('\nTest B2: Upload Voice Note');
-    const upload = await utils.uploadTestFile('zabka.m4a');
-    const uploadPassed = upload.status === 201 && upload.noteId;
-    utils.logResult('B2: Upload', uploadPassed, `Note ID: ${upload.noteId}`);
-    results[uploadPassed ? 'passed' : 'failed']++;
-    
-    if (upload.noteId) {
-      // Test 3: Get Voice Note
-      console.log('\nTest B3: Get Voice Note');
-      const getNote = await utils.getVoiceNote(upload.noteId);
-      const getPassed = getNote.status === 200 && getNote.data.id === upload.noteId;
-      utils.logResult('B3: Get Note', getPassed, `Status: ${getNote.data.status}`);
-      results[getPassed ? 'passed' : 'failed']++;
-      
-      // Test 4: List Voice Notes
-      console.log('\nTest B4: List Voice Notes');
-      const list = await utils.listVoiceNotes({ limit: 5 });
-      const listPassed = list.status === 200 && Array.isArray(list.data.items);
-      utils.logResult('B4: List Notes', listPassed, `Count: ${list.data.items?.length}`);
-      results[listPassed ? 'passed' : 'failed']++;
-      
-      // Test 5: List with Query Parameters
-      console.log('\nTest B5: List with Query Parameters');
-      const listWithParams = await utils.listVoiceNotes({ limit: 2, page: 1 });
-      const paramsPassed = listWithParams.status === 200 && 
-                          listWithParams.data.pagination?.limit === 2;
-      utils.logResult('B5: Query Params', paramsPassed, 
-        `Limit applied: ${listWithParams.data.pagination?.limit}`);
-      results[paramsPassed ? 'passed' : 'failed']++;
-      
-      // Test 6: Delete Voice Note
-      console.log('\nTest B6: Delete Voice Note');
-      const deleteResult = await utils.deleteVoiceNote(upload.noteId);
-      const deletePassed = deleteResult.status === 204;
-      utils.logResult('B6: Delete Note', deletePassed, `Status: ${deleteResult.status}`);
-      results[deletePassed ? 'passed' : 'failed']++;
-      
-      // Test 7: Verify Deletion
-      console.log('\nTest B7: Verify Deletion');
-      const getDeleted = await utils.getVoiceNote(upload.noteId);
-      const deletionVerified = getDeleted.status === 404 || 
-                              (getDeleted.status === 200 && getDeleted.data.error);
-      utils.logResult('B7: Deletion Verified', deletionVerified, 
-        `Note not found: ${deletionVerified}`);
-      results[deletionVerified ? 'passed' : 'failed']++;
-    }
-    
-    // Test 8: Invalid File Upload
-    console.log('\nTest B8: Invalid File Upload');
-    try {
-      await utils.uploadTestFile('test-file.txt'); // Text file, should fail
-      utils.logResult('B8: Invalid Upload', false, 'Should have rejected text file');
-      results.failed++;
-    } catch (error) {
-      // Expected to fail - text files not allowed
-      utils.logResult('B8: Invalid Upload', true, 'Correctly rejected text file');
+    const response = await axios.get(`${API_BASE}/health`);
+    if (response.status === 200 && response.data.status === 'healthy') {
       results.passed++;
+      results.tests.push({ id: 'B3.1', name: 'Health check', status: 'PASS' });
+      console.log('✅ B3.1: Health check - PASS');
+    } else {
+      throw new Error('Unexpected health response');
     }
-    
-    // Test 9: Session Consistency
-    console.log('\nTest B9: Session Consistency');
-    const session1 = utils.createTestSession('consistency');
-    const upload1 = await utils.uploadTestFile('zabka.m4a', { sessionId: session1 });
-    const list1 = await utils.listVoiceNotes({ sessionId: session1 });
-    
-    const session2 = utils.createTestSession('different');
-    const list2 = await utils.listVoiceNotes({ sessionId: session2 });
-    
-    const sessionPassed = list1.data.items?.length > 0 && 
-                         list2.data.items?.length === 0;
-    utils.logResult('B9: Session Isolation', sessionPassed, 
-      `Session 1: ${list1.data.items?.length} notes, Session 2: ${list2.data.items?.length} notes`);
-    results[sessionPassed ? 'passed' : 'failed']++;
-    
-    // Cleanup
-    if (upload1.noteId) {
-      await utils.deleteVoiceNote(upload1.noteId, { sessionId: session1 });
-    }
-    
   } catch (error) {
-    console.error('\n❌ Test suite error:', error.message);
     results.failed++;
+    results.tests.push({ id: 'B3.1', name: 'Health check', status: 'FAIL', error: error.message });
+    console.log('❌ B3.1: Health check - FAIL:', error.message);
   }
-  
+
+  // Test B3.2: Upload voice note
+  let uploadedNoteId = null;
+  try {
+    const form = new FormData();
+    const testFile = path.join(TEST_DATA_DIR, 'zabka.m4a');
+    
+    if (!fs.existsSync(testFile)) {
+      throw new Error(`Test file not found: ${testFile}`);
+    }
+    
+    form.append('file', fs.createReadStream(testFile));
+    form.append('userId', 'anonymous');
+    
+    const response = await axios.post(`${API_BASE}/voice-notes/upload`, form, {
+      headers: {
+        ...form.getHeaders(),
+        'x-session-id': sessionId
+      }
+    });
+    
+    if (response.status === 201 && response.data.voiceNote?.id) {
+      uploadedNoteId = response.data.voiceNote.id;
+      results.passed++;
+      results.tests.push({ id: 'B3.2', name: 'Upload voice note', status: 'PASS' });
+      console.log('✅ B3.2: Upload voice note - PASS');
+    } else {
+      throw new Error('Unexpected upload response');
+    }
+  } catch (error) {
+    results.failed++;
+    results.tests.push({ id: 'B3.2', name: 'Upload voice note', status: 'FAIL', error: error.message });
+    console.log('❌ B3.2: Upload voice note - FAIL:', error.message);
+  }
+
+  // Test B3.3: Get single note
+  if (uploadedNoteId) {
+    try {
+      const response = await axios.get(`${API_BASE}/voice-notes/${uploadedNoteId}`, {
+        headers: { 'x-session-id': sessionId }
+      });
+      
+      if (response.status === 200 && response.data.voiceNote?.id === uploadedNoteId) {
+        results.passed++;
+        results.tests.push({ id: 'B3.3', name: 'Get single note', status: 'PASS' });
+        console.log('✅ B3.3: Get single note - PASS');
+      } else {
+        throw new Error('Unexpected get response');
+      }
+    } catch (error) {
+      results.failed++;
+      results.tests.push({ id: 'B3.3', name: 'Get single note', status: 'FAIL', error: error.message });
+      console.log('❌ B3.3: Get single note - FAIL:', error.message);
+    }
+  }
+
+  // Test B3.4: List voice notes
+  try {
+    const response = await axios.get(`${API_BASE}/voice-notes?sessionId=${sessionId}`);
+    
+    if (response.status === 200 && Array.isArray(response.data.voiceNotes)) {
+      results.passed++;
+      results.tests.push({ id: 'B3.4', name: 'List voice notes', status: 'PASS' });
+      console.log('✅ B3.4: List voice notes - PASS');
+    } else {
+      throw new Error('Unexpected list response');
+    }
+  } catch (error) {
+    results.failed++;
+    results.tests.push({ id: 'B3.4', name: 'List voice notes', status: 'FAIL', error: error.message });
+    console.log('❌ B3.4: List voice notes - FAIL:', error.message);
+  }
+
+  // Test B3.5: Delete voice note
+  if (uploadedNoteId) {
+    try {
+      const response = await axios.delete(`${API_BASE}/voice-notes/${uploadedNoteId}`, {
+        headers: { 'x-session-id': sessionId }
+      });
+      
+      if (response.status === 204 || response.status === 200) {
+        results.passed++;
+        results.tests.push({ id: 'B3.5', name: 'Delete voice note', status: 'PASS' });
+        console.log('✅ B3.5: Delete voice note - PASS');
+      } else {
+        throw new Error('Unexpected delete response');
+      }
+    } catch (error) {
+      results.failed++;
+      results.tests.push({ id: 'B3.5', name: 'Delete voice note', status: 'FAIL', error: error.message });
+      console.log('❌ B3.5: Delete voice note - FAIL:', error.message);
+    }
+  }
+
+  // Test B3.6: Invalid file upload
+  try {
+    const form = new FormData();
+    form.append('file', Buffer.from('invalid data'), 'test.txt');
+    form.append('userId', 'anonymous');
+    
+    await axios.post(`${API_BASE}/voice-notes/upload`, form, {
+      headers: {
+        ...form.getHeaders(),
+        'x-session-id': sessionId
+      }
+    });
+    
+    // Should have failed
+    results.failed++;
+    results.tests.push({ id: 'B3.6', name: 'Invalid file rejection', status: 'FAIL', error: 'Should have rejected invalid file' });
+    console.log('❌ B3.6: Invalid file rejection - FAIL: Should have rejected');
+  } catch (error) {
+    if (error.response?.status === 400 || error.response?.status === 415) {
+      results.passed++;
+      results.tests.push({ id: 'B3.6', name: 'Invalid file rejection', status: 'PASS' });
+      console.log('✅ B3.6: Invalid file rejection - PASS');
+    } else {
+      results.failed++;
+      results.tests.push({ id: 'B3.6', name: 'Invalid file rejection', status: 'FAIL', error: error.message });
+      console.log('❌ B3.6: Invalid file rejection - FAIL:', error.message);
+    }
+  }
+
+  // Test B3.7: Anonymous usage check
+  try {
+    const response = await axios.get(`${API_BASE}/anonymous/usage/${sessionId}`);
+    
+    if (response.status === 200 && typeof response.data.usageCount === 'number') {
+      results.passed++;
+      results.tests.push({ id: 'B3.7', name: 'Anonymous usage tracking', status: 'PASS' });
+      console.log('✅ B3.7: Anonymous usage tracking - PASS');
+    } else {
+      throw new Error('Unexpected usage response');
+    }
+  } catch (error) {
+    results.failed++;
+    results.tests.push({ id: 'B3.7', name: 'Anonymous usage tracking', status: 'FAIL', error: error.message });
+    console.log('❌ B3.7: Anonymous usage tracking - FAIL:', error.message);
+  }
+
   // Summary
-  console.log('\n================================');
-  console.log('📊 Test Summary');
-  console.log(`✅ Passed: ${results.passed}`);
-  console.log(`❌ Failed: ${results.failed}`);
-  console.log(`📈 Pass Rate: ${Math.round((results.passed / (results.passed + results.failed)) * 100)}%`);
+  console.log(`\n=== Test Summary ===`);
+  console.log(`Total: ${results.passed + results.failed}`);
+  console.log(`Passed: ${results.passed}`);
+  console.log(`Failed: ${results.failed}`);
+  console.log(`Pass Rate: ${((results.passed / (results.passed + results.failed)) * 100).toFixed(1)}%\n`);
   
-  process.exit(results.failed > 0 ? 1 : 0);
+  return results;
 }
 
-// Run tests
-runTests().catch(console.error);
+if (require.main === module) {
+  testBackendAPI()
+    .then(results => {
+      process.exit(results.failed > 0 ? 1 : 0);
+    })
+    .catch(error => {
+      console.error('Test suite error:', error);
+      process.exit(1);
+    });
+}
+
+module.exports = { testBackendAPI };

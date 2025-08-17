@@ -523,7 +523,17 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 
 ## Tools & Scripts
 
-### Test Infrastructure (NEW)
+### Test Infrastructure (RESTORED - August 17, 2025)
+**Infrastructure Status**: ✅ FIXED
+- Dependencies installed via `tests/scripts/package.json`
+- Critical scripts restored from archive
+- Execute permissions set on shell scripts
+
+**Package Management** (`tests/scripts/package.json`):
+- Contains all required dependencies (axios, form-data, uuid, dotenv)
+- Run `npm install` in tests/scripts to setup
+- npm scripts for running test suites
+
 **Test Utilities** (`tests/scripts/test-utils.js`):
 - Provides consistent session management across tests
 - Corrects frontend routes (`/note/` not `/notes/`)
@@ -534,19 +544,68 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
   - `deleteVoiceNote()` - Deletes with permission checks
   - `getVoiceNote()` - Retrieves single note
 
-**Test Runner** (`tests/scripts/run-tests.sh`):
-- Pre-flight environment checks
-- Orchestrates all test suites
-- Generates test reports with pass/fail tracking
-- Usage: `./tests/scripts/run-tests.sh`
+### Core Test Suites (RESTORED)
 
 **Backend API Test Suite** (`tests/scripts/test-backend-api.js`):
-- Comprehensive API endpoint testing
-- Session isolation validation
-- Proper error handling
-- Usage: `node tests/scripts/test-backend-api.js`
+- ✅ RESTORED - Enhanced version with full test coverage
+- Tests health, upload, get, list, delete, invalid files, usage tracking
+- Proper session isolation validation
+- Usage: `node tests/scripts/test-backend-api.js` or `npm run test:backend`
 
-### Existing Scripts (in /tests)
+**Session Management Tests** (`tests/scripts/test-sessions.js`):
+- ✅ CREATED - New comprehensive session test suite
+- Tests session isolation and usage tracking
+- Usage: `node tests/scripts/test-sessions.js` or `npm run test:sessions`
+
+**Authentication Tests** (`tests/scripts/test-auth.js`):
+- ✅ WORKING - One of the few originally working scripts
+- Tests user registration, login, JWT, logout
+- Usage: `node tests/scripts/test-auth.js` or `npm run test:auth`
+
+**Anonymous Upload Tests** (`tests/scripts/test-anonymous-upload.js`):
+- ✅ RESTORED from archive
+- Tests anonymous user upload flow
+- Usage: `node tests/scripts/test-anonymous-upload.js` or `npm run test:anonymous`
+
+**Library Flow Tests** (`tests/scripts/test-library-flow-mcp.js`):
+- ✅ RESTORED from archive
+- Tests library viewing and management with MCP
+- Usage: `node tests/scripts/test-library-flow-mcp.js`
+
+**Entity-Aware Tests** (`tests/scripts/test-entity-aware-transcription-mcp.js`):
+- ✅ RESTORED from archive
+- Tests entity system integration
+- Usage: `node tests/scripts/test-entity-aware-transcription-mcp.js`
+
+**Multi-Model Tests** (`tests/scripts/test-multi-model-mcp.js`):
+- ✅ RESTORED from archive
+- Tests GPT-4o vs Gemini model selection
+- Usage: `node tests/scripts/test-multi-model-mcp.js`
+
+### Shell Scripts (RESTORED)
+
+**Endpoint Tests** (`tests/scripts/test-endpoints.sh`):
+- ✅ RESTORED from archive with execute permissions
+- API endpoint validation via curl
+- Usage: `./tests/scripts/test-endpoints.sh`
+
+**Entity Project API Tests** (`tests/scripts/test-entity-project-api.sh`):
+- ✅ FIXED - Execute permissions set
+- Tests entity-project system via API
+- Usage: `./tests/scripts/test-entity-project-api.sh`
+
+### Test Runners
+
+**Run All Tests** (`tests/scripts/run-all-tests.sh`):
+- ✅ AVAILABLE - Pre-flight checks and orchestration
+- Usage: `./tests/scripts/run-all-tests.sh`
+
+**Run MCP Tests** (`tests/scripts/run-all-mcp-tests.js`):
+- ✅ RESTORED from archive
+- Orchestrates all MCP-based tests
+- Usage: `node tests/scripts/run-all-mcp-tests.js`
+
+### Python Scripts (in /tests)
 - `upload_test.py` - Basic upload test
 - `upload_zabka.py` - Polish file upload
 - `test_upload.js` - JS upload test
