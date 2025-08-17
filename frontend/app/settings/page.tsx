@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import EntityManager from '@/components/EntityManager';
+import ProjectManager from '@/components/ProjectManager';
 import styles from './page.module.css';
 
 interface UserSettings {
@@ -31,6 +32,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'entities' | 'projects'>('entities');
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -316,9 +318,31 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        {/* Entity Management */}
+        {/* Entity & Project Management */}
         <div className={styles.section}>
-          <EntityManager userId={user?.id} />
+          <h2 className={styles.sectionTitle}>Entity & Project Management</h2>
+          
+          {/* Tab Navigation */}
+          <div className={styles.tabNav}>
+            <button 
+              className={`${styles.tab} ${activeTab === 'entities' ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab('entities')}
+            >
+              Entities & Projects
+            </button>
+            <button 
+              className={`${styles.tab} ${activeTab === 'projects' ? styles.tabActive : ''}`}
+              onClick={() => setActiveTab('projects')}
+            >
+              Projects
+            </button>
+          </div>
+          
+          {/* Tab Content */}
+          <div className={styles.tabContent}>
+            {activeTab === 'entities' && <EntityManager userId={user?.id} />}
+            {activeTab === 'projects' && <ProjectManager userId={user?.id} />}
+          </div>
         </div>
 
         {/* Change Password */}

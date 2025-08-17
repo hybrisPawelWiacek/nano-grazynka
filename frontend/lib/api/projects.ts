@@ -152,33 +152,43 @@ export const projectsApi = {
     }
   },
 
-  // Add an entity to a project
-  async addEntityToProject(projectId: string, entityId: string): Promise<void> {
+  // Add entities to a project (expects array)
+  async addEntitiesToProject(projectId: string, entityIds: string[]): Promise<void> {
     const response = await fetch(`${API_URL}/api/projects/${projectId}/entities`, {
       method: 'POST',
       headers: getAuthHeaders(),
       credentials: 'include',
-      body: JSON.stringify({ entityId }),
+      body: JSON.stringify({ entityIds }),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to add entity to project');
+      throw new Error(error.message || 'Failed to add entities to project');
     }
   },
 
-  // Remove an entity from a project
-  async removeEntityFromProject(projectId: string, entityId: string): Promise<void> {
-    const response = await fetch(`${API_URL}/api/projects/${projectId}/entities/${entityId}`, {
+  // Remove entities from a project (expects array)
+  async removeEntitiesFromProject(projectId: string, entityIds: string[]): Promise<void> {
+    const response = await fetch(`${API_URL}/api/projects/${projectId}/entities`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
       credentials: 'include',
+      body: JSON.stringify({ entityIds }),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.message || 'Failed to remove entity from project');
+      throw new Error(error.message || 'Failed to remove entities from project');
     }
+  },
+
+  // Legacy single entity methods (kept for backward compatibility but use array internally)
+  async addEntityToProject(projectId: string, entityId: string): Promise<void> {
+    return this.addEntitiesToProject(projectId, [entityId]);
+  },
+
+  async removeEntityFromProject(projectId: string, entityId: string): Promise<void> {
+    return this.removeEntitiesFromProject(projectId, [entityId]);
   },
 
   // Get all entities in a project
@@ -206,4 +216,4 @@ export const projectsApi = {
   async deactivateProject(id: string): Promise<Project> {
     return this.updateProject(id, { isActive: false });
   },
-};
+};;

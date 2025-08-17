@@ -55,10 +55,26 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
     description: ''
   });
   const [aliasInput, setAliasInput] = useState('');
+  
+  // New state for Session 3 enhancements
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [assignmentSuccess, setAssignmentSuccess] = useState<string | null>(null);
+  const [entityProjects, setEntityProjects] = useState<Map<string, Project[]>>(new Map());
+  const [projectManageModal, setProjectManageModal] = useState<{ open: boolean; entity: Entity | null }>({ open: false, entity: null });
+  const [filterProjectId, setFilterProjectId] = useState<string>('all');
+  const [selectedProjectsForEntity, setSelectedProjectsForEntity] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    // Auto-hide success message after 3 seconds
+    if (assignmentSuccess) {
+      const timer = setTimeout(() => setAssignmentSuccess(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [assignmentSuccess]);
 
   const loadData = async () => {
     setLoading(true);
@@ -70,11 +86,39 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
       ]);
       setEntities(entitiesResponse.entities);
       setProjects(projectsResponse.projects);
+      
+      // Load entity-project mappings
+      await loadEntityProjects(projectsResponse.projects);
     } catch (err) {
       setError('Failed to load data');
       console.error('Failed to load entities:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load which projects each entity belongs to
+  const loadEntityProjects = async (projectsList?: Project[]) => {
+    const projectsToUse = projectsList || projects;
+    const projectEntityMap = new Map<string, Project[]>();
+    
+    try {
+      // For each project, get its entities and build reverse mapping
+      for (const project of projectsToUse) {
+        const response = await projectsApi.getProjectEntities(project.id);
+        if (response.entities) {
+          response.entities.forEach(entity => {
+            if (!projectEntityMap.has(entity.id)) {
+              projectEntityMap.set(entity.id, []);
+            }
+            projectEntityMap.get(entity.id)!.push(project);
+          });
+        }
+      }
+      
+      setEntityProjects(projectEntityMap);
+    } catch (err) {
+      console.error('Failed to load entity-project mappings:', err);
     }
   };
 
@@ -97,6 +141,19 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
       filtered = filtered.filter(entity => entity.type === filterType);
     }
 
+    // Apply project filter
+    if (filterProjectId !== 'all') {
+      if (filterProjectId === 'unassigned') {
+        filtered = filtered.filter(entity => 
+          !entityProjects.has(entity.id) || entityProjects.get(entity.id)!.length === 0
+        );
+      } else {
+        filtered = filtered.filter(entity => 
+          entityProjects.get(entity.id)?.some(p => p.id === filterProjectId)
+        );
+      }
+    }
+
     // Group by type
     const grouped: Record<EntityType, Entity[]> = {
       person: [],
@@ -117,7 +174,7 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
     });
 
     return grouped;
-  }, [entities, searchTerm, filterType]);
+  }, [entities, searchTerm, filterType, filterProjectId, entityProjects]);
 
   const handleAddEntity = () => {
     setFormData({
@@ -237,6 +294,82 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
     }
   };
 
+  // Bulk assignment to project
+  const handleBulkAssignToProject = async () => {
+    if (!selectedProjectId || selectedEntities.size === 0) return;
+    
+    try {
+      await projectsApi.addEntitiesToProject(
+        selectedProjectId, 
+        Array.from(selectedEntities)
+      );
+      setAssignmentSuccess(`Assigned ${selectedEntities.size} entities to project`);
+      setSelectedEntities(new Set());
+      setSelectedProjectId('');
+      await loadEntityProjects();
+    } catch (err) {
+      setError('Failed to assign entities to project');
+      console.error('Failed to assign entities:', err);
+    }
+  };
+
+  // Remove entity from project
+  const handleRemoveFromProject = async (entityId: string, projectId: string) => {
+    try {
+      await projectsApi.removeEntitiesFromProject(projectId, [entityId]);
+      await loadEntityProjects();
+    } catch (err) {
+      setError('Failed to remove entity from project');
+      console.error('Failed to remove entity from project:', err);
+    }
+  };
+
+  // Open manage projects modal for a single entity
+  const handleManageProjects = (entity: Entity) => {
+    const currentProjects = entityProjects.get(entity.id) || [];
+    const currentProjectIds = new Set(currentProjects.map(p => p.id));
+    setSelectedProjectsForEntity(currentProjectIds);
+    setProjectManageModal({ open: true, entity });
+    setActiveMenu(null);
+  };
+
+  // Save project assignments for a single entity
+  const handleSaveProjectsForEntity = async () => {
+    if (!projectManageModal.entity) return;
+    
+    try {
+      const entity = projectManageModal.entity;
+      const currentProjects = entityProjects.get(entity.id) || [];
+      const currentProjectIds = new Set(currentProjects.map(p => p.id));
+      
+      // Find projects to add and remove
+      const toAdd = Array.from(selectedProjectsForEntity).filter(id => !currentProjectIds.has(id));
+      const toRemove = currentProjects.filter(p => !selectedProjectsForEntity.has(p.id)).map(p => p.id);
+      
+      // Add entity to new projects
+      for (const projectId of toAdd) {
+        await projectsApi.addEntitiesToProject(projectId, [entity.id]);
+      }
+      
+      // Remove entity from old projects
+      for (const projectId of toRemove) {
+        await projectsApi.removeEntitiesFromProject(projectId, [entity.id]);
+      }
+      
+      setAssignmentSuccess('Project associations updated successfully');
+      setTimeout(() => setAssignmentSuccess(null), 3000);
+      
+      // Reload and close modal
+      await loadEntityProjects();
+      setProjectManageModal({ open: false, entity: null });
+      setSelectedProjectsForEntity(new Set());
+    } catch (err) {
+      setError('Failed to update project associations');
+      console.error('Failed to update project associations:', err);
+    }
+  };
+
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -276,15 +409,49 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
             <option value="technical">Technical</option>
             <option value="product">Product</option>
           </select>
+          <select
+            value={filterProjectId}
+            onChange={(e) => setFilterProjectId(e.target.value)}
+            className={styles.filterSelect}
+          >
+            <option value="all">All Projects</option>
+            {projects.map(project => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+            <option value="unassigned">Unassigned</option>
+          </select>
         </div>
         <div className={styles.toolbarRight}>
           {selectedEntities.size > 0 && (
-            <button
-              onClick={handleBulkDelete}
-              className={styles.bulkDeleteButton}
-            >
-              Delete ({selectedEntities.size})
-            </button>
+            <>
+              <select
+                value={selectedProjectId}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className={styles.projectSelector}
+              >
+                <option value="">Select Project...</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleBulkAssignToProject}
+                className={styles.assignButton}
+                disabled={!selectedProjectId}
+              >
+                Assign to Project ({selectedEntities.size})
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className={styles.bulkDeleteButton}
+              >
+                Delete ({selectedEntities.size})
+              </button>
+            </>
           )}
           <button
             onClick={handleAddEntity}
@@ -294,6 +461,13 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
           </button>
         </div>
       </div>
+
+      {/* Success Message */}
+      {assignmentSuccess && (
+        <div className={styles.successMessage}>
+          {assignmentSuccess}
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -337,6 +511,23 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
                             Also: {entity.aliases.join(', ')}
                           </div>
                         )}
+                        {/* Project Badges */}
+                        {entityProjects.get(entity.id) && entityProjects.get(entity.id)!.length > 0 && (
+                          <div className={styles.projectBadges}>
+                            {entityProjects.get(entity.id)!.map(project => (
+                              <span key={project.id} className={styles.projectBadge}>
+                                {project.name}
+                                <button
+                                  onClick={() => handleRemoveFromProject(entity.id, project.id)}
+                                  className={styles.badgeRemove}
+                                  title={`Remove from ${project.name}`}
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className={styles.entityActions}>
                         <button
@@ -355,6 +546,15 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
                               className={styles.menuItem}
                             >
                               Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleManageProjects(entity);
+                                setActiveMenu(null);
+                              }}
+                              className={styles.menuItem}
+                            >
+                              Manage Projects
                             </button>
                             <button
                               onClick={() => handleDeleteEntity(entity.id)}
@@ -496,6 +696,71 @@ export default function EntityManager({ userId, className }: EntityManagerProps)
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Project Management Modal */}
+      {projectManageModal.open && projectManageModal.entity && (
+        <div className={styles.modalOverlay} onClick={() => setProjectManageModal({ open: false, entity: null })}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Manage Projects for {projectManageModal.entity.name}</h3>
+              <button
+                onClick={() => setProjectManageModal({ open: false, entity: null })}
+                className={styles.closeButton}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.projectManageContent}>
+              <p className={styles.modalDescription}>
+                Select which projects this entity should belong to:
+              </p>
+              <div className={styles.projectCheckboxList}>
+                {projects.map(project => (
+                  <label key={project.id} className={styles.projectCheckbox}>
+                    <input
+                      type="checkbox"
+                      checked={selectedProjectsForEntity.has(project.id)}
+                      onChange={(e) => {
+                        const newSet = new Set(selectedProjectsForEntity);
+                        if (e.target.checked) {
+                          newSet.add(project.id);
+                        } else {
+                          newSet.delete(project.id);
+                        }
+                        setSelectedProjectsForEntity(newSet);
+                      }}
+                    />
+                    <span>{project.name}</span>
+                    {project.description && (
+                      <span className={styles.projectDescription}> - {project.description}</span>
+                    )}
+                  </label>
+                ))}
+              </div>
+              {projects.length === 0 && (
+                <p className={styles.noProjects}>
+                  No projects available. Create a project first to assign entities to it.
+                </p>
+              )}
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                onClick={() => setProjectManageModal({ open: false, entity: null })}
+                className={styles.cancelButton}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveProjectsForEntity}
+                className={styles.submitButton}
+                disabled={projects.length === 0}
+              >
+                Save Project Assignments
+              </button>
+            </div>
           </div>
         </div>
       )}

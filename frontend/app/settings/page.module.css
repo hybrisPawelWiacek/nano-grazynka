@@ -244,6 +244,41 @@
   margin-top: var(--space-4);
 }
 
+/* Tab Navigation Styles */
+.tabNav {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 0;
+}
+
+.tab {
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  margin-bottom: -2px;
+}
+
+.tab:hover {
+  color: var(--color-text-primary);
+}
+
+.tabActive {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.tabContent {
+  padding: var(--space-4) 0;
+}
+
 .buttonPrimary {
   padding: var(--space-3) var(--space-6);
   background-color: var(--color-accent);

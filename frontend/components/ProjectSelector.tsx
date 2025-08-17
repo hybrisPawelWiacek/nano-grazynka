@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Plus, Folder } from 'lucide-react';
+import { ChevronDown, Plus, Folder, Check } from 'lucide-react';
 import { projectsApi, type Project } from '../lib/api/projects';
+import { entitiesApi, type Entity } from '../lib/api/entities';
 import styles from './ProjectSelector.module.css';
 
 interface ProjectSelectorProps {
@@ -24,6 +25,9 @@ export default function ProjectSelector({
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDescription, setNewProjectDescription] = useState('');
   const [creating, setCreating] = useState(false);
+  const [availableEntities, setAvailableEntities] = useState<Entity[]>([]);
+  const [selectedEntityIds, setSelectedEntityIds] = useState<string[]>([]);
+  const [loadingEntities, setLoadingEntities] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Load projects on mount
@@ -63,6 +67,26 @@ export default function ProjectSelector({
     }
   };
 
+  const loadEntities = async () => {
+    setLoadingEntities(true);
+    try {
+      const response = await entitiesApi.listEntities();
+      setAvailableEntities(response.entities);
+    } catch (error) {
+      console.error('Failed to load entities:', error);
+    } finally {
+      setLoadingEntities(false);
+    }
+  };
+
+  const toggleEntitySelection = (entityId: string) => {
+    setSelectedEntityIds(prev => 
+      prev.includes(entityId) 
+        ? prev.filter(id => id !== entityId)
+        : [...prev, entityId]
+    );
+  };
+
   const handleSelectProject = (project: Project | null) => {
     setSelectedProject(project);
     onProjectSelect(project?.id || null);
@@ -79,6 +103,16 @@ export default function ProjectSelector({
         description: newProjectDescription.trim() || undefined,
       });
       
+      // Link selected entities to the new project
+      if (selectedEntityIds.length > 0) {
+        try {
+          await projectsApi.addEntitiesToProject(newProject.id, selectedEntityIds);
+        } catch (error) {
+          console.error('Failed to link entities to project:', error);
+          // Continue even if entity linking fails
+        }
+      }
+      
       // Add to projects list and select it
       setProjects([...projects, newProject]);
       handleSelectProject(newProject);
@@ -86,6 +120,7 @@ export default function ProjectSelector({
       // Reset form
       setNewProjectName('');
       setNewProjectDescription('');
+      setSelectedEntityIds([]);
       setShowCreateModal(false);
     } catch (error) {
       console.error('Failed to create project:', error);
@@ -149,6 +184,8 @@ export default function ProjectSelector({
               onClick={() => {
                 setIsOpen(false);
                 setShowCreateModal(true);
+                loadEntities(); // Load entities when opening modal
+                setSelectedEntityIds([]); // Reset selected entities
               }}
             >
               <Plus size={14} className={styles.plusIcon} />
@@ -191,6 +228,41 @@ export default function ProjectSelector({
                 placeholder="Brief description of the project..."
                 rows={3}
               />
+            </div>
+
+            {/* Entity Selection */}
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Select Entities (optional)
+              </label>
+              {loadingEntities ? (
+                <div className={styles.loadingText}>Loading entities...</div>
+              ) : availableEntities.length > 0 ? (
+                <div className={styles.entityList}>
+                  {availableEntities.map(entity => (
+                    <label key={entity.id} className={styles.entityCheckbox}>
+                      <input
+                        type="checkbox"
+                        checked={selectedEntityIds.includes(entity.id)}
+                        onChange={() => toggleEntitySelection(entity.id)}
+                      />
+                      <span className={styles.entityName}>
+                        {entity.name}
+                        <span className={styles.entityType}>
+                          {entity.type === 'person' && ' 👤'}
+                          {entity.type === 'company' && ' 🏢'}
+                          {entity.type === 'technical' && ' ⚙️'}
+                          {entity.type === 'product' && ' 📦'}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.noEntities}>
+                  No entities available. Create entities in Settings first.
+                </div>
+              )}
             </div>
 
             <div className={styles.modalActions}>

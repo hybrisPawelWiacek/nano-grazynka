@@ -299,7 +299,7 @@ mcp__playwright__browser_snapshot
 // Claude API should be removed from list
 ```
 
-### 9. Test Project Management
+### 9. Test Project Management (Enhanced with Entity Association)
 ```javascript
 // Navigate back to home page to test project selector
 mcp__playwright__browser_navigate
@@ -316,7 +316,7 @@ mcp__playwright__browser_select_option
   ref: [find select element]
   values: ["new"]
 
-// Fill new project modal
+// Fill new project modal with entity selection
 mcp__playwright__browser_type
   element: "Project name input"
   ref: [find input with placeholder "Project name"]
@@ -327,7 +327,7 @@ mcp__playwright__browser_type
   ref: [find textarea for project description]
   text: "Weekly technical discussion transcriptions"
 
-// Select entities to add to project
+// NEW: Select entities to add to project during creation
 mcp__playwright__browser_click
   element: "Dario Amodei checkbox"
   ref: [find checkbox for Dario Amodei entity]
@@ -336,16 +336,17 @@ mcp__playwright__browser_click
   element: "Microsoft checkbox"
   ref: [find checkbox for Microsoft entity]
 
-// Save project
+// Save project with entities
 mcp__playwright__browser_click
   element: "Create Project button"
   ref: [find button with text "Create Project"]
 
-// Verify project created and selected
+// Verify project created with entity pills displayed
 mcp__playwright__browser_snapshot
 // Should see:
 // - "Tech Meeting Notes" selected in dropdown
 // - Entity pills showing "Dario Amodei" and "Microsoft" below selector
+// - "Active entities: 2" indicator
 
 // Create second project for testing
 mcp__playwright__browser_select_option
@@ -466,16 +467,32 @@ mcp__playwright__browser_evaluate
 8. ✅ Library shows user's notes correctly
 9. ✅ Dashboard displays user statistics and credit usage
 10. ✅ Settings page shows account information
-11. ✅ **Entity Management**: Create, view, and delete entities in Settings
-12. ✅ **Project Creation**: Create multiple projects with descriptions
-13. ✅ **Entity-Project Association**: Link entities to projects
-14. ✅ **Project Switching**: Switch between projects on homepage
-15. ✅ **Entity Pills Display**: Active entities shown below project selector
-16. ✅ **Upload with Context**: ProjectId included in upload FormData
-17. ✅ **Improved Transcription**: "Microsoft" correctly transcribed with entity context
-18. ✅ **Entity Usage Tracking**: Usage stats updated after transcription
-19. ✅ Logout clears authentication data
-20. ✅ Credits tracked and decremented properly
+
+### Entity Management Success Criteria
+11. ✅ **Entity CRUD**: Create, view, edit, and delete entities in Settings
+12. ✅ **Entity Types**: Support for person, company, technical, product types
+13. ✅ **Entity Search/Filter**: Filter by type and search by name
+14. ✅ **Bulk Selection**: Multiple entities can be selected with checkboxes
+15. ✅ **Project Badges**: Entities show which projects they belong to
+16. ✅ **Three-dot Menu**: Edit, Manage Projects, Delete actions work
+
+### Project Management Success Criteria
+17. ✅ **Project Creation**: Create projects with name, description, and entities
+18. ✅ **Entity Association at Creation**: Select entities when creating project
+19. ✅ **Project Selector**: Dropdown shows all projects plus "New Project"
+20. ✅ **Entity Pills Display**: Active entities shown below project selector
+21. ✅ **Project Switching**: Pills update when switching projects
+22. ✅ **ProjectManager Component**: Edit projects in Settings > Projects tab
+23. ✅ **Bulk Entity Operations**: Add/remove multiple entities from projects
+24. ✅ **Project Deletion**: Delete projects with confirmation dialog
+
+### Entity-Aware Transcription Success Criteria  
+25. ✅ **Upload with Context**: ProjectId included in upload FormData
+26. ✅ **Improved Transcription**: "Microsoft" correctly transcribed with entity context
+27. ✅ **Entity Usage Tracking**: Usage stats updated after transcription
+28. ✅ **Context Switching**: Can change project mid-session for different context
+29. ✅ Logout clears authentication data
+30. ✅ Credits tracked and decremented properly
 
 ### Known Issues & Common Failure Points
 1. **User Already Exists**: Using timestamp in email prevents this issue

@@ -176,58 +176,41 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | P5.9 | Entity search response | 1000 entities | < 300ms |
 | P5.10 | Transcription with entities | 50 entity context | < 10% overhead |
 
-### Suite 7: Entity Project System Tests (30 min)
+### Suite 7: Entity Project System Tests (45 min)
 **Purpose**: Validate entity context injection for improved transcription accuracy
 
 #### Test Setup Requirements
-**Database Migration (Optional Verification)**:
+**Database Migration (Verification)**:
 ```bash
-# Check if Entity/Project tables already exist:
+# Entity/Project tables exist as of 2025-08-17
+# Verify with:
 sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
-
-# If tables don't exist or you're unsure, run migration:
-cd backend
-DATABASE_URL="file:../data/nano-grazynka.db" npx prisma migrate deploy
-
-# Note: In current deployment, these tables already exist (migration completed 2025-08-17)
-# The migration command is idempotent - safe to run even if tables exist
 ```
 
 **Test Data Creation**:
 1. Create test user with authentication
-2. Create project "Test Project"
-3. Create 5 entities:
-   - Microsoft (company) - Actually in audio
-   - Żabka (company) - Polish chain
-   - Claude API (technical)
-   - Dario Amodei (person)
-   - RLHF (technical)
-4. Associate all entities with project
+2. Create multiple projects
+3. Create entities of all types (person, company, technical, product)
+4. Associate entities with projects
+5. Test with zabka.m4a (contains "Microsoft" mention)
 
-**Audio File**: Use `tests/test-data/zabka.m4a` (contains "Microsoft" mention)
-
-**Models to Test**:
-- `gpt-4o-transcribe` - Token-optimized compression
-- `google/gemini-2.0-flash-001` - Expanded context format
+#### 7A: Backend API Tests (15 min)
+**Purpose**: Validate API endpoints for entity-project system
 
 | Test ID | Test Case | Expected Result |
 |---------|-----------|-----------------|
-| EP7.1 | Create project via API | 201 Created, returns project ID |
-| EP7.2 | Create entities (5 types) | 201 Created for each entity |
-| EP7.3 | Associate entities to project | 200 OK, entities linked |
-| EP7.4 | Upload with projectId (GPT-4o) | Entity context injected in prompt |
-| EP7.5 | Verify transcription (GPT-4o) | "Microsoft" correctly transcribed |
-| EP7.6 | Check entity usage tracking | EntityUsage records created |
-| EP7.7 | Upload with projectId (Gemini) | Entity context in expanded format |
-| EP7.8 | Verify transcription (Gemini) | "Microsoft" correctly transcribed |
-| EP7.9 | Token optimization validation | Compressed for GPT-4o, expanded for Gemini |
-| EP7.10 | Entity context without project | Uses user's global entities |
+| EP7A.1 | Create project via API | 201 Created, returns project ID |
+| EP7A.2 | Create entities (all 4 types) | 201 Created for each entity |
+| EP7A.3 | Associate entities to project | 200 OK, entities linked |
+| EP7A.4 | Upload with projectId (GPT-4o) | Entity context injected in prompt |
+| EP7A.5 | Verify transcription accuracy | "Microsoft" correctly transcribed |
+| EP7A.6 | Check entity usage tracking | EntityUsage records created |
+| EP7A.7 | Upload with projectId (Gemini) | Entity context in expanded format |
+| EP7A.8 | Token optimization validation | Compressed for GPT-4o, expanded for Gemini |
+| EP7A.9 | Remove entities from project | 200 OK, associations removed |
+| EP7A.10 | Delete project | 204 No Content, project deleted |
 
-**Test Script**: `tests/scripts/test-entity-project-authenticated.sh`
-**Known Issues**: 
-- SQLite disk I/O errors may require Docker backend restart
-- Entity checks should focus on "Microsoft" (actually in audio)
-- Entity features are only available for authenticated users
+**Test Script**: `tests/scripts/test-entity-project-api.sh`
 
 #### 7B: Frontend Entity Management Tests (15 min)
 **Purpose**: Validate entity CRUD operations through the UI
@@ -295,6 +278,25 @@ DATABASE_URL="file:../data/nano-grazynka.db" npx prisma migrate deploy
 
 **Test Script**: `tests/scripts/test-multi-model.js`
 **E2E Tests**: `tests/e2e/multi-model-transcription.spec.js`
+
+#### 4E: Session 3 - Entity-to-Project Assignment Enhancement (20 min)
+**Purpose**: Validate bulk assignment and project management features in EntityManager
+**Reference**: Lines 292-314 of ENTITY_PROJECT_TEST_RESULTS.md
+
+| Test ID | Test Case | Tool | Expected Result |
+|---------|-----------|------|-----------------|
+| F4E.1 | Bulk entity selection | Playwright MCP | Checkboxes appear on each entity card and are functional |
+| F4E.2 | Multi-select entities | Playwright MCP | Multiple entities can be selected simultaneously |
+| F4E.3 | Project badges display | Playwright MCP | Project names appear as badges on entity cards |
+| F4E.4 | Remove badge functionality | Playwright MCP | Click × on badge removes entity from project |
+| F4E.5 | Three-dot menu - Edit | Playwright MCP | Menu opens, Edit option opens entity edit modal |
+| F4E.6 | Three-dot menu - Manage Projects | Playwright MCP | Opens modal with project checkboxes |
+| F4E.7 | Three-dot menu - Delete | Playwright MCP | Deletes entity with confirmation |
+| F4E.8 | Filter by project | Playwright MCP | Dropdown filters entities by selected project |
+| F4E.9 | Filter unassigned entities | Playwright MCP | Shows only entities with no project associations |
+| F4E.10 | Bulk assign with button | Playwright MCP | "Assign to Project" button assigns selected entities |
+| F4E.11 | Success message display | Playwright MCP | Green success message appears after operations |
+| F4E.12 | Project management modal save | Playwright MCP | Updates entity's project associations and badges |
 
 ### Suite 8: Edge Cases (10 min)
 **Purpose**: Test boundary conditions

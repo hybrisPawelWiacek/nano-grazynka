@@ -1,0 +1,427 @@
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.stats {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+}
+
+.error {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #d00;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dismissError {
+  background: none;
+  border: none;
+  color: #d00;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.projectList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.emptyState p {
+  margin: 10px 0;
+}
+
+.hint {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+.projectCard {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  transition: box-shadow 0.2s;
+}
+
+.projectCard:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.projectInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.projectHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.projectName {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.statusBadge {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.statusBadge.active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.statusBadge.inactive {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.projectDescription {
+  color: #4b5563;
+  font-size: 0.95rem;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.projectMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.entityCount {
+  font-weight: 500;
+}
+
+.separator {
+  color: #d1d5db;
+}
+
+.createdAt {
+  color: #9ca3af;
+}
+
+.projectActions {
+  display: flex;
+  gap: 8px;
+  margin-left: 20px;
+}
+
+.actionButton {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.1rem;
+}
+
+.actionButton:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.deleteButton:hover {
+  background-color: #fee;
+  border-color: #fcc;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.modalHeader {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: #f3f4f6;
+}
+
+.modalBody {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.field {
+  margin-bottom: 20px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.entityList {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.entityCheckbox {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  margin: 4px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.entityCheckbox:hover {
+  background-color: #f9fafb;
+}
+
+.entityCheckbox input[type="checkbox"] {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.entityLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.entityIcon {
+  font-size: 1.1rem;
+}
+
+.entityName {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.entityValue {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.selectionInfo {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f3f4f6;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+.modalFooter {
+  padding: 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.buttonPrimary,
+.buttonSecondary,
+.buttonDanger {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.buttonPrimary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.buttonPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.buttonSecondary {
+  background-color: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.buttonSecondary:hover {
+  background-color: #f3f4f6;
+}
+
+.buttonDanger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.buttonDanger:hover {
+  background-color: #dc2626;
+}
+
+.warning {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  color: #92400e;
+  font-size: 0.9rem;
+}

@@ -236,3 +236,83 @@ The Entity Project System requires **immediate attention** to deliver its promis
 
 ---
 *Test completed on August 17, 2025 at 15:45 UTC*
+
+## Implementation Sessions
+
+### Session 1: Core Entity-Project Linking (Critical Path)
+**Prompt:**
+```
+I need to implement the core Entity-Project linking functionality for nano-Grazynka. The backend APIs are ready and working. Please:
+
+1. Fix the frontend API client in frontend/lib/api/projects.ts:
+   - Change addEntityToProject to use entityIds[] array instead of single entityId
+   - Add proper addEntitiesToProject and removeEntitiesFromProject methods
+   
+2. Enhance ProjectSelector component (frontend/components/ProjectSelector.tsx):
+   - Load available entities when create modal opens
+   - Add entity selection checkboxes to the create project modal
+   - Include selected entityIds when creating the project
+   - Call addEntitiesToProject API after project creation
+
+3. Verify EntityPills display (frontend/app/page.tsx):
+   - Confirm EntityPills component receives projectId correctly
+   - Test that pills display when entities are linked to projects
+   - Ensure proper styling for the pills container
+
+This will enable users to select entities when creating projects and see them as pills below the project selector. The backend expects entityIds as an array in POST /api/projects/:id/entities.
+```
+
+### Session 2: Project Management Interface
+**Prompt:**
+```
+we are working on @imp_docs/planning/ENTITY_PROJECT_TEST_RESULTS.md ;
+I need to create a comprehensive Project Management interface for nano-Grazynka. Please:
+
+1. Create a new ProjectManager component (frontend/components/ProjectManager.tsx):
+   - List all user projects with their details
+   - Edit project name, description, and active status
+   - Manage project-entity associations:
+     * Show current entities for each project
+     * Add/remove entities via checkboxes
+     * Support bulk operations
+   - Delete projects with confirmation dialog
+   - Use similar styling to EntityManager component
+
+2. Add Projects tab to Settings page (frontend/app/settings/page.tsx):
+   - Add "Projects" as a new tab alongside "Entities & Projects"
+   - Integrate the ProjectManager component
+   - Ensure proper data flow between tabs
+   - Maintain consistent UI with existing tabs
+
+The backend has all necessary APIs:
+- GET/PUT/DELETE /api/projects/:id
+- POST/DELETE /api/projects/:id/entities (expects entityIds[] array)
+- GET /api/projects/:id/entities
+```
+
+### Session 3: Entity-to-Project Assignment Enhancement
+**Prompt:**
+```
+we are working on @imp_docs/planning/ENTITY_PROJECT_TEST_RESULTS.md ;
+I need to enhance the EntityManager component to support project assignment for entities. Please update frontend/components/EntityManager.tsx:
+
+1. Add bulk project assignment UI:
+   - Add checkbox selection for multiple entities
+   - Add a project dropdown selector above the entity list
+   - Add "Assign to Project" button for bulk operations
+   - Show success feedback after assignment
+
+2. Display project associations:
+   - Show which projects each entity belongs to (as small badges/tags)
+   - Add ability to remove entity from specific projects
+   - Group entities by project if filter is applied
+
+3. Fix the three-dot menu functionality:
+   - Implement edit/delete actions properly
+   - Add "Manage Projects" option in the menu
+
+This enhancement will allow users to easily manage entity-project relationships from the entity perspective. Use the existing API endpoints that expect entityIds[] arrays.
+```
+
+---
+*Implementation sessions added on August 17, 2025*

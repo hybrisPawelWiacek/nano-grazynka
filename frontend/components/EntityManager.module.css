@@ -53,6 +53,7 @@
 .toolbarLeft {
   display: flex;
   gap: 12px;
+  align-items: center;
   flex: 1;
   min-width: 0;
 }
@@ -66,7 +67,7 @@
 .searchInput {
   flex: 1;
   min-width: 200px;
-  padding: 10px 16px;
+  padding: 8px 12px;
   border: 1px solid #d2d2d7;
   border-radius: 10px;
   font-size: 15px;
@@ -79,67 +80,23 @@
   border-color: #007aff;
 }
 
-.filterSelect {
-  padding: 10px 16px;
-  padding-right: 32px;
-  border: 1px solid #d2d2d7;
-  border-radius: 10px;
-  font-size: 15px;
-  background: white;
-  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  appearance: none;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.filterSelect:focus {
-  outline: none;
-  border-color: #007aff;
-}
-
-.bulkDeleteButton {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 500;
-  background: #ff3b30;
-  color: white;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.bulkDeleteButton:hover {
-  opacity: 0.9;
-}
-
 .addButton {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
   background: #007aff;
   color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
 }
 
 .addButton:hover {
   background: #0051d5;
-}
-
-/* Error Message */
-.error {
-  padding: 12px 16px;
-  background: #fff5f5;
-  border: 1px solid #ff3b30;
-  border-radius: 10px;
-  color: #ff3b30;
-  font-size: 14px;
-  margin-bottom: 16px;
 }
 
 /* Entity List */
@@ -159,10 +116,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
   color: #1d1d1f;
   margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e5ea;
 }
 
 .typeIcon {
@@ -170,37 +129,26 @@
 }
 
 .entityGrid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .entityCard {
-  background: white;
-  border: 1px solid #d2d2d7;
+  background: #f5f5f7;
   border-radius: 12px;
-  overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  padding: 16px;
+  transition: background-color 0.2s;
 }
 
 .entityCard:hover {
-  border-color: #86868b;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: #e8e8ed;
 }
 
 .entityCardContent {
-  padding: 16px;
   display: flex;
-  align-items: flex-start;
   gap: 12px;
-}
-
-.checkbox {
-  width: 18px;
-  height: 18px;
-  margin-top: 2px;
-  cursor: pointer;
-  accent-color: #007aff;
+  align-items: flex-start;
 }
 
 .entityInfo {
@@ -209,21 +157,22 @@
 }
 
 .entityName {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: #1d1d1f;
   margin-bottom: 4px;
+  word-break: break-word;
 }
 
 .entityDescription {
-  font-size: 13px;
-  color: #3c3c43;
-  margin-bottom: 4px;
+  font-size: 14px;
+  color: #86868b;
+  margin-bottom: 8px;
   line-height: 1.4;
 }
 
 .entityAliases {
-  font-size: 12px;
+  font-size: 13px;
   color: #86868b;
   font-style: italic;
 }
@@ -233,36 +182,39 @@
 }
 
 .menuButton {
-  padding: 4px 8px;
+  width: 32px;
+  height: 32px;
   border: none;
-  background: none;
+  background: transparent;
   font-size: 18px;
   color: #86868b;
   cursor: pointer;
   border-radius: 6px;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .menuButton:hover {
-  background: #f5f5f7;
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .menu {
   position: absolute;
   top: 100%;
   right: 0;
-  margin-top: 4px;
   background: white;
   border: 1px solid #d2d2d7;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   min-width: 120px;
-  animation: slideDown 0.2s ease;
+  z-index: 10;
+  overflow: hidden;
+  animation: menuSlide 0.2s ease;
 }
 
-@keyframes slideDown {
+@keyframes menuSlide {
   from {
     opacity: 0;
     transform: translateY(-8px);
@@ -340,7 +292,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #f5f5f7;
+  border-bottom: 1px solid #e5e5ea;
 }
 
 .modalHeader h3 {
@@ -354,11 +306,11 @@
   width: 32px;
   height: 32px;
   border: none;
-  background: none;
+  background: transparent;
   font-size: 24px;
   color: #86868b;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,6 +321,7 @@
   background: #f5f5f7;
 }
 
+/* Form */
 .form {
   padding: 24px;
 }
@@ -379,12 +332,10 @@
 
 .label {
   display: block;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: #1d1d1f;
   margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .input,
@@ -407,87 +358,85 @@
 }
 
 .select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 32px;
   cursor: pointer;
 }
 
 .textarea {
   resize: vertical;
+  min-height: 80px;
   font-family: inherit;
-  line-height: 1.5;
 }
 
+/* Aliases */
 .aliasInput {
   display: flex;
   gap: 8px;
 }
 
-.aliasInput .input {
+.aliasInput input {
   flex: 1;
 }
 
 .addAliasButton {
-  padding: 10px 16px;
+  padding: 8px 16px;
   border: 1px solid #007aff;
+  background: white;
+  color: #007aff;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 500;
-  background: white;
-  color: #007aff;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .addAliasButton:hover {
-  background: #f0f8ff;
+  background: #007aff;
+  color: white;
 }
 
 .aliasList {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 12px;
 }
 
 .aliasTag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  background: #f5f5f7;
+  padding: 6px 12px;
+  background: #e5e5ea;
   border-radius: 16px;
-  font-size: 13px;
+  font-size: 14px;
   color: #1d1d1f;
 }
 
 .removeAlias {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 16px;
   height: 16px;
   border: none;
-  background: #86868b;
-  color: white;
-  border-radius: 50%;
-  font-size: 12px;
+  background: transparent;
+  color: #86868b;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   transition: background-color 0.2s;
 }
 
 .removeAlias:hover {
-  background: #3c3c43;
+  background: rgba(0, 0, 0, 0.1);
 }
 
+/* Modal Actions */
 .modalActions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 24px;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e5ea;
 }
 
 .cancelButton {
@@ -522,6 +471,286 @@
   background: #0051d5;
 }
 
+/* Session 3 Enhancements */
+
+/* Checkbox for bulk selection */
+.checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  margin-right: 4px;
+}
+
+/* Bulk Actions Bar */
+.bulkActionsBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f5f5f7;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.bulkActionsBar span {
+  font-size: 14px;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+.projectSelect {
+  flex: 1;
+  max-width: 250px;
+  padding: 6px 10px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.assignButton {
+  padding: 6px 16px;
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.assignButton:hover {
+  background: #0051d5;
+}
+
+.assignButton:disabled {
+  background: #d2d2d7;
+  cursor: not-allowed;
+}
+
+.clearSelectionButton {
+  padding: 6px 12px;
+  background: transparent;
+  color: #007aff;
+  border: 1px solid #007aff;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clearSelectionButton:hover {
+  background: #007aff;
+  color: white;
+}
+
+/* Project Filter */
+.projectFilter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.projectFilter label {
+  font-size: 14px;
+  color: #86868b;
+  font-weight: 500;
+}
+
+.projectFilterSelect {
+  padding: 6px 10px;
+  border: 1px solid #d2d2d7;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+/* Project Badges on Entity Cards */
+.projectBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.projectBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #007aff;
+  color: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badgeRemove {
+  width: 14px;
+  height: 14px;
+  border: none;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 2px;
+}
+
+.badgeRemove:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Success Message */
+.successMessage {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  background: #34c759;
+  color: white;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: slideInRight 0.3s ease;
+  z-index: 1001;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Project Management Modal */
+.projectManageContent {
+  padding: 24px;
+}
+
+.modalDescription {
+  font-size: 14px;
+  color: #86868b;
+  margin-bottom: 16px;
+}
+
+.projectCheckboxList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.projectCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.projectCheckbox:hover {
+  background: #f5f5f7;
+}
+
+.projectCheckbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.projectCheckbox span {
+  font-size: 14px;
+  color: #1d1d1f;
+}
+
+.projectDescription {
+  font-size: 13px;
+  color: #86868b;
+  font-style: italic;
+}
+
+.noProjects {
+  text-align: center;
+  color: #86868b;
+  font-size: 14px;
+  padding: 20px;
+}
+
+/* Error State */
+.errorContainer {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.errorMessage {
+  color: #ff3b30;
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.retryButton {
+  padding: 10px 20px;
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.retryButton:hover {
+  background: #0051d5;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.emptyMessage {
+  font-size: 18px;
+  color: #86868b;
+  margin-bottom: 24px;
+}
+
+.emptyAction {
+  padding: 12px 24px;
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.emptyAction:hover {
+  background: #0051d5;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .toolbar {
@@ -545,5 +774,14 @@
   .modal {
     width: 95%;
     margin: 16px;
+  }
+  
+  .bulkActionsBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .projectSelect {
+    max-width: 100%;
   }
 }
