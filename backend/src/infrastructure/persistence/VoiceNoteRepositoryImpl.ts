@@ -131,7 +131,15 @@ export class VoiceNoteRepositoryImpl implements VoiceNoteRepository {
     }
   ): Promise<{ items: VoiceNote[]; total: number; page: number; pageSize: number; totalPages: number }> {
     // Support both userId and sessionId filtering
-    const where: any = filter?.sessionId ? { sessionId: filter.sessionId } : { userId };
+    // For anonymous users (userId is 'anonymous'), use sessionId
+    // For authenticated users, use userId
+    const where: any = {};
+    
+    if (userId === 'anonymous' && filter?.sessionId) {
+      where.sessionId = filter.sessionId;
+    } else if (userId && userId !== 'anonymous') {
+      where.userId = userId;
+    }
     
     if (filter) {
       if (filter.status) where.status = filter.status.toString();
