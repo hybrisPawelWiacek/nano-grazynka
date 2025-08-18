@@ -1,219 +1,165 @@
-# nano-Grazynka Test Infrastructure
+# nano-Grazynka Test Suite
 
-**Last Updated**: August 17, 2025  
-**Status**: Reorganized - Active scripts separated from archived
+## Overview
+This directory contains all test suites for the nano-Grazynka voice transcription application. Tests are organized by type and purpose, with a single comprehensive test runner as the primary entry point.
 
-## Test Organization
+## Quick Start
+
+### Running All Tests
+```bash
+# From project root directory:
+node tests/scripts/run-comprehensive-tests.js
+```
+
+This runs the complete test suite including:
+- Smoke Tests (health checks)
+- Authentication Tests (user system)
+- Backend API Tests (endpoints)
+- Entity System Tests (projects & entities)
+
+## Directory Structure
 
 ```
 tests/
-├── scripts/              # Active test scripts (9 files)
-│   ├── archive/          # Deprecated scripts (32 files)
-│   ├── run-tests.sh      # Main test orchestrator
-│   ├── run-all-tests.sh  # Legacy runner (being phased out)
-│   ├── test-backend-api.js
-│   ├── test-utils.js
-│   ├── test-auth.js      # Stub - to be implemented
-│   ├── test-sessions.js  # Stub - to be implemented
-│   ├── test-entity-project-api.sh
-│   ├── test-entity-project-authenticated.sh
-│   └── test-entity-simple.sh
-├── test-data/            # Test audio and data files
-│   ├── zabka.m4a         # Polish audio (451KB)
-│   ├── test-audio.mp3    # English audio
-│   └── test-file.txt     # Invalid file for error testing
-├── debug-archive/        # Debug scripts (15 files)
-├── e2e/                  # E2E test specifications
-│   └── archive/          # Old npm Playwright tests
-├── integration/          # Integration test specs
-├── unit/                 # Unit test specs
-└── python/               # Python test scripts (legacy)
+├── scripts/              # Test scripts and runners
+│   ├── run-comprehensive-tests.js    # 🎯 MAIN TEST RUNNER
+│   ├── run-all-mcp-tests.js         # MCP/Playwright coordinator
+│   ├── test-*.js                    # Individual test files
+│   └── archive/                     # Old/deprecated test runners
+├── test-data/           # Test audio files
+│   ├── zabka.m4a       # Polish audio (451KB)
+│   ├── zabka.mp3       # Polish audio (MP3 format)
+│   ├── test-audio.mp3  # English audio
+│   └── test-file.txt   # Invalid file for error tests
+├── e2e/                # End-to-end test specs
+├── integration/        # Integration test suites
+└── python/            # Python test scripts
 ```
 
-## Active Test Infrastructure
+## Test Runners
 
-### Core Test Runners (2 files)
+### Primary Test Runner
+**`scripts/run-comprehensive-tests.js`**
+- Complete test suite with 19 test cases
+- Automatic dependency installation
+- Colored output and detailed reporting
+- Must be run from project root
+- Returns exit code 0 (pass) or 1 (fail)
 
-| Script | Purpose | Usage |
-|--------|---------|-------|
-| `run-tests.sh` | Main test orchestrator with pre-flight checks | `./tests/scripts/run-tests.sh` |
-| `run-all-tests.sh` | Legacy test runner (references old scripts) | Being phased out |
+### Specialized Runners
+**`scripts/run-all-mcp-tests.js`**
+- Coordinates MCP/Playwright tests
+- Provides instructions for Claude AI
+- Used for UI automation testing
 
-### Backend API Tests (4 files)
+### Individual Test Scripts
+Located in `scripts/` directory:
+- `test-anonymous-upload.js` - Anonymous user flows
+- `test-auth.js` - Authentication system
+- `test-backend-api.js` - API endpoint validation
+- `test-sessions.js` - Session management
+- `test-entity-*.sh` - Entity system tests
+- `test-multi-model-mcp.js` - Model selection tests
 
-| Script | Purpose | Coverage |
-|--------|---------|----------|
-| `test-backend-api.js` | Core backend API tests | Upload, processing, CRUD operations |
-| `test-utils.js` | Shared test utilities | Session management, API helpers |
-| `test-auth.js` | Authentication tests (stub) | To be implemented |
-| `test-sessions.js` | Session management tests (stub) | To be implemented |
+## Prerequisites
 
-### Entity/Project System Tests (3 files)
+### Environment Setup
+1. **Start Docker services**:
+   ```bash
+   docker compose up
+   ```
 
-| Script | Purpose | Coverage |
-|--------|---------|----------|
-| `test-entity-project-api.sh` | Entity-project API tests | Backend entity system |
-| `test-entity-project-authenticated.sh` | Authenticated entity tests | User-specific operations |
-| `test-entity-simple.sh` | Basic entity operations | Simple CRUD for entities |
+2. **Verify services**:
+   - Frontend: http://localhost:3100
+   - Backend: http://localhost:3101
+   - Database: SQLite at `/data/nano-grazynka.db`
 
-## Archived Scripts (32 files)
+3. **Install test dependencies** (if needed):
+   ```bash
+   cd tests/scripts
+   npm install
+   ```
 
-Located in `/tests/scripts/archive/`:
+## Running Specific Test Suites
 
-### MCP Test Scripts (7 files)
-Replaced by direct Playwright MCP tool usage:
-- test-anonymous-flow-mcp.js
-- test-entity-aware-transcription-mcp.js  
-- test-library-flow-mcp.js
-- test-logged-in-flow-mcp.js
-- test-main-flow-mcp.js
-- test-multi-model-mcp.js
-- test-two-pass-mcp.js
-
-### Old Implementation Scripts (25 files)
-Outdated or replaced functionality:
-- Anonymous tests: test-anonymous-limit.js, test-anonymous-upload.js
-- Custom prompt tests: test-custom-prompt*.js (4 files)
-- Gemini tests: test-gemini-*.js (3 files), test-webapp-gemini.js
-- Other: test-hot-reload.js, test-library-abort.js, test-mp3-upload.js, etc.
-
-## Testing Approach
-
-### 1. Backend API Testing
-Use Node.js scripts with proper session management:
+### Smoke Tests Only
 ```bash
 node tests/scripts/test-backend-api.js
 ```
 
-### 2. Frontend E2E Testing  
-Use Playwright MCP tools directly in Claude (no npm packages):
-- Navigate: `mcp__playwright__browser_navigate`
-- Interact: `mcp__playwright__browser_click`
-- Validate: `mcp__playwright__browser_snapshot`
+### Authentication Tests
+```bash
+node tests/scripts/test-auth.js
+```
 
-### 3. Entity System Testing
-Run shell scripts for comprehensive testing:
+### Entity System Tests
 ```bash
 ./tests/scripts/test-entity-project-api.sh
-./tests/scripts/test-entity-project-authenticated.sh
 ```
 
-## Environment Setup
-
-### Prerequisites
+### MCP/Playwright Tests
 ```bash
-# 1. Start Docker environment
-docker compose up
-
-# 2. Verify services
-Frontend: http://localhost:3100
-Backend: http://localhost:3101
-Database: /data/nano-grazynka.db
+node tests/scripts/run-all-mcp-tests.js
 ```
 
-### Common Issues & Solutions
+## Test Data
 
-| Issue | Solution |
-|-------|----------|
-| SQLite I/O errors | `docker compose restart backend` |
-| 404 on routes after code changes | Restart backend container |
-| Session ID mismatches | Use test-utils.js helpers |
-| File upload issues with Playwright MCP | Use API-based uploads instead |
+All test files are in `test-data/` directory:
+- **zabka.m4a**: Polish audio file containing "Microsoft" mention
+- **zabka.mp3**: Same content in MP3 format
+- **test-audio.mp3**: English audio for basic tests
+- **test-file.txt**: Text file for invalid upload tests
 
-## Running Tests
+**Important**: Always run tests from project root to ensure correct path resolution.
 
-### Quick Validation
-```bash
-# Test backend API
-node tests/scripts/test-backend-api.js
+## Common Issues
 
-# Test entity system
-./tests/scripts/test-entity-project-api.sh
-```
+### 1. File Not Found Errors
+- **Cause**: Running from wrong directory
+- **Fix**: Always run from project root, not from `tests/` or `tests/scripts/`
 
-### Full Test Suite
-```bash
-# Run all active tests with reporting
-./tests/scripts/run-tests.sh
-```
+### 2. Docker Not Running
+- **Symptoms**: Connection refused errors
+- **Fix**: Run `docker compose up` first
 
-### Frontend Testing with MCP
-In Claude with MCP enabled:
-1. Navigate to http://localhost:3100
-2. Use Playwright MCP tools for interactions
-3. Validate with snapshots and evaluations
+### 3. Backend Needs Restart
+- **Symptoms**: 404 errors on known endpoints
+- **Fix**: `docker compose restart backend`
 
-## Test Data Files
+### 4. SQLite Disk I/O Errors
+- **Symptoms**: 500 errors during operations
+- **Fix**: `docker compose restart backend`
 
-Located in `/tests/test-data/`:
-- `zabka.m4a` - Polish audio containing "Microsoft" mention
-- `test-audio.mp3` - English audio sample
-- `test-file.txt` - Invalid file for error testing
+## Test Results
 
-## Debug Archive (15 files)
+Test results are saved to:
+- Console output (colored for readability)
+- `imp_docs/testing/results/` for historical tracking
 
-Located in `/tests/debug-archive/`:
-Debug scripts preserved for reference but not part of active testing:
-- Database debugging: check-db-schema.js, test-db-*.js
-- Model testing: test-gpt4o-transcribe.js, test-multi-model-*.js
-- API debugging: test-403-fix.js, test-openrouter-fix.js
-- Direct testing: test-prisma-*.js, test-whisper-prompt.js
+### Success Criteria
+- **Deployment Ready**: ≥90% pass rate
+- **Needs Work**: 70-89% pass rate
+- **Critical Issues**: <70% pass rate
 
-## Other Test Directories
+## Writing New Tests
 
-### E2E Archive
-`/tests/e2e/archive/npm-based/` - Old Playwright npm tests (deprecated)
+1. Add test file to `scripts/` directory
+2. Use consistent naming: `test-{feature}.js`
+3. Include in comprehensive test runner if applicable
+4. Update this README with new test information
 
-### Integration Tests
-`/tests/integration/` - Integration test specifications
+## Archived Test Runners
 
-### Unit Tests  
-`/tests/unit/` - Unit test specifications
+The following test runners have been archived to `scripts/archive/`:
+- `comprehensive-test.js` - Duplicate of main runner
+- `run-tests.sh` - Outdated bash version
+- `run-all-tests.sh` - Redundant bash runner
 
-### Python Tests
-`/tests/python/` - Legacy Python test scripts
+**Do not use archived runners** - they contain outdated paths and configurations.
 
-## Future Improvements
+## Support
 
-1. **Implement Missing Tests**
-   - Complete test-auth.js implementation
-   - Complete test-sessions.js implementation
-
-2. **Consolidate Test Runners**
-   - Retire run-all-tests.sh
-   - Update run-tests.sh to be comprehensive
-
-3. **Clean Up Legacy Code**
-   - Remove Python tests once fully migrated
-   - Archive additional obsolete scripts
-
-4. **Add New Test Suites**
-   - Performance benchmarking
-   - Load testing
-   - Security testing
-
-## Maintenance Tasks
-
-### Weekly Cleanup
-```bash
-# Clean test uploads
-rm -f data/uploads/test-*
-
-# Clean WAL files
-rm -f data/*.db-wal data/*.db-shm
-
-# Check for new obsolete scripts
-ls -la tests/scripts/*.js | grep -v -E "(test-utils|test-backend-api|test-auth|test-sessions)"
-```
-
-### Before Major Releases
-1. Run full test suite
-2. Archive any newly obsolete scripts
-3. Update this README
-4. Document any new test patterns
-
----
-
-**Total Active Scripts**: 9  
-**Total Archived Scripts**: 32  
-**Test Coverage**: Backend API ✅ | Frontend MCP ✅ | Entity System ✅
+For test-related issues:
+1. Check this README first
+2. Review TEST_PLAN.md for detailed test specifications
+3. Check recent test results in `imp_docs/testing/results/`

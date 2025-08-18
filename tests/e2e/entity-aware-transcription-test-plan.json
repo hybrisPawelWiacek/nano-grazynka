@@ -1,0 +1,22 @@
+{
+  "testId": "I4.8",
+  "testName": "Entity-Aware Transcription E2E Test",
+  "timestamp": "2025-08-18T09:44:01.493Z",
+  "steps": 20,
+  "expectedOutcomes": [
+    "Project created successfully",
+    "Entities added and associated with project",
+    "Entity pills displayed on upload page",
+    "Transcription uses entity context for accuracy",
+    "Summary includes correct entity names",
+    "Entity usage tracked in database",
+    "GPT-4o compression works (top 20)",
+    "Gemini expansion includes all entities"
+  ],
+  "successCriteria": {
+    "transcriptionAccuracy": "95% for known entities",
+    "performanceOverhead": "< 100ms",
+    "userExperience": "Seamless entity selection",
+    "dataIntegrity": "All entities persisted correctly"
+  }
+}

@@ -28,7 +28,7 @@ async function testSessions() {
     form1.append('file', fs.createReadStream(testFile));
     form1.append('userId', 'anonymous');
     
-    const upload1 = await axios.post(`${API_BASE}/voice-notes/upload`, form1, {
+    const upload1 = await axios.post(`${API_BASE}/voice-notes`, form1, {
       headers: {
         ...form1.getHeaders(),
         'x-session-id': sessionId1
@@ -40,7 +40,7 @@ async function testSessions() {
     form2.append('file', fs.createReadStream(testFile));
     form2.append('userId', 'anonymous');
     
-    const upload2 = await axios.post(`${API_BASE}/voice-notes/upload`, form2, {
+    const upload2 = await axios.post(`${API_BASE}/voice-notes`, form2, {
       headers: {
         ...form2.getHeaders(),
         'x-session-id': sessionId2
@@ -54,10 +54,10 @@ async function testSessions() {
     const list2 = await axios.get(`${API_BASE}/voice-notes?sessionId=${sessionId2}`);
     
     // Verify isolation
-    const session1HasOnlyItsNote = list1.data.voiceNotes.length === 1 && 
-                                   list1.data.voiceNotes[0].id === upload1.data.voiceNote.id;
-    const session2HasOnlyItsNote = list2.data.voiceNotes.length === 1 && 
-                                   list2.data.voiceNotes[0].id === upload2.data.voiceNote.id;
+    const session1HasOnlyItsNote = list1.data.items.length === 1 && 
+                                   list1.data.items[0].id === upload1.data.voiceNote.id;
+    const session2HasOnlyItsNote = list2.data.items.length === 1 && 
+                                   list2.data.items[0].id === upload2.data.voiceNote.id;
     
     if (session1HasOnlyItsNote && session2HasOnlyItsNote) {
       results.passed++;
@@ -94,7 +94,7 @@ async function testSessions() {
     form.append('file', fs.createReadStream(testFile));
     form.append('userId', 'anonymous');
     
-    const upload = await axios.post(`${API_BASE}/voice-notes/upload`, form, {
+    const upload = await axios.post(`${API_BASE}/voice-notes`, form, {
       headers: {
         ...form.getHeaders(),
         'x-session-id': sessionId3

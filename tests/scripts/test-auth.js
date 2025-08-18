@@ -171,8 +171,8 @@ async function testMigrateAnonymous() {
   
   // Migrate anonymous notes
   const migrateResponse = await axios.post(
-    `${API_URL}/auth/migrate-anonymous`,
-    { sessionId },
+    `${API_URL}/anonymous/migrate`,
+    { sessionId, userId: registerResponse.data.user.id },
     { headers: { Authorization: `Bearer ${migrationToken}` } }
   );
   
@@ -185,7 +185,7 @@ async function testMigrateAnonymous() {
     headers: { Authorization: `Bearer ${migrationToken}` }
   });
   
-  const migratedNote = notesResponse.data.voiceNotes.find(n => n.id === noteId);
+  const migratedNote = notesResponse.data.items.find(n => n.id === noteId);
   if (!migratedNote || migratedNote.userId !== registerResponse.data.user.id) {
     throw new Error('Note not properly migrated');
   }

@@ -21,7 +21,7 @@ async function testBackendAPI() {
 
   // Test B3.1: Health endpoints
   try {
-    const response = await axios.get(`${API_BASE}/health`);
+    const response = await axios.get(`http://localhost:3101/health`);
     if (response.status === 200 && response.data.status === 'healthy') {
       results.passed++;
       results.tests.push({ id: 'B3.1', name: 'Health check', status: 'PASS' });
@@ -48,7 +48,7 @@ async function testBackendAPI() {
     form.append('file', fs.createReadStream(testFile));
     form.append('userId', 'anonymous');
     
-    const response = await axios.post(`${API_BASE}/voice-notes/upload`, form, {
+    const response = await axios.post(`${API_BASE}/voice-notes`, form, {
       headers: {
         ...form.getHeaders(),
         'x-session-id': sessionId
@@ -76,7 +76,7 @@ async function testBackendAPI() {
         headers: { 'x-session-id': sessionId }
       });
       
-      if (response.status === 200 && response.data.voiceNote?.id === uploadedNoteId) {
+      if (response.status === 200 && response.data.id === uploadedNoteId) {
         results.passed++;
         results.tests.push({ id: 'B3.3', name: 'Get single note', status: 'PASS' });
         console.log('✅ B3.3: Get single note - PASS');
@@ -94,7 +94,7 @@ async function testBackendAPI() {
   try {
     const response = await axios.get(`${API_BASE}/voice-notes?sessionId=${sessionId}`);
     
-    if (response.status === 200 && Array.isArray(response.data.voiceNotes)) {
+    if (response.status === 200 && Array.isArray(response.data.items) && response.data.pagination) {
       results.passed++;
       results.tests.push({ id: 'B3.4', name: 'List voice notes', status: 'PASS' });
       console.log('✅ B3.4: List voice notes - PASS');
@@ -134,7 +134,7 @@ async function testBackendAPI() {
     form.append('file', Buffer.from('invalid data'), 'test.txt');
     form.append('userId', 'anonymous');
     
-    await axios.post(`${API_BASE}/voice-notes/upload`, form, {
+    await axios.post(`${API_BASE}/voice-notes`, form, {
       headers: {
         ...form.getHeaders(),
         'x-session-id': sessionId

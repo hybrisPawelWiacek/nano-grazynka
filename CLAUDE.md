@@ -552,32 +552,48 @@ docker compose logs -f
 
 **SINGLE DATABASE LOCATION**: `./data/nano-grazynka.db` from project root
 
-**NEVER run raw Prisma commands!** Always use npm scripts from backend/:
-- `npm run migrate:dev` - Create new migrations
-- `npm run migrate:deploy` - Apply migrations  
-- `npm run migrate:status` - Check migration status
-- `npm run migrate:resolve` - Resolve migration issues
-- `npm run db:push` - Push schema changes without migration
-- `npm run db:studio` - Open Prisma Studio
+**⚠️ PRISMA COMMAND LOCATION MANDATE ⚠️**
+**ALL Prisma commands MUST be run from PROJECT ROOT directory ONLY!**
+**NEVER run Prisma commands from backend/ or any subdirectory!**
 
-**Why npm scripts?** They use `$PWD` to create absolute paths, avoiding Prisma's relative path bug (GitHub #27212).
+**Correct Prisma Usage (FROM ROOT ONLY):**
+```bash
+# ✅ CORRECT - Always from project root:
+DATABASE_URL="file:$PWD/data/nano-grazynka.db" npx --prefix backend prisma migrate deploy
+DATABASE_URL="file:$PWD/data/nano-grazynka.db" npx --prefix backend prisma db push
+DATABASE_URL="file:$PWD/data/nano-grazynka.db" npx --prefix backend prisma studio
 
-**If you see databases in:**
-- `backend/data/` ❌ WRONG - Delete immediately
-- `backend/prisma/data/` ❌ WRONG - Delete immediately  
-- `backend/backend/` ❌ FORBIDDEN - Never navigate here!
-- `data/` ✅ CORRECT - Only location
+# ❌ WRONG - Never do this:
+cd backend && npx prisma migrate deploy  # Creates wrong database!
+cd backend && npm run migrate:dev        # Creates wrong database!
+```
+
+**Why this strict rule?** 
+Prisma has a critical bug with SQLite relative paths (GitHub #27212). Running commands from wrong directory creates duplicate databases that break the application.
+
+**Database Location Verification:**
+```bash
+# Check for wrong databases (run from root):
+find . -name "*.db" -type f | grep -v node_modules | grep -v "^./data/"
+# If ANY results show, DELETE them immediately
+```
+
+**Wrong Database Locations (DELETE ON SIGHT):**
+- `backend/data/nano-grazynka.db` ❌ DELETE
+- `backend/prisma/data/nano-grazynka.db` ❌ DELETE  
+- `backend/backend/data/nano-grazynka.db` ❌ CATASTROPHIC - DELETE
+- Only `./data/nano-grazynka.db` ✅ CORRECT
 
 **Docker vs Local:**
-- Docker uses: `file:/data/nano-grazynka.db` (via docker-compose volume mount)
-- Local uses: `file:$PWD/../data/nano-grazynka.db` (via npm scripts from backend/)
+- Docker: `file:/data/nano-grazynka.db` (volume mount)
+- Local: `file:$PWD/data/nano-grazynka.db` (absolute path from root)
 
-**Directory Navigation Guards:**
-- NEVER run `cd backend` when already in backend/ directory
-- NEVER create backend/backend/ directory structure
-- If you accidentally navigate to wrong directory, immediately return to project root
-
-**Known Issue:** Prisma has a bug with SQLite relative paths. Always use absolute paths or the npm scripts which handle this automatically.
+**Emergency Database Fix:**
+1. Stop services: `docker compose down`
+2. Find wrong DBs: `find . -name "*.db" | grep -v "./data/"`
+3. Copy if needed: `cp backend/data/nano-grazynka.db data/`
+4. Delete wrong: `rm -rf backend/data backend/prisma/data`
+5. Restart: `docker compose up`
 
 ### File Structure
 ```

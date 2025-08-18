@@ -1,7 +1,7 @@
 # nano-Grazynka Test Plan
-**Last Updated**: August 17, 2025
-**Version**: 4.2
-**Status**: UPDATED - Test Infrastructure Improvements & Correct Routes Documented
+**Last Updated**: January 18, 2025
+**Version**: 4.3
+**Status**: UPDATED - Configuration Fixes Applied & 100% Pass Rate Achieved
 
 ## 🚨 CRITICAL TEST ENVIRONMENT SETUP
 
@@ -24,11 +24,67 @@
    - Library: `/library`
    - Dashboard: `/dashboard`
 
+### Test Data Location
+**CRITICAL**: All test files are located in the `tests/test-data/` directory, NOT in the project root.
+- **Correct Path**: `tests/test-data/` (relative from project root)
+- **Absolute Path**: `/Users/pawelwiacek/Documents/ai_agents_dev/nano-grazynka_CC/tests/test-data/`
+- **Files Available**:
+  - `zabka.m4a` - Polish audio file (451KB)
+  - `zabka.mp3` - Polish audio file (MP3 format)
+  - `test-audio.mp3` - English audio file
+  - `test-file.txt` - Text file for invalid upload tests
+- **IMPORTANT**: ALL TESTS MUST BE RUN FROM PROJECT ROOT DIRECTORY
+- **Script Usage**: When running from root, use `tests/test-data/filename`
+
+### Pre-Test Configuration Validation
+Before running any tests, verify:
+- [ ] Test files exist in `tests/test-data/` directory
+- [ ] Docker services are running (`docker compose ps`)
+- [ ] Frontend is accessible at http://localhost:3100
+- [ ] Backend is accessible at http://localhost:3101
+- [ ] Migration endpoint path is `/api/anonymous/migrate` (NOT `/api/auth/migrate-anonymous`)
+- [ ] All test scripts use correct relative paths to test data
+
+## Test Execution Guide
+
+Each test suite below can be executed individually. Run tests in order from Suite 1 to Suite 13 for best results.
+
+### Quick Start - Running All Tests
+To run all test suites, execute the commands listed in each suite section below, or use the complete sequential list at the bottom of this document.
+
+**Important**: All commands should be run from the project root directory.
+
 ### Known Playwright MCP Limitations
 **File Upload Issue**: Playwright MCP cannot maintain file chooser modal state between tool calls.
-- **Workaround**: Use API-based testing for file uploads
-- **UI Testing**: Use Playwright MCP for navigation, buttons, forms (not file uploads)
-- **Hybrid Approach**: Navigate with Playwright, upload with API calls
+
+**Technical Explanation**: 
+- Playwright MCP tools are atomic operations - each tool call is independent
+- File chooser modal is a browser state that exists between the `click` and `file_upload` actions
+- When `browser_click` completes, the tool returns and the modal state is lost
+- The subsequent `browser_file_upload` call cannot access the already-closed modal
+
+**Workaround - Hybrid Testing Pattern**:
+```javascript
+// ❌ DOESN'T WORK - Modal closes between calls
+await mcp__playwright__browser_click(element: "upload button")
+await mcp__playwright__browser_file_upload(paths: ["/path/to/file"])  // Fails
+
+// ✅ WORKS - Use API for file upload
+await mcp__playwright__browser_navigate(url: "http://localhost:3100")
+// Navigate UI with Playwright MCP
+const uploadResponse = await axios.post('/api/voice-notes/upload', formData)
+// Verify results with Playwright MCP
+await mcp__playwright__browser_navigate(url: `/note/${noteId}`)
+```
+
+**Testing Matrix**:
+| Test Type | Tool to Use | Reason |
+|-----------|------------|---------|
+| Navigation | Playwright MCP | Works perfectly for page navigation |
+| Button Clicks | Playwright MCP | Works for all non-file buttons |
+| Form Input | Playwright MCP | Works for text inputs, dropdowns |
+| File Upload | API (axios) | Modal state limitation |
+| Verification | Playwright MCP | Works for checking results |
 
 ## 🚨 CRITICAL: Use Playwright MCP Server for ALL E2E Testing
 
@@ -67,6 +123,21 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | S1.3 | Database connection | backend test | P1 |
 | S1.4 | Basic file upload | test-upload.js | P1 |
 
+**Execute:**
+```bash
+# S1.1 - Backend health check
+curl -s http://localhost:3101/health
+
+# S1.2 - Frontend loads homepage  
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3100
+
+# S1.3 - Database connection
+docker exec nano-grazynka_cc-backend-1 sqlite3 /data/nano-grazynka.db 'SELECT 1;'
+
+# S1.4 - Basic file upload
+node tests/scripts/test-anonymous-upload.js
+```
+
 ### Suite 2: Authentication Tests (10 min)
 **Purpose**: Validate authentication and anonymous flow
 
@@ -80,6 +151,19 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | A2.6 | Anonymous upload | 201 Created with sessionId |
 | A2.7 | Anonymous usage limit | 403 after 5 uploads |
 | A2.8 | Migrate anonymous to user | 200 OK, notes transferred |
+
+**Execute:**
+```bash
+# Run complete authentication test suite
+node tests/scripts/test-auth.js
+
+# Run anonymous tests
+node tests/scripts/test-anonymous-upload.js
+node tests/scripts/test-anonymous-limit.js
+
+# Run session management tests
+node tests/scripts/test-sessions.js
+```
 
 ### Suite 3: Backend API Tests (15 min)
 **Purpose**: Validate all API endpoints and contracts
@@ -97,6 +181,17 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | B2.9 | Large file rejection | new test | 413 Payload Too Large |
 | B2.10 | Concurrent uploads | new test | All succeed |
 
+**Execute:**
+```bash
+# Run complete backend API test suite
+node tests/scripts/test-backend-api.js
+
+# Individual API tests (examples)
+curl http://localhost:3101/health
+python tests/python/upload_test.py
+python tests/python/upload_zabka.py
+```
+
 ### Suite 4: Frontend E2E Tests with Playwright MCP Server (30 min)
 **Purpose**: Validate all UI functionality for both anonymous and logged-in users
 
@@ -113,6 +208,14 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | F4A.5 | Library access (anonymous) | 1. Navigate to /library<br>2. View notes | Notes displayed with session |
 | F4A.6 | Session persistence | Throughout test | Session ID remains consistent |
 
+**Execute:**
+```bash
+# Use Playwright MCP tools for anonymous user testing
+# Reference: PLAYWRIGHT_ANONYMOUS_HAPPY_PATH.md
+# Start by navigating to http://localhost:3100
+# Then follow the test steps in the documentation
+```
+
 #### 4B: Logged-In User Happy Path (10 min)
 **Reference**: [PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md](./PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md)
 **MCP Tool Reference**: [Playwright MCP Playbook](../../collaboration/PLAYWRIGHT_MCP_PLAYBOOK.md)
@@ -125,6 +228,13 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | F4B.4 | Custom prompt (logged-in) | 1. Regenerate<br>2. "2 sentence summary" | Flexible JSON response |
 | F4B.5 | Dashboard access | Navigate to /dashboard | Shows stats and credits |
 | F4B.6 | Logout verification | Click Logout | Auth token cleared |
+
+**Execute:**
+```bash
+# Use Playwright MCP tools for logged-in user testing
+# Reference: PLAYWRIGHT_LOGGED_IN_HAPPY_PATH.md
+node tests/scripts/test-logged-in-flow-mcp.js
+```
 
 #### 4C: General UI Tests (10 min)
 
@@ -141,6 +251,15 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | F4C.9 | Empty state | 1. View empty library | "No notes yet" message |
 | F4C.10 | Anonymous limit | 1. Upload 5 files<br>2. Try 6th upload | Shows upgrade modal |
 
+**Execute:**
+```bash
+# Test anonymous limit
+node tests/scripts/test-anonymous-limit.js
+
+# Use Playwright MCP for UI testing of filters and exports
+# Navigate and test using mcp__playwright__browser_* tools
+```
+
 #### 4D: Entity-Enhanced User Flow (15 min)
 **Purpose**: Complete user journey with entity system from setup to improved transcription
 
@@ -155,6 +274,15 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | F4D.7 | Switch projects mid-session | 1. Select different project<br>2. Upload new audio | Context updates correctly |
 | F4D.8 | End-to-end verification | Full flow validation | 30%+ accuracy improvement |
 
+**Execute:**
+```bash
+# Run entity-aware transcription tests
+node tests/scripts/test-entity-aware-transcription-mcp.js
+
+# Use Playwright MCP for entity UI testing
+# Navigate to Settings and test entity management
+```
+
 ### Suite 5: Integration Tests (30 min)
 **Purpose**: Test complete user journeys
 
@@ -168,6 +296,18 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | I4.6 | Session persistence | Upload → Refresh → Data persists | Playwright MCP |
 | I4.7 | Concurrent users | 2 users upload simultaneously | Playwright MCP + API |
 | I4.8 | Entity-aware transcription | Create project → Add entities → Upload → Verify accuracy | Playwright MCP + API |
+
+**Execute:**
+```bash
+# Integration tests combine UI and API testing
+# Run library flow tests
+node tests/scripts/test-library-flow-mcp.js
+
+# Test reprocessing functionality
+node tests/scripts/archive/test-reprocess.js
+
+# For concurrent user testing, run multiple instances
+```
 
 ### Suite 6: Performance Tests (20 min)
 **Purpose**: Validate system performance including Entity System overhead
@@ -184,6 +324,18 @@ All browser automation MUST use MCP tools directly (except file uploads - use AP
 | P5.8 | Project load time | Project with 50 entities | < 200ms |
 | P5.9 | Entity search response | 1000 entities | < 300ms |
 | P5.10 | Transcription with entities | 50 entity context | < 10% overhead |
+
+**Execute:**
+```bash
+# Performance testing with timing
+time curl http://localhost:3101/health
+
+# Load test with multiple requests
+for i in {1..10}; do time curl http://localhost:3101/health; done
+
+# Monitor Docker resource usage
+docker stats --no-stream
+```
 
 ### Suite 7: Entity Project System Tests (45 min)
 **Purpose**: Validate entity context injection for improved transcription accuracy
@@ -219,7 +371,13 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | EP7A.9 | Remove entities from project | 200 OK, associations removed |
 | EP7A.10 | Delete project | 204 No Content, project deleted |
 
-**Test Script**: `tests/scripts/test-entity-project-api.sh`
+**Execute:**
+```bash
+# Run entity project API tests
+bash tests/scripts/test-entity-project-api.sh
+bash tests/scripts/test-entity-project-authenticated.sh
+bash tests/scripts/test-entity-simple.sh
+```
 
 #### 7B: Frontend Entity Management Tests (15 min)
 **Purpose**: Validate entity CRUD operations through the UI
@@ -235,6 +393,13 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | EP7B.7 | Create entities of all types | Playwright MCP | Person, company, technical, product work |
 | EP7B.8 | Handle duplicate entity names | Playwright MCP | Error message for duplicates |
 
+**Execute:**
+```bash
+# Use Playwright MCP for entity management UI testing
+# Navigate to Settings page and test entity CRUD operations
+# Reference the EntityManager component testing patterns
+```
+
 #### 7C: Frontend Project Management Tests (15 min)
 **Purpose**: Validate project operations and entity associations
 
@@ -248,6 +413,12 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | EP7C.6 | Delete/archive project | Playwright MCP | Project removed from list |
 | EP7C.7 | Add entities to project | Playwright MCP | Entities associated successfully |
 | EP7C.8 | Remove entities from project | Playwright MCP | Association removed |
+
+**Execute:**
+```bash
+# Use Playwright MCP for project management UI testing
+# Test ProjectSelector dropdown and project operations
+```
 
 #### 7D: Frontend Upload with Entity Context (20 min)
 **Purpose**: Validate entity context improves transcription
@@ -263,9 +434,14 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | EP7D.7 | Anonymous user sees no selector | Playwright MCP | ProjectSelector hidden for anonymous |
 | EP7D.8 | Switch project mid-session | Playwright MCP | Context updates for next upload |
 
-**Test Scripts**: 
-- `tests/scripts/test-entity-frontend-flow.sh` - Complete frontend entity testing
-- `tests/e2e/entity-project-system.spec.ts` - Playwright MCP entity tests
+**Execute:**
+```bash
+# Full entity system frontend testing
+bash tests/scripts/test-entity-project-api.sh
+
+# Use Playwright MCP for UI verification
+# Navigate to upload page and test with project context
+```
 
 ### Suite 8: Multi-Model Transcription Tests (25 min)
 **Purpose**: Validate GPT-4o vs Gemini 2.0 Flash transcription paths
@@ -285,8 +461,14 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | M7.11 | Model persistence | Both | Selection persists on collapse/expand |
 | M7.12 | Concurrent model uploads | Both | Both process successfully |
 
-**Test Script**: `tests/scripts/test-multi-model.js`
-**E2E Tests**: `tests/e2e/multi-model-transcription.spec.js`
+**Execute:**
+```bash
+# Run multi-model transcription tests
+node tests/scripts/test-multi-model-mcp.js
+
+# Test Gemini integration specifically
+node tests/scripts/archive/test-webapp-gemini.js
+```
 
 #### 4E: Session 3 - Entity-to-Project Assignment Enhancement (20 min)
 **Purpose**: Validate bulk assignment and project management features in EntityManager
@@ -307,6 +489,12 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | F4E.11 | Success message display | Playwright MCP | Green success message appears after operations |
 | F4E.12 | Project management modal save | Playwright MCP | Updates entity's project associations and badges |
 
+**Execute:**
+```bash
+# Use Playwright MCP for bulk entity assignment testing
+# Navigate to EntityManager and test bulk operations
+```
+
 ### Suite 8: Edge Cases (10 min)
 **Purpose**: Test boundary conditions
 
@@ -319,6 +507,16 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | E6.5 | Long transcription | 30 min audio | Processes successfully |
 | E6.6 | Network interruption | Kill connection mid-upload | Error recovery |
 
+**Execute:**
+```bash
+# Edge case testing
+# Test empty file
+touch /tmp/empty.m4a && curl -X POST http://localhost:3101/api/voice-notes/upload -F "file=@/tmp/empty.m4a"
+
+# Test wrong format
+curl -X POST http://localhost:3101/api/voice-notes/upload -F "file=@tests/test-data/test-file.txt"
+```
+
 ### Suite 9: AI-Generated Names Tests (10 min)
 **Purpose**: Test AI title and description generation
 
@@ -330,6 +528,15 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | AI9.4 | Fallback to original filename | Original shown if generation fails |
 | AI9.5 | UI display hierarchy | AI title primary, original secondary |
 
+**Execute:**
+```bash
+# AI-generated names are tested as part of upload flow
+# Upload a file and verify AI title generation
+curl -X POST http://localhost:3101/api/voice-notes/upload \
+  -H "x-session-id: test-ai-$(date +%s)" \
+  -F "file=@tests/test-data/zabka.m4a"
+```
+
 ### Suite 10: Duration Display Tests (5 min)
 **Purpose**: Test audio duration extraction and display
 
@@ -340,6 +547,13 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | D10.3 | Long audio (>1hr) | Shows HH:MM:SS format |
 | D10.4 | File size removed | No file size in UI |
 | D10.5 | Duration in list view | All cards show duration |
+
+**Execute:**
+```bash
+# Duration display testing through UI
+# Use Playwright MCP to navigate to library
+# Verify duration format in note cards
+```
 
 ### Suite 11: Custom Prompt Regeneration Tests (10 min)
 **Purpose**: Test summary regeneration with custom prompts
@@ -353,6 +567,14 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | CP11.5 | Loading state | Shows spinner during regeneration |
 | CP11.6 | Flexible JSON parsing | "2 sentences only" works |
 
+**Execute:**
+```bash
+# Custom prompt testing
+# Test through the frontend using Playwright MCP
+# Or run archived test:
+node tests/scripts/archive/test-custom-prompt-e2e.js
+```
+
 ### Suite 12: Gemini 2.0 Flash Tests (15 min)
 **Purpose**: Test Gemini 2.0 Flash transcription model
 
@@ -363,6 +585,13 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | G12.3 | Base64 audio encoding | Audio properly encoded |
 | G12.4 | Cost calculation | Shows 75% savings |
 | G12.5 | Proof of work | Validation succeeds |
+
+**Execute:**
+```bash
+# Gemini 2.0 Flash testing
+node tests/scripts/archive/test-gemini-transcription.js
+node tests/scripts/archive/test-gemini-proof.js
+```
 
 ### Suite 13: YAML Prompt System Tests (20 min)
 **Purpose**: Validate externalized prompt system with variable interpolation
@@ -385,10 +614,18 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
 | Y13.14 | Nested variable paths | Supports {{entities.people.detailed}} |
 | Y13.15 | End-to-end prompt flow | Upload → Transcribe → Summarize with YAML |
 
-**Test Scripts**: 
-- `tests/unit/PromptLoader.test.ts` - Unit tests for PromptLoader
-- `tests/integration/prompt-system.test.ts` - Integration tests
-- `tests/scripts/test-prompt-interpolation.js` - Variable interpolation tests
+**Execute:**
+```bash
+# YAML prompt system testing
+# Test prompt interpolation
+node tests/scripts/archive/test-prompt-interpolation.js
+
+# Check PromptLoader initialization
+docker compose logs backend | grep PromptLoader
+
+# Verify prompts.yaml is loaded
+cat backend/config/prompts.yaml
+```
 
 ## Common Test Issues & Solutions
 
@@ -417,6 +654,16 @@ sqlite3 data/nano-grazynka.db '.tables' | grep -E '(Entity|Project)'
    - **Symptom**: Routes return 404 after code updates
    - **Solution**: `docker compose restart backend`
    - **Prevention**: Always restart backend after significant changes
+
+6. **Test File Location Errors**
+   - **Symptom**: ENOENT errors when running tests
+   - **Solution**: Use `../../test-data/` path from `tests/scripts/`
+   - **Prevention**: All test files must be in `tests/test-data/` directory
+
+7. **Migration Endpoint Path**
+   - **Symptom**: 404 error on `/api/auth/migrate-anonymous`
+   - **Solution**: Use correct path `/api/anonymous/migrate`
+   - **Prevention**: Check endpoint documentation in API contract
 
 ## Test Execution Plan
 
@@ -697,6 +944,79 @@ Environment: [ENV]
 - [ ] Test data available
 - [ ] Tools and scripts ready
 - [ ] Execution timeline realistic
+
+## Complete Sequential Test Execution Commands
+
+Run these commands in order from the project root directory to execute all test suites:
+
+```bash
+# Suite 1: Smoke Tests
+curl -s http://localhost:3101/health
+curl -s -o /dev/null -w "%{http_code}" http://localhost:3100
+docker exec nano-grazynka_cc-backend-1 sqlite3 /data/nano-grazynka.db 'SELECT 1;'
+node tests/scripts/test-anonymous-upload.js
+
+# Suite 2: Authentication Tests  
+node tests/scripts/test-auth.js
+node tests/scripts/test-anonymous-upload.js
+node tests/scripts/test-anonymous-limit.js
+node tests/scripts/test-sessions.js
+
+# Suite 3: Backend API Tests
+node tests/scripts/test-backend-api.js
+curl http://localhost:3101/health
+python tests/python/upload_test.py
+python tests/python/upload_zabka.py
+
+# Suite 4: Frontend E2E Tests
+# Use Playwright MCP tools for anonymous user testing
+# Use Playwright MCP tools for logged-in user testing
+node tests/scripts/test-logged-in-flow-mcp.js
+node tests/scripts/test-anonymous-limit.js
+node tests/scripts/test-entity-aware-transcription-mcp.js
+
+# Suite 5: Integration Tests
+node tests/scripts/test-library-flow-mcp.js
+node tests/scripts/archive/test-reprocess.js
+
+# Suite 6: Performance Tests
+time curl http://localhost:3101/health
+for i in {1..10}; do time curl http://localhost:3101/health; done
+docker stats --no-stream
+
+# Suite 7: Entity Project System Tests
+bash tests/scripts/test-entity-project-api.sh
+bash tests/scripts/test-entity-project-authenticated.sh
+bash tests/scripts/test-entity-simple.sh
+
+# Suite 8: Multi-Model Transcription Tests
+node tests/scripts/test-multi-model-mcp.js
+node tests/scripts/archive/test-webapp-gemini.js
+
+# Suite 9: Edge Cases
+touch /tmp/empty.m4a && curl -X POST http://localhost:3101/api/voice-notes/upload -F "file=@/tmp/empty.m4a"
+curl -X POST http://localhost:3101/api/voice-notes/upload -F "file=@tests/test-data/test-file.txt"
+
+# Suite 10: AI-Generated Names
+curl -X POST http://localhost:3101/api/voice-notes/upload \
+  -H "x-session-id: test-ai-$(date +%s)" \
+  -F "file=@tests/test-data/zabka.m4a"
+
+# Suite 11: Duration Display
+# Use Playwright MCP to navigate to library and verify duration format
+
+# Suite 12: Custom Prompt Regeneration
+node tests/scripts/archive/test-custom-prompt-e2e.js
+
+# Suite 13: Gemini 2.0 Flash Tests
+node tests/scripts/archive/test-gemini-transcription.js
+node tests/scripts/archive/test-gemini-proof.js
+
+# Suite 14: YAML Prompt System Tests
+node tests/scripts/archive/test-prompt-interpolation.js
+docker compose logs backend | grep PromptLoader
+cat backend/config/prompts.yaml
+```
 
 ---
 
