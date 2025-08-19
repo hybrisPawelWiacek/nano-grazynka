@@ -16,6 +16,23 @@ This document provides a step-by-step guide for testing the complete logged-in u
 
 ## Test Steps
 
+### 0. Clear Session State (CRITICAL)
+```javascript
+// CRITICAL: Start with clean browser state
+// Navigate to the application first
+mcp__playwright__browser_navigate
+  url: "http://localhost:3100"
+
+// Clear ALL localStorage to ensure no session conflicts
+mcp__playwright__browser_evaluate
+  function: () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log('Browser storage cleared - starting fresh');
+    return { cleared: true };
+  }
+```
+
 ### 1. Create Unique User Account
 ```javascript
 // Navigate to registration page

@@ -18,17 +18,33 @@ This document provides a step-by-step guide for testing the complete anonymous u
 
 ### 1. Start Fresh Session
 ```javascript
-// Navigate to homepage as new anonymous user
+// CRITICAL: Clear localStorage to ensure fresh session
+// This prevents reusing exhausted sessions from previous test runs
 mcp__playwright__browser_navigate
   url: "http://localhost:3100"
 
-// Verify session ID is created in localStorage
+// Clear all localStorage items to force new session creation
+mcp__playwright__browser_evaluate
+  function: () => {
+    localStorage.clear();
+    console.log('LocalStorage cleared - forcing new session');
+    return { cleared: true };
+  }
+
+// Reload page to trigger new session creation
+mcp__playwright__browser_navigate
+  url: "http://localhost:3100"
+
+// Verify NEW session ID is created in localStorage
 mcp__playwright__browser_evaluate
   function: () => {
     const sessionId = localStorage.getItem('anonymousSessionId');
-    console.log('Session ID:', sessionId);
+    console.log('New Session ID:', sessionId);
     return { sessionId };
   }
+
+// Verify we have 5 free uses available
+// Should see "Free uses: 5 / 5 remaining" in navigation
 ```
 
 ### 2. Upload Voice Note

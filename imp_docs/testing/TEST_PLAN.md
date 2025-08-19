@@ -97,6 +97,51 @@ await mcp__playwright__browser_navigate(url: `/note/${noteId}`)
 The Playwright MCP server is already configured in the Docker environment.
 All browser automation MUST use MCP tools directly (except file uploads - use API).
 
+### 🔴 MANDATORY: Clear localStorage Before EVERY Playwright Test
+
+**CRITICAL REQUIREMENT**: All Playwright MCP tests MUST clear localStorage before starting to ensure fresh sessions and prevent test failures due to session reuse.
+
+**Why This Is Required**:
+- Anonymous sessions persist in localStorage across test runs
+- Session usage limits (5 free uploads) get exhausted
+- Tests fail with "0/5 free uses remaining" errors
+- Session IDs from previous tests cause 401/403 errors
+
+**Implementation Pattern (MUST USE FOR ALL TESTS)**:
+```javascript
+// Step 1: Navigate to application
+mcp__playwright__browser_navigate
+  url: "http://localhost:3100"
+
+// Step 2: Clear ALL localStorage (MANDATORY)
+mcp__playwright__browser_evaluate
+  function: () => {
+    localStorage.clear();
+    sessionStorage.clear();  // Also clear sessionStorage for logged-in tests
+    console.log('Browser storage cleared - forcing new session');
+    return { cleared: true };
+  }
+
+// Step 3: Reload page to trigger fresh session creation
+mcp__playwright__browser_navigate
+  url: "http://localhost:3100"
+
+// Step 4: Verify new session created (for anonymous tests)
+mcp__playwright__browser_evaluate
+  function: () => {
+    const sessionId = localStorage.getItem('anonymousSessionId');
+    console.log('New Session ID:', sessionId);
+    return { sessionId };
+  }
+```
+
+**Test Categories Requiring localStorage Clear**:
+- ✅ Anonymous user tests - Clear to get new session with 5 free uses
+- ✅ Logged-in user tests - Clear to prevent auth token conflicts
+- ✅ Migration tests - Clear to ensure clean state
+- ✅ Multi-user tests - Clear between user switches
+- ✅ Any test accessing the application UI
+
 ## Test Strategy Overview
 
 ### Testing Levels
