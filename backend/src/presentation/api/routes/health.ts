@@ -69,67 +69,6 @@ export async function healthRoutes(fastify: FastifyInstance): Promise<void> {
     });
   });
 
-  fastify.get('/ready', {
-    schema: {
-      description: 'Readiness check endpoint',
-      tags: ['System'],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            ready: { type: 'boolean' },
-            checks: {
-              type: 'object',
-              properties: {
-                database: { type: 'boolean' },
-                storage: { type: 'boolean' },
-                config: { type: 'boolean' }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request, reply) => {
-    const config = container.getConfig();
-    const prisma = container.getPrisma();
-    
-    const checks = {
-      database: false,
-      storage: false,
-      config: false
-    };
-
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      checks.database = true;
-    } catch (error) {
-      request.log.error('Database readiness check failed:', error);
-    }
-
-    try {
-      const fs = await import('fs/promises');
-      const uploadDir = (config as any).storage?.uploadDir;
-      await fs.access(uploadDir);
-      checks.storage = true;
-    } catch (error) {
-      request.log.error('Storage readiness check failed:', error);
-    }
-
-    try {
-      (config as any).server?.port;
-      checks.config = true;
-    } catch (error) {
-      request.log.error('Config readiness check failed:', error);
-    }
-
-    const ready = Object.values(checks).every(check => check);
-    
-    return reply
-      .status(ready ? 200 : 503)
-      .send({ ready, checks });
-  });
-
   // Metrics endpoint for Prometheus
   fastify.get('/metrics', {
     schema: {

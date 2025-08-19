@@ -6,6 +6,7 @@ import cookie from '@fastify/cookie';
 import { Container } from './container';
 import { errorHandler } from './middleware/errorHandler';
 import { healthRoutes } from './routes/health';
+import readyRoutes from './routes/ready';
 import { voiceNoteRoutes } from './routes/voiceNotes';
 import authRoutes from './routes/auth';
 import paymentsRoutes from './routes/payments';
@@ -92,14 +93,17 @@ export async function createApp(): Promise<FastifyInstance> {
     });
   });
 
+  // Register routes with proper async initialization
   await fastify.register(healthRoutes);
+  await fastify.register(readyRoutes);
   await fastify.register(authRoutes, { prefix: '/api/auth' });
   await fastify.register(voiceNoteRoutes);
   await fastify.register(paymentsRoutes);
   await fastify.register(anonymousRoutes);
   await fastify.register(entityRoutes);
   await fastify.register(projectRoutes);
-
+  
+  // Add root route before marking as ready
   fastify.get('/', async (request, reply) => {
     return {
       name: 'nano-Grazynka API',
@@ -112,6 +116,9 @@ export async function createApp(): Promise<FastifyInstance> {
       }
     };
   });
+  
+  // Ensure all routes are properly loaded
+  await fastify.ready();
 
   return fastify;
 }

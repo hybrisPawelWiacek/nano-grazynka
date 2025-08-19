@@ -24,7 +24,7 @@ const path = require('path');
 // Configuration
 const FRONTEND_URL = 'http://localhost:3100';
 const BACKEND_URL = 'http://localhost:3101';
-const TEST_AUDIO = path.join(__dirname, 'zabka.m4a');
+const TEST_AUDIO = path.join(__dirname, '../test-data/zabka.m4a');
 const TEST_TIMEOUT = 60000; // 60 seconds
 
 // Test data

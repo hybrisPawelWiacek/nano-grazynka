@@ -11,7 +11,7 @@ async function uploadFile() {
     const form = new FormData();
     
     // Read zabka.m4a from tests directory
-    const fileStream = fs.createReadStream('./tests/zabka.m4a');
+    const fileStream = fs.createReadStream('./tests/test-data/zabka.m4a');
     form.append('file', fileStream, {
       filename: 'zabka.m4a',
       contentType: 'audio/m4a'

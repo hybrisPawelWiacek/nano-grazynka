@@ -32,15 +32,21 @@ mcp__playwright__browser_evaluate
 ```
 
 ### 2. Upload Voice Note
+
+**IMPORTANT**: The Playwright MCP file upload requires a two-step process:
+1. First click the visible dropzone to trigger the file chooser
+2. Then immediately use file_upload tool while the chooser is open
+
 ```javascript
-// Click on the upload dropzone area (NOT the hidden file input)
-// Look for the area that says "Click to upload or drag and drop"
+// Step 1: Click on the upload dropzone area (NOT the hidden file input)
+// This triggers the file chooser dialog
 mcp__playwright__browser_click
   element: "Upload dropzone area with text 'Click to upload'"
   ref: [find ref for element containing "Click to upload or drag and drop"]
   // Note: Click the visible dropzone label, not the hidden input
 
-// Upload the test file when file chooser appears
+// Step 2: Upload the file while file chooser is open
+// This must be done immediately after clicking the dropzone
 mcp__playwright__browser_file_upload
   paths: ["/Users/pawelwiacek/Documents/ai_agents_dev/nano-grazynka_CC/tests/test-data/zabka.m4a"]
 

@@ -11,7 +11,7 @@ async function testReprocess() {
   // First, upload a test file
   console.log('1️⃣ Uploading test audio file...');
   const formData = new FormData();
-  const audioBuffer = fs.readFileSync(path.join(__dirname, 'zabka.m4a'));
+  const audioBuffer = fs.readFileSync(path.join(__dirname, '../test-data/zabka.m4a'));
   const blob = new Blob([audioBuffer], { type: 'audio/mp4' });
   
   formData.append('audio', blob, 'zabka.m4a');

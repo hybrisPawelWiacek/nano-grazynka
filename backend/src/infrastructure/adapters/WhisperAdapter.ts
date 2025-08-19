@@ -28,12 +28,33 @@ export class WhisperAdapter implements TranscriptionService {
     
     const provider = ConfigLoader.get('transcription.provider');
     
-    if (provider === 'openai') {
-      return this.transcribeWithOpenAI(audioFilePath, language, options);
-    } else if (provider === 'openrouter') {
-      return this.transcribeWithOpenRouter(audioFilePath, language, options);
-    } else {
-      throw new Error(`Unsupported transcription provider: ${provider}`);
+    try {
+      if (provider === 'openai') {
+        return await this.transcribeWithOpenAI(audioFilePath, language, options);
+      } else if (provider === 'openrouter') {
+        return await this.transcribeWithOpenRouter(audioFilePath, language, options);
+      } else {
+        throw new Error(`Unsupported transcription provider: ${provider}`);
+      }
+    } catch (error) {
+      console.error('[WhisperAdapter] Primary transcription failed:', error);
+      
+      // Fallback to Gemini if OpenAI/OpenRouter fails
+      if (provider !== 'gemini') {
+        console.log('[WhisperAdapter] Attempting fallback to Gemini...');
+        try {
+          const result = await this.transcribeWithGemini(audioFilePath, language, options);
+          console.log('[WhisperAdapter] Gemini fallback successful');
+          return result;
+        } catch (geminiError) {
+          console.error('[WhisperAdapter] Gemini fallback also failed:', geminiError);
+          // Re-throw original error as it's more relevant
+          throw error;
+        }
+      }
+      
+      // If we're already using Gemini or fallback failed, re-throw
+      throw error;
     }
   }
 
@@ -52,13 +73,9 @@ export class WhisperAdapter implements TranscriptionService {
     // Use the path as-is since LocalStorageAdapter now returns full path
     const fullPath = audioFilePath;
     
-    // Debug logging
-
-    
     if (!fs.existsSync(fullPath)) {
       throw new Error(`Audio file not found: ${fullPath}`);
     }
-    
     
     // Read file as buffer
     const fileBuffer = fs.readFileSync(fullPath);
@@ -70,97 +87,113 @@ export class WhisperAdapter implements TranscriptionService {
                      fileName.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg';
     const fileBlob = new Blob([fileBuffer], { type: mimeType });
     
-    // Use native FormData (available in Node.js 18+)
-    const formData = new FormData();
-    formData.append('file', fileBlob, fileName);
-    formData.append('model', model);
+    // Retry logic with exponential backoff
+    const maxRetries = 3;
+    let lastError: Error | null = null;
     
-    // Only add language if not auto-detect
-    const langValue = language.getValue();
-    if (langValue && langValue !== '') {
-      formData.append('language', langValue);
-    }
-    
-    // Use 'json' format for gpt-4o-transcribe, 'verbose_json' for whisper models
-    const responseFormat = model.includes('gpt-4o') ? 'json' : 'verbose_json';
-    formData.append('response_format', responseFormat);
-    
-    if (options?.prompt) {
-      formData.append('prompt', options.prompt);
-    }
-    if (options?.temperature !== undefined) {
-      formData.append('temperature', options.temperature.toString());
-    }
-
-
-    
-    const response = await fetch(`${baseUrl}/audio/transcriptions`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        // DO NOT set Content-Type - let fetch handle it automatically
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('OpenAI API error:', error);
-      
-      // If model not found, try with just 'whisper'
-      if (error.includes('model') && model === 'whisper-1') {
-
-        model = 'whisper';
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Use native FormData (available in Node.js 18+)
+        const formData = new FormData();
+        formData.append('file', fileBlob, fileName);
+        formData.append('model', model);
         
-        // Recreate FormData with new model
-        const retryFormData = new FormData();
-        retryFormData.append('file', fileBlob, fileName);
-        retryFormData.append('model', model);
+        // Only add language if not auto-detect
+        const langValue = language.getValue();
         if (langValue && langValue !== '') {
-          retryFormData.append('language', langValue);
+          formData.append('language', langValue);
         }
-        const retryResponseFormat = model.includes('gpt-4o') ? 'json' : 'verbose_json';
-        retryFormData.append('response_format', retryResponseFormat);
+        
+        // Use 'json' format for gpt-4o-transcribe, 'verbose_json' for whisper models
+        const responseFormat = model.includes('gpt-4o') ? 'json' : 'verbose_json';
+        formData.append('response_format', responseFormat);
+        
         if (options?.prompt) {
-          retryFormData.append('prompt', options.prompt);
+          formData.append('prompt', options.prompt);
         }
         if (options?.temperature !== undefined) {
-          retryFormData.append('temperature', options.temperature.toString());
+          formData.append('temperature', options.temperature.toString());
         }
         
-        const retryResponse = await fetch(`${baseUrl}/audio/transcriptions`, {
+        console.log(`[WhisperAdapter] Attempt ${attempt}/${maxRetries} - Transcribing with OpenAI...`);
+        
+        const response = await fetch(`${baseUrl}/audio/transcriptions`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
+            // DO NOT set Content-Type - let fetch handle it automatically
           },
-          body: retryFormData,
+          body: formData,
         });
+
+        if (!response.ok) {
+          const error = await response.text();
+          console.error(`[WhisperAdapter] OpenAI API error (attempt ${attempt}):`, error);
+          
+          // If model not found, try with just 'whisper' on first attempt
+          if (attempt === 1 && error.includes('model') && model === 'whisper-1') {
+            console.log('[WhisperAdapter] Retrying with model: whisper');
+            model = 'whisper';
+            continue; // Retry with new model
+          }
+          
+          // Check for rate limit errors
+          if (response.status === 429) {
+            const retryAfter = response.headers.get('retry-after');
+            const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempt) * 1000;
+            console.log(`[WhisperAdapter] Rate limited, waiting ${waitTime}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          }
+          
+          // For server errors, retry with exponential backoff
+          if (response.status >= 500) {
+            const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+            console.log(`[WhisperAdapter] Server error, waiting ${waitTime}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            lastError = new Error(`OpenAI transcription failed: ${error}`);
+            continue;
+          }
+          
+          // For client errors, don't retry
+          throw new Error(`OpenAI transcription failed: ${error}`);
+        }
+
+        const result: any = await response.json();
         
-        if (!retryResponse.ok) {
-          const retryError = await retryResponse.text();
-          throw new Error(`OpenAI transcription failed: ${retryError}`);
+        console.log('[WhisperAdapter] Transcription successful');
+        return {
+          text: result.text,
+          language,
+          duration: result.duration || 0,
+          confidence: this.calculateConfidence(result.segments),
+        };
+        
+      } catch (error) {
+        console.error(`[WhisperAdapter] Error on attempt ${attempt}:`, error);
+        lastError = error as Error;
+        
+        // If this is a network error and not the last attempt, retry
+        if (attempt < maxRetries && 
+            (error instanceof TypeError || // Network errors
+             (error as any).code === 'ECONNRESET' ||
+             (error as any).code === 'ETIMEDOUT')) {
+          const waitTime = Math.pow(2, attempt) * 1000;
+          console.log(`[WhisperAdapter] Network error, waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
         }
         
-        const retryResult: any = await retryResponse.json();
-        return {
-          text: retryResult.text,
-          language,
-          duration: retryResult.duration || 0,
-          confidence: this.calculateConfidence(retryResult.segments),
-        };
+        // If it's the last attempt or a non-retryable error, throw
+        if (attempt === maxRetries) {
+          console.error('[WhisperAdapter] All retry attempts exhausted');
+        }
+        throw error;
       }
-      
-      throw new Error(`OpenAI transcription failed: ${error}`);
     }
-
-    const result: any = await response.json();
     
-    return {
-      text: result.text,
-      language,
-      duration: result.duration || 0,
-      confidence: this.calculateConfidence(result.segments),
-    };
+    // If we get here, all retries failed
+    throw lastError || new Error('OpenAI transcription failed after all retries');
   }
 
   private async transcribeWithOpenRouter(
