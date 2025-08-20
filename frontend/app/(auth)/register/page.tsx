@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { clearAuthCookie } from '@/lib/auth-helpers';
 import styles from '../auth.module.css';
 
 export default function RegisterPage() {
@@ -14,6 +15,12 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    // Clear any invalid cookies when accessing register page
+    // This ensures users with stale tokens can register
+    clearAuthCookie().catch(console.error);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +58,17 @@ export default function RegisterPage() {
       await register(email, password);
       router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      // Provide more helpful error messages
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+      if (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {
+        setError('An account with this email already exists. Please log in instead.');
+      } else if (errorMessage.includes('Network')) {
+        setError('Unable to connect to the server. Please check your connection.');
+      } else if (errorMessage.includes('Invalid')) {
+        setError('Invalid registration data. Please check your information.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

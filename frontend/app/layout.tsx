@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import SessionInitializer from "@/components/SessionInitializer";
+import ApiInterceptorSetup from "@/components/ApiInterceptorSetup";
 import { Toaster } from "sonner";
 
 const geistSans = Geist({
@@ -29,6 +30,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <SessionInitializer />
+        <ApiInterceptorSetup />
         <AuthProvider>
           {children}
         </AuthProvider>

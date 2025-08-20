@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { isTokenValid } from './lib/auth-helpers';
 
 // Define protected routes
 const protectedRoutes = [
@@ -17,7 +18,18 @@ const authRoutes = [
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('token');
+  const tokenCookie = request.cookies.get('token');
+  
+  // Check if token exists AND is valid
+  let hasValidToken = false;
+  if (tokenCookie?.value) {
+    hasValidToken = isTokenValid(tokenCookie.value);
+    
+    // If token exists but is invalid, we should NOT block auth routes
+    if (!hasValidToken) {
+      console.log('Invalid token detected in middleware, allowing auth route access');
+    }
+  }
 
   // Check if the route is protected
   const isProtectedRoute = protectedRoutes.some(route => 
@@ -29,15 +41,16 @@ export function middleware(request: NextRequest) {
     pathname === route || pathname.startsWith(`${route}/`)
   );
 
-  // Redirect to login if accessing protected route without token
-  if (isProtectedRoute && !token) {
+  // Redirect to login if accessing protected route without valid token
+  if (isProtectedRoute && !hasValidToken) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('from', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Redirect to home if accessing auth route with token
-  if (isAuthRoute && token) {
+  // Only redirect away from auth routes if token is VALID
+  // Invalid tokens should NOT prevent access to login/register
+  if (isAuthRoute && hasValidToken) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 

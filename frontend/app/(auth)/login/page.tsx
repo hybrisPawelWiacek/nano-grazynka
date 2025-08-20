@@ -1,19 +1,37 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { clearAuthCookie } from '@/lib/auth-helpers';
+import { toast } from 'sonner';
 import styles from '../auth.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    // Check if redirected due to expired session
+    if (searchParams.get('session') === 'expired') {
+      toast.info('Your session has expired. Please log in again.');
+      // Clear any invalid cookies
+      clearAuthCookie().catch(console.error);
+    }
+    
+    // Check if there's a redirect URL stored
+    const redirectUrl = searchParams.get('from');
+    if (redirectUrl) {
+      sessionStorage.setItem('redirectAfterLogin', redirectUrl);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,9 +40,25 @@ export default function LoginPage() {
 
     try {
       await login(email, password, rememberMe);
-      router.push('/');
+      
+      // Check if there's a redirect URL stored
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        sessionStorage.removeItem('redirectAfterLogin');
+        router.push(redirectUrl);
+      } else {
+        router.push('/');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      // Provide more helpful error messages
+      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+        setError('Invalid email or password. Please try again.');
+      } else if (errorMessage.includes('Network')) {
+        setError('Unable to connect to the server. Please check your connection.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }

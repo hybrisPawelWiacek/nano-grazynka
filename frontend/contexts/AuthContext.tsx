@@ -80,6 +80,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await response.json();
         setUser(userData);
       } else {
+        // If we get a 401, the token is invalid - clear it
+        if (response.status === 401) {
+          console.log('Invalid token detected, clearing auth cookie');
+          // Try to clear the invalid cookie
+          try {
+            await fetch(`${API_URL}/api/auth/logout`, {
+              method: 'POST',
+              credentials: 'include',
+            });
+          } catch (logoutError) {
+            console.error('Failed to clear invalid token:', logoutError);
+          }
+        }
         setUser(null);
       }
     } catch (error) {
