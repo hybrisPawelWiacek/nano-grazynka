@@ -1,9 +1,9 @@
 server:
-  port: 3101
+  port: 3001
   host: 0.0.0.0
 
 database:
-  url: file:/data/nano-grazynka.db
+  url: file:./data/nano-grazynka.db
 
 transcription:
   provider: openai  # Using OpenAI for gpt-4o-transcribe model
@@ -58,7 +58,7 @@ titleGeneration:
   # Prompt moved to backend/prompts.yaml
 
 storage:
-  uploadDir: /data/uploads
+  uploadDir: ./data/uploads
   maxFileAgeDays: 30
 
 processing:

@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3101',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev:3001',
   },
   async rewrites() {
     // For server-side API calls in Docker
@@ -19,8 +19,20 @@ const nextConfig = {
   reactStrictMode: false,
   // Optimize for Docker
   output: 'standalone',
-  // Enable SWC minification
-  swcMinify: true,
+  // Allow all hosts for Replit proxy
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
