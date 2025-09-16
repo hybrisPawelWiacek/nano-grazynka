@@ -1,19 +1,32 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev:3001',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || (
+      process.env.NODE_ENV === 'production' 
+        ? '/api' // Use relative API calls in production
+        : 'http://localhost:3001' // Default to localhost for development
+    ),
   },
   async rewrites() {
+    const rewrites = [];
+    
     // For server-side API calls in Docker
     if (process.env.API_URL_INTERNAL) {
-      return [
-        {
-          source: '/api/proxy/:path*',
-          destination: `${process.env.API_URL_INTERNAL}/api/:path*`,
-        },
-      ];
+      rewrites.push({
+        source: '/api/proxy/:path*',
+        destination: `${process.env.API_URL_INTERNAL}/api/:path*`,
+      });
     }
-    return [];
+    
+    // In production, rewrite /api/:path* to the backend service
+    if (process.env.NODE_ENV === 'production' && process.env.BACKEND_URL) {
+      rewrites.push({
+        source: '/api/:path*',
+        destination: `${process.env.BACKEND_URL}/api/:path*`,
+      });
+    }
+    
+    return rewrites;
   },
   // Disable strict mode for development
   reactStrictMode: false,
