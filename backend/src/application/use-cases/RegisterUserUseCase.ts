@@ -1,5 +1,4 @@
 import { AuthService } from '../../domain/services/AuthService';
-import { UserEntity } from '../../domain/entities/User';
 
 export interface RegisterUserRequest {
   email: string;
@@ -14,7 +13,7 @@ export interface RegisterUserResponse {
     creditsUsed: number;
     creditLimit: number;
   };
-  token: string;
+  token: string; // Only used internally for httpOnly cookie
 }
 
 export class RegisterUserUseCase {
@@ -34,7 +33,7 @@ export class RegisterUserUseCase {
         creditsUsed: user.creditsUsed,
         creditLimit: user.creditLimit,
       },
-      token,
+      token, // Only used internally for httpOnly cookie
     };
   }
 }

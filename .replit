@@ -49,10 +49,6 @@ outputType = "console"
 localPort = 3001
 externalPort = 3001
 
-[[ports]]
-localPort = 34987
-externalPort = 80
-
 [deployment]
 deploymentTarget = "vm"
 run = ["bash", "-c", "cd backend && DATABASE_URL=file:../data/nano-grazynka.db CONFIG_PATH=./config.yaml npm run dev & cd ../frontend && npm run start"]

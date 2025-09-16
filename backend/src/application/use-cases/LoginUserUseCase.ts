@@ -14,7 +14,7 @@ export interface LoginUserResponse {
     creditsUsed: number;
     creditLimit: number;
   };
-  token: string;
+  token: string; // Only used internally for httpOnly cookie
 }
 
 export class LoginUserUseCase {
@@ -34,7 +34,7 @@ export class LoginUserUseCase {
         creditsUsed: user.creditsUsed,
         creditLimit: user.creditLimit,
       },
-      token,
+      token, // Only used internally for httpOnly cookie
     };
   }
 }

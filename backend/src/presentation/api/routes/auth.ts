@@ -46,8 +46,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
                 creditsUsed: { type: 'number' },
                 creditLimit: { type: 'number' }
               }
-            },
-            token: { type: 'string' }
+            }
           }
         }
       }
@@ -66,7 +65,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         path: '/'
       });
       
-      return result;
+      // Return only user data, token is in httpOnly cookie
+      return { user: result.user };
     } catch (error) {
       if (error instanceof Error && error.message.includes('already exists')) {
         return reply.code(409).send({ error: error.message });
@@ -103,8 +103,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
                 creditsUsed: { type: 'number' },
                 creditLimit: { type: 'number' }
               }
-            },
-            token: { type: 'string' }
+            }
           }
         }
       }
@@ -148,7 +147,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         path: '/'
       });
       
-      return result;
+      // Return only user data, token is in httpOnly cookie
+      return { user: result.user };
     } catch (error) {
       // Record failed login attempt
       await loginAttemptService.recordLoginAttempt(email, clientIP, false);
@@ -175,7 +175,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // Logout endpoint
-  fastify.post('/logout', async (request, reply) => {
+  fastify.post('/logout', async (_request, reply) => {
     reply.clearCookie('token', { path: '/' });
     return { success: true };
   });
@@ -221,8 +221,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
     }
-  }, async (request, _reply) => {
-    const { email } = request.body as { email: string };
+  }, async (_request, _reply) => {
+    const { email } = _request.body as { email: string };
     
     // For MVP, just log to console
     console.log(`Password reset requested for: ${email}`);
