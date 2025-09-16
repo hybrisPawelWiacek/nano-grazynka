@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { X, Upload, FileAudio, Clock } from 'lucide-react';
 import AdvancedOptions from './AdvancedOptions';
-import { TranscriptionModel } from './ModelSelection';
+import { TranscriptionModel } from '../hooks/useTranscriptionModel';
 import styles from './PreviewDialog.module.css';
 
 interface PreviewDialogProps {

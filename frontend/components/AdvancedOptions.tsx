@@ -1,25 +1,34 @@
 import React from 'react';
+import { TranscriptionModel } from '../hooks/useTranscriptionModel';
 import styles from './AdvancedOptions.module.css';
 
 interface AdvancedOptionsProps {
   whisperPrompt: string;
   onWhisperPromptChange: (value: string) => void;
-  selectedModel: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  selectedModel: TranscriptionModel;
+  onModelChange: (model: TranscriptionModel) => void;
   geminiPrompt: string;
   onGeminiPromptChange: (value: string) => void;
-  showOptions: boolean; // Only show when file is selected
+  selectedTemplate?: string;
+  onTemplateSelect: (template: string | undefined) => void;
 }
 
 export default function AdvancedOptions({
   whisperPrompt,
   onWhisperPromptChange,
+  isExpanded,
+  onToggle,
   selectedModel,
+  onModelChange,
   geminiPrompt,
   onGeminiPromptChange,
-  showOptions
+  selectedTemplate,
+  onTemplateSelect
 }: AdvancedOptionsProps) {
-  // Don't render anything if no file is selected
-  if (!showOptions) return null;
+  // Don't render anything if not expanded
+  if (!isExpanded) return null;
 
   const isGemini = selectedModel === 'google/gemini-2.0-flash-001';
   

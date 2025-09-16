@@ -1,11 +1,15 @@
 // Configuration for frontend application
 
+// Detect if running in Replit environment
+const isReplit = process.env.NEXT_PUBLIC_API_URL || 
+  (typeof process !== 'undefined' && process.env.REPLIT_DOMAINS !== undefined);
+
 export const config = {
   // API configuration
   api: {
     baseUrl: process.env.NEXT_PUBLIC_API_URL || 
-      (typeof window !== 'undefined' && window.location.hostname.includes('replit.dev') 
-        ? `https://${window.location.hostname}:3001`
+      (isReplit 
+        ? 'https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev:3001'
         : 'http://localhost:3001'),
     timeout: 30000, // 30 seconds
   },
