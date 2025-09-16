@@ -53,10 +53,6 @@ externalPort = 3001
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 36823
-externalPort = 3000
-
 [deployment]
 deploymentTarget = "vm"
 run = ["bash", "-c", "cd backend && DATABASE_URL=file:../data/nano-grazynka.db CONFIG_PATH=./config.yaml npm run dev & cd ../frontend && npm run start"]
