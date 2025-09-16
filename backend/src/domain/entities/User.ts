@@ -120,7 +120,7 @@ export class UserEntity {
     return { ...this.data };
   }
 
-  // Password validation rules
+  // Password validation rules (enhanced for better security)
   static validatePassword(password: string): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
     
@@ -128,10 +128,41 @@ export class UserEntity {
       errors.push('Password must be at least 8 characters long');
     }
     
-    // Additional rules can be added here
-    // if (!/[A-Z]/.test(password)) errors.push('Password must contain uppercase letter');
-    // if (!/[a-z]/.test(password)) errors.push('Password must contain lowercase letter');
-    // if (!/[0-9]/.test(password)) errors.push('Password must contain number');
+    if (password.length > 128) {
+      errors.push('Password must be no more than 128 characters long');
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      errors.push('Password must contain at least one uppercase letter');
+    }
+    
+    if (!/[a-z]/.test(password)) {
+      errors.push('Password must contain at least one lowercase letter');
+    }
+    
+    if (!/[0-9]/.test(password)) {
+      errors.push('Password must contain at least one number');
+    }
+    
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push('Password must contain at least one special character (!@#$%^&*(),.?":{}|<>)');
+    }
+    
+    // Check for common weak passwords
+    const commonPasswords = [
+      'password', 'password123', '12345678', 'qwerty123', 
+      'admin123', 'welcome123', 'Password1', 'Password123'
+    ];
+    
+    if (commonPasswords.includes(password.toLowerCase())) {
+      errors.push('Password is too common. Please choose a more unique password');
+    }
+    
+    // Check for sequential characters (like 123456 or abcdef)
+    const hasSequential = /(?:012|123|234|345|456|567|678|789|abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)/i.test(password);
+    if (hasSequential) {
+      errors.push('Password should not contain sequential characters');
+    }
     
     return {
       valid: errors.length === 0,

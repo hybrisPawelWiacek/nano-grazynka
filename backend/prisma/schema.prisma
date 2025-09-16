@@ -146,6 +146,17 @@ model AnonymousSession {
   @@index([createdAt])
 }
 
+model LoginAttempt {
+  id          String   @id @default(cuid())
+  email       String
+  ipAddress   String
+  success     Boolean
+  attemptedAt DateTime @default(now())
+
+  @@index([email, attemptedAt])
+  @@index([email, success])
+}
+
 model Entity {
   id              String          @id @default(cuid())
   userId          String

@@ -5,6 +5,7 @@ import { AuthService } from '../../../domain/services/AuthService';
 import { UserRepositoryImpl } from '../../../infrastructure/persistence/UserRepositoryImpl';
 import { PasswordService } from '../../../infrastructure/auth/PasswordService';
 import { JwtService } from '../../../infrastructure/auth/JwtService';
+import { LoginAttemptService } from '../../../infrastructure/auth/LoginAttemptService';
 import { PrismaClient } from '@prisma/client';
 import { createAuthenticateMiddleware } from '../middleware/authenticate';
 
@@ -13,6 +14,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   const userRepository = new UserRepositoryImpl(prisma);
   const passwordService = new PasswordService();
   const jwtService = new JwtService();
+  const loginAttemptService = new LoginAttemptService(prisma);
   const authService = new AuthService(userRepository, passwordService, jwtService);
   
   const registerUseCase = new RegisterUserUseCase(authService);
@@ -67,11 +69,11 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       return result;
     } catch (error) {
       if (error instanceof Error && error.message.includes('already exists')) {
-        reply.code(409).send({ error: error.message });
+        return reply.code(409).send({ error: error.message });
       } else if (error instanceof Error) {
-        reply.code(400).send({ error: error.message });
+        return reply.code(400).send({ error: error.message });
       } else {
-        reply.code(500).send({ error: 'Internal server error' });
+        return reply.code(500).send({ error: 'Internal server error' });
       }
     }
   });
@@ -108,13 +110,33 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
   }, async (request, reply) => {
+    const clientIP = LoginAttemptService.getClientIp(request);
+    const { email, password, rememberMe } = request.body as { 
+      email: string; 
+      password: string; 
+      rememberMe?: boolean;
+    };
+
     try {
-      const { email, password, rememberMe } = request.body as { 
-        email: string; 
-        password: string; 
-        rememberMe?: boolean;
-      };
+      // Check if account is locked due to failed attempts
+      const lockStatus = await loginAttemptService.getAccountLockStatus(email, clientIP);
+      
+      if (lockStatus.isLocked) {
+        await loginAttemptService.recordLoginAttempt(email, clientIP, false);
+        return reply.code(429).send({ 
+          error: 'Account temporarily locked due to too many failed login attempts',
+          message: `Please try again after ${lockStatus.lockedUntil?.toLocaleTimeString()}`,
+          retryAfter: lockStatus.lockedUntil ? Math.ceil((lockStatus.lockedUntil.getTime() - Date.now()) / 1000) : 900
+        });
+      }
+      
       const result = await loginUseCase.execute({ email, password, rememberMe });
+      
+      // Record successful login attempt
+      await loginAttemptService.recordLoginAttempt(email, clientIP, true);
+      
+      // Clear any failed attempts for this email
+      await loginAttemptService.clearFailedAttempts(email);
       
       // Set JWT in httpOnly cookie
       const maxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
@@ -128,7 +150,27 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       
       return result;
     } catch (error) {
-      reply.code(401).send({ error: 'Invalid email or password' });
+      // Record failed login attempt
+      await loginAttemptService.recordLoginAttempt(email, clientIP, false);
+      
+      if (error instanceof Error && error.message.includes('Invalid credentials')) {
+        const lockStatus = await loginAttemptService.getAccountLockStatus(email, clientIP);
+        const remainingAttempts = lockStatus.remainingAttempts;
+        
+        if (remainingAttempts <= 1) {
+          return reply.code(401).send({ 
+            error: 'Invalid email or password. Your account will be temporarily locked after one more failed attempt.',
+            remainingAttempts
+          });
+        } else {
+          return reply.code(401).send({ 
+            error: 'Invalid email or password',
+            remainingAttempts
+          });
+        }
+      } else {
+        return reply.code(401).send({ error: 'Invalid email or password' });
+      }
     }
   });
 
@@ -156,7 +198,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
     }
-  }, async (request, reply) => {
+  }, async (request, _reply) => {
     const user = request.user!;
     return {
       id: user.id,
@@ -179,7 +221,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
     }
-  }, async (request, reply) => {
+  }, async (request, _reply) => {
     const { email } = request.body as { email: string };
     
     // For MVP, just log to console
