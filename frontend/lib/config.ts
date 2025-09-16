@@ -3,7 +3,10 @@
 export const config = {
   // API configuration
   api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 
+      (typeof window !== 'undefined' && window.location.hostname.includes('replit.dev') 
+        ? `https://${window.location.hostname}:3001`
+        : 'http://localhost:3001'),
     timeout: 30000, // 30 seconds
   },
   
