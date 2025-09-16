@@ -1,0 +1,13 @@
+TypeError: Failed to fetch
+    at window.fetch (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:218642)
+    at Object.apply (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/__replco/static/devtools/injected.js:278:39)
+    at fetch (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/_54dc4da3._.js:898:36)
+    at handleUpload (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/_da63383d._.js:2295:42)
+    at executeDispatch (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1f56dc06._.js:8903:13)
+    at runWithFiberInDEV (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1f56dc06._.js:890:74)
+    at processDispatchQueue (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1f56dc06._.js:8929:41)
+    at https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1f56dc06._.js:9224:13
+    at batchedUpdates$1 (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1f56dc06._.js:2215:44)
+    at dispatchEventForPluginEventSystem (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1f56dc06._.js:9005:9)
+    at dispatchEvent (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1f56dc06._.js:11162:37)
+    at dispatchDiscreteEvent (https://6d0e6925-6bd1-4a2e-b8a8-5d737fd235f6-00-3hgmow4b6i0zo.riker.replit.dev/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1f56dc06._.js:11144:64)

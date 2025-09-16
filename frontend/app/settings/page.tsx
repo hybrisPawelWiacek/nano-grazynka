@@ -9,6 +9,8 @@ import EntityManager from '@/components/EntityManager';
 import ProjectManager from '@/components/ProjectManager';
 import styles from './page.module.css';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3101';
+
 interface UserSettings {
   email: string;
   tier: string;
@@ -129,7 +131,7 @@ export default function SettingsPage() {
     setMessage(null);
 
     try {
-      const response = await fetch('http://localhost:3101/api/auth/change-password', {
+      const response = await fetch(`${API_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

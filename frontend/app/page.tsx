@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ConversionModal from '@/components/ConversionModal';
 import AdvancedOptions from '@/components/AdvancedOptions';
+import { TranscriptionModel } from '@/hooks/useTranscriptionModel';
 import ProjectSelector from '@/components/ProjectSelector';
 import EntityPills from '@/components/EntityPills';
 import { getOrCreateSessionId, getUsageCount, getRemainingUsage } from '@/lib/anonymousSession';
@@ -13,6 +14,8 @@ import { toast } from 'sonner';
 import { formatErrorForDisplay, formatErrorForToast } from '@/lib/error-messages';
 import Header from '@/components/Header';
 import styles from './page.module.css';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3101';
 
 interface ProcessingStatus {
   stage: 'idle' | 'uploading' | 'processing' | 'transcribing' | 'summarizing' | 'complete' | 'error';
@@ -139,7 +142,7 @@ export default function HomePage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   
   // Multi-model transcription state with localStorage persistence
-  const [selectedModel, setSelectedModel] = useState<string>(() => {
+  const [selectedModel, setSelectedModel] = useState<TranscriptionModel>(() => {
     // Initialize from localStorage if available
     if (typeof window !== 'undefined') {
       const savedModel = localStorage.getItem('selectedTranscriptionModel');
@@ -283,7 +286,7 @@ export default function HomePage() {
         uploadHeaders['x-session-id'] = sessionId;
       }
       
-      const uploadResponse = await fetch('http://localhost:3101/api/voice-notes', {
+      const uploadResponse = await fetch(`${API_URL}/api/voice-notes`, {
         method: 'POST',
         credentials: 'include',
         headers: uploadHeaders,
@@ -319,7 +322,7 @@ export default function HomePage() {
       
       // Process with retry logic
       const processResponse = await retryWithBackoff(async () => {
-        const response = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}/process`, {
+        const response = await fetch(`${API_URL}/api/voice-notes/${voiceNoteId}/process`, {
           method: 'POST',
           credentials: 'include',
           headers: processHeaders,
@@ -355,7 +358,7 @@ export default function HomePage() {
         
         // Check status with retry logic for network failures
         const statusResponse = await retryWithBackoff(async () => {
-          const response = await fetch(`http://localhost:3101/api/voice-notes/${voiceNoteId}?includeTranscription=true&includeSummary=true`, {
+          const response = await fetch(`${API_URL}/api/voice-notes/${voiceNoteId}?includeTranscription=true&includeSummary=true`, {
             credentials: 'include',
             headers: statusHeaders
           });
@@ -645,10 +648,14 @@ export default function HomePage() {
               <AdvancedOptions
                 whisperPrompt={whisperPrompt}
                 onWhisperPromptChange={setWhisperPrompt}
+                isExpanded={!!file}
+                onToggle={() => {}}
                 selectedModel={selectedModel}
+                onModelChange={setSelectedModel}
                 geminiPrompt={geminiPrompt}
                 onGeminiPromptChange={setGeminiPrompt}
-                showOptions={!!file}
+                selectedTemplate={selectedTemplate}
+                onTemplateSelect={setSelectedTemplate}
               />
 
               {/* Submit Button */}

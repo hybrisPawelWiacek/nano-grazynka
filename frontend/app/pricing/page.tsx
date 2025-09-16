@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3101';
+
 interface PricingPlan {
   id: string;
   name: string;
@@ -91,7 +93,7 @@ export default function PricingPage() {
       
       setLoading(planId);
       try {
-        const response = await fetch('http://localhost:3101/api/payments/cancel-subscription', {
+        const response = await fetch(`${API_URL}/api/payments/cancel-subscription`, {
           method: 'POST',
           credentials: 'include',
         });
@@ -112,7 +114,7 @@ export default function PricingPage() {
       setLoading(planId);
       try {
         const priceId = `price_mock_${planId}`;
-        const response = await fetch('http://localhost:3101/api/payments/create-checkout-session', {
+        const response = await fetch(`${API_URL}/api/payments/create-checkout-session`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -131,7 +133,7 @@ export default function PricingPage() {
         // For mock, we'll simulate the payment flow
         if (data.checkoutUrl) {
           // Simulate successful payment
-          const webhookResponse = await fetch('http://localhost:3101/api/payments/webhook', {
+          const webhookResponse = await fetch(`${API_URL}/api/payments/webhook`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -149,7 +151,7 @@ export default function PricingPage() {
 
           // Update tier directly (for testing)
           const tier = planId.includes('pro') ? 'pro' : 'business';
-          const upgradeResponse = await fetch('http://localhost:3101/api/payments/upgrade-tier', {
+          const upgradeResponse = await fetch(`${API_URL}/api/payments/upgrade-tier`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

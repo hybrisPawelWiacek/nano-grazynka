@@ -112,3 +112,46 @@ export interface ReprocessRequest {
 }
 
 export interface SearchParams extends PaginationParams, FilterParams {}
+
+// Project-related types
+export interface Project {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateProjectDto {
+  name?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface ListProjectsResponse {
+  projects: Project[];
+  total: number;
+}
+
+// Entity-related types
+export type EntityType = 'person' | 'company' | 'technical' | 'product';
+
+export interface Entity {
+  id: string;
+  userId?: string;
+  projectId?: string;
+  name: string;
+  type: EntityType;
+  description?: string;
+  context?: string;
+  isGlobal: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectEntitiesResponse {
+  entities: Entity[];
+  total: number;
+}

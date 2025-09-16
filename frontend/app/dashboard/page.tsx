@@ -6,6 +6,8 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import styles from './page.module.css';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3101';
+
 interface DashboardStats {
   creditsUsed: number;
   creditLimit: number;
@@ -56,7 +58,7 @@ export default function DashboardPage() {
       setLoading(true);
       
       // Fetch user's voice notes
-      const voiceNotesRes = await fetch('http://localhost:3101/api/voice-notes?limit=5', {
+      const voiceNotesRes = await fetch(`${API_URL}/api/voice-notes?limit=5`, {
         headers: {
           'x-session-id': sessionId
         }

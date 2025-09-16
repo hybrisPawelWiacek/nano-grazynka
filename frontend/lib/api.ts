@@ -1,5 +1,7 @@
 // API helper functions for the frontend
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3101';
+
 /**
  * Utility function to retry failed requests with exponential backoff
  * @param fn The async function to retry
@@ -60,7 +62,7 @@ export async function regenerateSummary(
     
     // Use retry logic for the regenerate request
     const regenerateWithRetry = async () => {
-      const response = await fetch(`http://localhost:3101/api/voice-notes/${noteId}/regenerate-summary`, {
+      const response = await fetch(`${API_URL}/api/voice-notes/${noteId}/regenerate-summary`, {
         method: 'POST',
         credentials: 'include',
         headers,
@@ -158,7 +160,7 @@ export async function uploadVoiceNote(
     
     // Use retry logic for the upload
     const uploadWithRetry = async () => {
-      const response = await fetch('http://localhost:3101/api/voice-notes', {
+      const response = await fetch(`${API_URL}/api/voice-notes`, {
         method: 'POST',
         credentials: 'include',
         headers,  // Include the headers with x-session-id
